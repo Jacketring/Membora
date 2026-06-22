@@ -595,6 +595,21 @@ button {
   color: #b91c1c;
 }
 
+.status-badge--pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-badge--completed {
+  background: #dcfce7;
+  color: #047857;
+}
+
+.status-badge--cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 .lead-summary-strip {
   display: grid;
   gap: 12px;
@@ -1006,6 +1021,12 @@ button {
   text-align: left;
 }
 
+.task-description {
+  color: var(--muted);
+  display: block;
+  margin-top: 4px;
+}
+
 .source-badge {
   background: #eef4ff;
   border-radius: 999px;
@@ -1019,6 +1040,10 @@ button {
 
 .stage-select--table {
   min-width: 160px;
+}
+
+.tasks-table {
+  min-width: 1120px;
 }
 
 .next-action {

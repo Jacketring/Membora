@@ -102,6 +102,52 @@ export interface CreateLeadPayload {
   nextActionAt?: string;
 }
 
+export interface Task {
+  id: string;
+  tenantId: string;
+  assignedUserId: string | null;
+  leadId: string | null;
+  memberId: string | null;
+  title: string;
+  description: string | null;
+  type: 'SALES' | 'RETENTION' | 'PAYMENT' | 'OPERATIONAL' | 'OTHER';
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  dueAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  assignedUser: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  lead: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+    email: string | null;
+    status: string;
+  } | null;
+  member: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+    email: string | null;
+    status: string;
+  } | null;
+}
+
+export interface CreateTaskPayload {
+  title: string;
+  description?: string | null;
+  type?: Task['type'];
+  status?: Task['status'];
+  dueAt?: string | null;
+  leadId?: string | null;
+  memberId?: string | null;
+  assignedUserId?: string | null;
+}
+
 export function getStoredToken() {
   if (typeof window === 'undefined') {
     return null;

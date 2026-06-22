@@ -259,10 +259,10 @@ export default function LeadsPage() {
             <CalendarDays size={20} />
             Clases
           </a>
-          <a href="#">
+          <Link href="/tasks">
             <CheckCircle2 size={20} />
             Tareas
-          </a>
+          </Link>
         </nav>
 
         <button className="logout-button" onClick={logout} type="button">

@@ -10,8 +10,9 @@ Estado del proyecto:
 
 ```text
 Backend MVP funcional desplegado en Plesk.
-Frontend pendiente de implementación.
-Diseño frontend pendiente de incorporar.
+Frontend base desplegado en Plesk.
+Pantallas implementadas: login, dashboard, leads y tareas.
+Pantallas pendientes: socios, membresías, pagos, clases, reservas, check-ins y alertas.
 ```
 
 Backend desplegado:
@@ -91,16 +92,23 @@ lead -> prueba -> alta -> socio -> membresía -> reserva -> check-in -> pago -> 
 - Alertas.
 - Dashboard con KPIs.
 
+### Implementado en frontend
+
+- Interfaz web responsive base.
+- Pantalla de login conectada al backend.
+- Dashboard visual.
+- Pantalla de leads con tabla CRM, filtros, KPIs, creación, conversión, reversión y eliminación.
+- Pantalla de tareas con tabla, filtros, KPIs, creación y cambios de estado.
+- Navegación principal entre panel, leads y tareas.
+
 ### Pendiente de frontend
 
-- Interfaz web responsive.
-- Pantalla de login.
-- Dashboard visual.
-- Pantallas de leads y pipeline.
 - Pantallas de socios.
 - Pantallas de membresías y pagos.
 - Pantallas de clases, reservas y check-ins.
-- Pantallas de tareas y alertas.
+- Pantallas de alertas.
+- Formularios avanzados de edición.
+- Pulido responsive final.
 
 ## 5. Funcionalidades fuera del MVP
 
