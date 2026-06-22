@@ -1,0 +1,225 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { LeadSource, LeadStatus, RoleKey } from '@prisma/client';
+import { AuthUser } from '../auth/auth-user';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateLeadDto } from './dto/create-lead.dto';
+import { UpdateLeadDto } from './dto/update-lead.dto';
+
+@Injectable()
+export class LeadsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findAll(user: AuthUser) {
+    const tenantId = this.requireTenant(user);
+
+    return this.prisma.lead.findMany({
+      where: { tenantId },
+      include: {
+        pipelineStage: true,
+        assignedUser: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: [{ createdAt: 'desc' }],
+    });
+  }
+
+  async findOne(user: AuthUser, id: string) {
+    const tenantId = this.requireTenant(user);
+    const lead = await this.prisma.lead.findFirst({
+      where: { id, tenantId },
+      include: {
+        pipelineStage: true,
+        assignedUser: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        tasks: true,
+        communicationLogs: true,
+      },
+    });
+
+    if (!lead) {
+      throw new NotFoundException('Lead not found');
+    }
+
+    return lead;
+  }
+
+  async create(user: AuthUser, dto: CreateLeadDto) {
+    const tenantId = this.requireTenant(user);
+
+    if (!dto.firstName?.trim()) {
+      throw new BadRequestException('firstName is required');
+    }
+
+    await this.ensurePipelineStageBelongsToTenant(tenantId, dto.pipelineStageId);
+
+    if (dto.assignedUserId) {
+      await this.ensureUserBelongsToTenant(tenantId, dto.assignedUserId);
+    }
+
+    return this.prisma.lead.create({
+      data: {
+        tenantId,
+        pipelineStageId: dto.pipelineStageId,
+        assignedUserId: dto.assignedUserId,
+        firstName: dto.firstName.trim(),
+        lastName: this.optionalText(dto.lastName),
+        email: this.optionalEmail(dto.email),
+        phone: this.optionalText(dto.phone),
+        source: dto.source ?? LeadSource.OTHER,
+        interest: this.optionalText(dto.interest),
+        status: LeadStatus.OPEN,
+        nextActionAt: this.optionalDate(dto.nextActionAt),
+      },
+      include: {
+        pipelineStage: true,
+        assignedUser: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
+
+  async update(user: AuthUser, id: string, dto: UpdateLeadDto) {
+    const tenantId = this.requireTenant(user);
+    await this.findOne(user, id);
+
+    if (dto.pipelineStageId) {
+      await this.ensurePipelineStageBelongsToTenant(tenantId, dto.pipelineStageId);
+    }
+
+    if (dto.assignedUserId) {
+      await this.ensureUserBelongsToTenant(tenantId, dto.assignedUserId);
+    }
+
+    const data = {
+      pipelineStageId: dto.pipelineStageId,
+      assignedUserId: dto.assignedUserId,
+      firstName: dto.firstName?.trim(),
+      lastName:
+        dto.lastName === undefined ? undefined : this.optionalText(dto.lastName),
+      email: dto.email === undefined ? undefined : this.optionalEmail(dto.email),
+      phone: dto.phone === undefined ? undefined : this.optionalText(dto.phone),
+      source: dto.source,
+      interest:
+        dto.interest === undefined ? undefined : this.optionalText(dto.interest),
+      status: dto.status,
+      lostReason:
+        dto.lostReason === undefined
+          ? undefined
+          : this.optionalText(dto.lostReason),
+      nextActionAt:
+        dto.nextActionAt === undefined
+          ? undefined
+          : this.optionalDate(dto.nextActionAt),
+    };
+
+    return this.prisma.lead.update({
+      where: { id },
+      data,
+      include: {
+        pipelineStage: true,
+        assignedUser: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
+
+  private requireTenant(user: AuthUser): string {
+    if (!user.tenantId || user.role === RoleKey.SUPERADMIN) {
+      throw new ForbiddenException('A tenant user is required');
+    }
+
+    return user.tenantId;
+  }
+
+  private async ensurePipelineStageBelongsToTenant(
+    tenantId: string,
+    pipelineStageId: string,
+  ) {
+    const stage = await this.prisma.pipelineStage.findFirst({
+      where: {
+        id: pipelineStageId,
+        tenantId,
+      },
+      select: { id: true },
+    });
+
+    if (!stage) {
+      throw new BadRequestException('Invalid pipelineStageId');
+    }
+  }
+
+  private async ensureUserBelongsToTenant(tenantId: string, userId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        tenantId,
+      },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid assignedUserId');
+    }
+  }
+
+  private optionalText(value?: string | null): string | null | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }
+
+  private optionalEmail(value?: string | null): string | null | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    const trimmed = value?.trim().toLowerCase();
+    return trimmed ? trimmed : null;
+  }
+
+  private optionalDate(value?: string | null): Date | null | undefined {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    if (value === null || value.trim() === '') {
+      return null;
+    }
+
+    const parsed = new Date(value);
+
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException('Invalid date');
+    }
+
+    return parsed;
+  }
+}
