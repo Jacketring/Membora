@@ -8,8 +8,6 @@ import {
   Dumbbell,
   LayoutDashboard,
   LogOut,
-  Mail,
-  Phone,
   Plus,
   Search,
   Users,
@@ -81,7 +79,6 @@ export default function LeadsPage() {
       const orderedStages = loadedStages.sort((a, b) => a.order - b.order);
       setStages(orderedStages);
       setLeads(loadedLeads);
-
       setForm((current) => ({
         ...current,
         pipelineStageId: current.pipelineStageId || orderedStages[0]?.id || '',
@@ -103,14 +100,7 @@ export default function LeadsPage() {
 
     if (!term) return true;
 
-    return [
-      lead.firstName,
-      lead.lastName,
-      lead.email,
-      lead.phone,
-      lead.interest,
-      lead.pipelineStage.name,
-    ]
+    return [lead.firstName, lead.lastName, lead.email, lead.phone, lead.interest, lead.pipelineStage.name]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(term));
   });
@@ -260,8 +250,8 @@ export default function LeadsPage() {
         <div className="content">
           <div className="page-heading">
             <div>
-              <h2>Leads y pipeline</h2>
-              <p>Seguimiento comercial de oportunidades para NexoFit Studio.</p>
+              <h2>Leads</h2>
+              <p>Listado comercial para seguimiento, cambio de etapa y conversión a socio.</p>
             </div>
             <button className="primary-action primary-action--compact" onClick={() => setShowForm(true)} type="button">
               <Plus size={18} />
@@ -271,72 +261,79 @@ export default function LeadsPage() {
 
           {error ? <div className="notice notice-error">{error}</div> : null}
 
-          <section className="kpi-grid kpi-grid--leads">
-            <MiniMetric label="Leads abiertos" value={openLeads} />
+          <section className="lead-summary-strip">
+            <MiniMetric label="Abiertos" value={openLeads} />
             <MiniMetric label="Convertidos" value={convertedLeads} />
             <MiniMetric label="Perdidos" value={lostLeads} />
             <MiniMetric label="Conversión" value={`${conversionRate}%`} />
           </section>
 
           {loading ? (
-            <div className="loading-card">Cargando pipeline comercial...</div>
+            <div className="loading-card">Cargando leads...</div>
           ) : (
-            <>
-              <section className="pipeline-board" aria-label="Pipeline comercial">
-                {stages.map((stage) => {
-                  const stageLeads = filteredLeads.filter((lead) => lead.pipelineStageId === stage.id);
-
-                  return (
-                    <article className="pipeline-column" key={stage.id}>
-                      <header>
-                        <h3>{stage.name}</h3>
-                        <span>{stageLeads.length}</span>
-                      </header>
-                      <div className="pipeline-cards">
-                        {stageLeads.length ? (
-                          stageLeads.map((lead) => (
-                            <LeadCard
-                              key={lead.id}
-                              lead={lead}
-                              onConvert={() => convertLead(lead)}
-                              onMove={(nextStageId) => moveLead(lead, nextStageId)}
-                              stages={stages}
-                            />
-                          ))
-                        ) : (
-                          <p className="empty-text">Sin oportunidades.</p>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
-              </section>
-
-              <section className="panel-card">
-                <header>
+            <section className="panel-card leads-list-card">
+              <header>
+                <div>
                   <h3>Listado de leads</h3>
-                  <span>{filteredLeads.length} registros</span>
-                </header>
-                <div className="lead-table">
-                  {filteredLeads.map((lead) => (
-                    <div className="lead-table-row" key={lead.id}>
-                      <div>
-                        <strong>
-                          {lead.firstName} {lead.lastName ?? ''}
-                        </strong>
-                        <small>{lead.interest ?? 'Sin interés indicado'}</small>
-                      </div>
-                      <div>
-                        <span>{lead.email ?? 'Sin email'}</span>
-                        <small>{lead.phone ?? 'Sin teléfono'}</small>
-                      </div>
-                      <span>{lead.pipelineStage.name}</span>
-                      <StatusBadge status={lead.status} />
-                    </div>
+                  <span>{filteredLeads.length} registros filtrados</span>
+                </div>
+                <div className="stage-legend">
+                  {stages.map((stage) => (
+                    <span key={stage.id}>
+                      {stage.name}: {leads.filter((lead) => lead.pipelineStageId === stage.id).length}
+                    </span>
                   ))}
                 </div>
-              </section>
-            </>
+              </header>
+
+              <div className="lead-table">
+                <div className="lead-table-row lead-table-row--head">
+                  <span>Lead</span>
+                  <span>Contacto</span>
+                  <span>Origen</span>
+                  <span>Etapa</span>
+                  <span>Estado</span>
+                  <span>Acciones</span>
+                </div>
+                {filteredLeads.map((lead) => (
+                  <div className="lead-table-row" key={lead.id}>
+                    <div>
+                      <strong>
+                        {lead.firstName} {lead.lastName ?? ''}
+                      </strong>
+                      <small>{lead.interest ?? 'Sin interés indicado'}</small>
+                    </div>
+                    <div>
+                      <span>{lead.email ?? 'Sin email'}</span>
+                      <small>{lead.phone ?? 'Sin teléfono'}</small>
+                    </div>
+                    <span>{translateSource(lead.source)}</span>
+                    <select
+                      aria-label="Mover lead de etapa"
+                      className="stage-select"
+                      onChange={(event) => moveLead(lead, event.target.value)}
+                      value={lead.pipelineStageId}
+                    >
+                      {stages.map((stage) => (
+                        <option key={stage.id} value={stage.id}>
+                          {stage.name}
+                        </option>
+                      ))}
+                    </select>
+                    <StatusBadge status={lead.status} />
+                    <div className="row-actions">
+                      {lead.status === 'OPEN' ? (
+                        <button onClick={() => convertLead(lead)} type="button">
+                          Convertir a socio
+                        </button>
+                      ) : (
+                        <span>Sin acciones</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
         </div>
       </section>
@@ -439,61 +436,6 @@ function MiniMetric({ label, value }: { label: string; value: number | string })
       <span>{label}</span>
       <strong>{value}</strong>
     </article>
-  );
-}
-
-function LeadCard({
-  lead,
-  onConvert,
-  onMove,
-  stages,
-}: {
-  lead: Lead;
-  onConvert: () => void;
-  onMove: (stageId: string) => void;
-  stages: PipelineStage[];
-}) {
-  return (
-    <div className="lead-card">
-      <div className="lead-card__head">
-        <div>
-          <strong>
-            {lead.firstName} {lead.lastName ?? ''}
-          </strong>
-          <small>{translateSource(lead.source)}</small>
-        </div>
-        <StatusBadge status={lead.status} />
-      </div>
-      <p>{lead.interest ?? 'Sin interés indicado'}</p>
-      <div className="lead-contact">
-        <span>
-          <Mail size={14} />
-          {lead.email ?? 'Sin email'}
-        </span>
-        <span>
-          <Phone size={14} />
-          {lead.phone ?? 'Sin teléfono'}
-        </span>
-      </div>
-      <div className="lead-actions">
-        <select
-          aria-label="Mover lead de etapa"
-          onChange={(event) => onMove(event.target.value)}
-          value={lead.pipelineStageId}
-        >
-          {stages.map((stage) => (
-            <option key={stage.id} value={stage.id}>
-              {stage.name}
-            </option>
-          ))}
-        </select>
-        {lead.status === 'OPEN' ? (
-          <button onClick={onConvert} type="button">
-            Convertir
-          </button>
-        ) : null}
-      </div>
-    </div>
   );
 }
 

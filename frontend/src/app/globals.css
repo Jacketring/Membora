@@ -595,17 +595,19 @@ button {
   color: #b91c1c;
 }
 
-.kpi-grid--leads {
+.lead-summary-strip {
+  display: grid;
+  gap: 12px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .mini-metric {
   background: var(--surface);
   border: 1px solid #edf0f7;
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: var(--shadow);
-  padding: 18px;
+  padding: 14px 16px;
 }
 
 .mini-metric span {
@@ -617,7 +619,38 @@ button {
 
 .mini-metric strong {
   display: block;
-  font-size: 28px;
+  font-size: 24px;
+}
+
+.leads-list-card {
+  overflow: hidden;
+}
+
+.leads-list-card header {
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.leads-list-card header div:first-child span {
+  display: block;
+  margin-top: 4px;
+}
+
+.stage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  max-width: 760px;
+}
+
+.stage-legend span {
+  background: var(--surface-soft);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 9px;
 }
 
 .pipeline-board {
@@ -738,15 +771,25 @@ button {
 
 .lead-table {
   display: grid;
+  overflow-x: auto;
 }
 
 .lead-table-row {
   align-items: center;
   border-top: 1px solid #edf0f7;
   display: grid;
-  gap: 16px;
-  grid-template-columns: 1.2fr 1.2fr 180px 120px;
-  padding: 16px 0;
+  gap: 14px;
+  grid-template-columns: minmax(190px, 1.25fr) minmax(210px, 1.2fr) 130px minmax(180px, 0.9fr) 105px minmax(160px, 0.8fr);
+  min-width: 1040px;
+  padding: 14px 0;
+}
+
+.lead-table-row--head {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .lead-table-row strong,
@@ -757,6 +800,37 @@ button {
 .lead-table-row small {
   color: var(--muted);
   margin-top: 4px;
+}
+
+.stage-select {
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  color: var(--text);
+  outline: 0;
+  padding: 10px 11px;
+  width: 100%;
+}
+
+.row-actions {
+  align-items: center;
+  display: flex;
+  min-height: 40px;
+}
+
+.row-actions button {
+  background: #dcfce7;
+  border: 0;
+  border-radius: 10px;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.row-actions span {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .modal-backdrop {
@@ -863,7 +937,8 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .kpi-grid {
+  .kpi-grid,
+  .lead-summary-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -871,9 +946,12 @@ button {
     grid-template-columns: repeat(7, minmax(220px, 1fr));
   }
 
-  .lead-table-row {
-    align-items: flex-start;
-    grid-template-columns: 1fr;
+  .leads-list-card header {
+    display: grid;
+  }
+
+  .stage-legend {
+    justify-content: flex-start;
   }
 }
 
@@ -897,7 +975,7 @@ button {
   }
 
   .form-grid,
-  .kpi-grid--leads {
+  .lead-summary-strip {
     grid-template-columns: 1fr;
   }
 
