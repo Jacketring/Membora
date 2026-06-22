@@ -12,7 +12,9 @@ import { PaymentsModule } from './payments/payments.module';
 import { PipelineStagesModule } from './pipeline-stages/pipeline-stages.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { RiskAlertsModule } from './risk-alerts/risk-alerts.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
     ClassSessionsModule,
     ReservationsModule,
     CheckInsModule,
+    TasksModule,
+    RiskAlertsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
