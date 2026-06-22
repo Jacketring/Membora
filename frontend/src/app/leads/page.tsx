@@ -1,20 +1,18 @@
 'use client';
 
 import {
-  ArrowRight,
   Bell,
   CalendarDays,
   CheckCircle2,
   Dumbbell,
   LayoutDashboard,
   LogOut,
-  Plus,
   Search,
   Users,
   WalletCards,
 } from 'lucide-react';
 import Link from 'next/link';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   apiGet,
@@ -27,35 +25,33 @@ import {
   Lead,
   PipelineStage,
 } from '@/lib/api';
+import {
+  CreateLeadModal,
+  LeadDetailDrawer,
+  LeadFilters,
+  LeadFiltersState,
+  LeadKanban,
+  LeadMetrics,
+} from './components/lead-components';
 
-const leadSources = [
-  { label: 'Visita presencial', value: 'WALK_IN' },
-  { label: 'Web', value: 'WEBSITE' },
-  { label: 'Teléfono', value: 'PHONE' },
-  { label: 'Redes sociales', value: 'SOCIAL_MEDIA' },
-  { label: 'Recomendación', value: 'REFERRAL' },
-  { label: 'Otro', value: 'OTHER' },
-];
+const initialFilters: LeadFiltersState = {
+  query: '',
+  source: '',
+  stageId: '',
+  status: '',
+};
 
 export default function LeadsPage() {
   const router = useRouter();
   const user = useMemo(() => getStoredUser(), []);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stages, setStages] = useState<PipelineStage[]>([]);
+  const [filters, setFilters] = useState<LeadFiltersState>(initialFilters);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<CreateLeadPayload>({
-    pipelineStageId: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    source: 'WALK_IN',
-    interest: '',
-  });
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     if (!getStoredToken()) {
@@ -76,13 +72,8 @@ export default function LeadsPage() {
         apiGet<Lead[]>('/leads'),
       ]);
 
-      const orderedStages = loadedStages.sort((a, b) => a.order - b.order);
-      setStages(orderedStages);
+      setStages(loadedStages.sort((a, b) => a.order - b.order));
       setLeads(loadedLeads);
-      setForm((current) => ({
-        ...current,
-        pipelineStageId: current.pipelineStageId || orderedStages[0]?.id || '',
-      }));
     } catch {
       setError('No se pudieron cargar los leads.');
     } finally {
@@ -96,54 +87,35 @@ export default function LeadsPage() {
   }
 
   const filteredLeads = leads.filter((lead) => {
-    const term = query.trim().toLowerCase();
+    const term = filters.query.trim().toLowerCase();
+    const matchesQuery =
+      !term ||
+      [lead.firstName, lead.lastName, lead.email, lead.phone, lead.interest, lead.pipelineStage.name]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term));
 
-    if (!term) return true;
-
-    return [lead.firstName, lead.lastName, lead.email, lead.phone, lead.interest, lead.pipelineStage.name]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(term));
+    return (
+      matchesQuery &&
+      (!filters.source || lead.source === filters.source) &&
+      (!filters.stageId || lead.pipelineStageId === filters.stageId) &&
+      (!filters.status || lead.status === filters.status)
+    );
   });
 
   const openLeads = leads.filter((lead) => lead.status === 'OPEN').length;
   const convertedLeads = leads.filter((lead) => lead.status === 'CONVERTED').length;
-  const lostLeads = leads.filter((lead) => lead.status === 'LOST').length;
   const conversionRate = leads.length ? Math.round((convertedLeads / leads.length) * 100) : 0;
+  const trialScheduled = leads.filter((lead) => lead.pipelineStage.key === 'TRIAL_SCHEDULED').length;
+  const noFollowUp = leads.filter((lead) => lead.status === 'OPEN' && !lead.nextActionAt).length;
 
-  async function createLead(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!form.pipelineStageId || !form.firstName.trim()) {
-      setError('Indica al menos nombre y etapa comercial.');
-      return;
-    }
-
+  async function createLead(payload: CreateLeadPayload) {
     setSaving(true);
     setError('');
 
     try {
-      const payload: CreateLeadPayload = {
-        pipelineStageId: form.pipelineStageId,
-        firstName: form.firstName.trim(),
-        lastName: form.lastName?.trim() || undefined,
-        email: form.email?.trim() || undefined,
-        phone: form.phone?.trim() || undefined,
-        source: form.source || 'WALK_IN',
-        interest: form.interest?.trim() || undefined,
-      };
-
       const createdLead = await apiPost<Lead>('/leads', payload);
       setLeads((current) => [createdLead, ...current]);
-      setShowForm(false);
-      setForm({
-        pipelineStageId: stages[0]?.id || '',
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        source: 'WALK_IN',
-        interest: '',
-      });
+      setShowCreateModal(false);
     } catch {
       setError('No se pudo crear el lead.');
     } finally {
@@ -161,6 +133,7 @@ export default function LeadsPage() {
       });
 
       setLeads((current) => current.map((item) => (item.id === lead.id ? updatedLead : item)));
+      setSelectedLead((current) => (current?.id === lead.id ? updatedLead : current));
     } catch {
       setError('No se pudo mover el lead.');
     }
@@ -171,9 +144,49 @@ export default function LeadsPage() {
 
     try {
       await apiPost(`/leads/${lead.id}/convert`);
+      setSelectedLead(null);
       await loadData();
     } catch {
       setError('No se pudo convertir el lead. Puede que ya esté convertido.');
+    }
+  }
+
+  async function markLost(lead: Lead) {
+    const lostStage = stages.find((stage) => stage.key === 'LOST');
+
+    setError('');
+
+    try {
+      const updatedLead = await apiPatch<Lead>(`/leads/${lead.id}`, {
+        pipelineStageId: lostStage?.id ?? lead.pipelineStageId,
+        status: 'LOST',
+      });
+
+      setLeads((current) => current.map((item) => (item.id === lead.id ? updatedLead : item)));
+      setSelectedLead(updatedLead);
+    } catch {
+      setError('No se pudo marcar el lead como perdido.');
+    }
+  }
+
+  async function createFollowUpTask(lead: Lead) {
+    const dueAt = new Date();
+    dueAt.setDate(dueAt.getDate() + 1);
+
+    setError('');
+
+    try {
+      await apiPost('/tasks', {
+        leadId: lead.id,
+        title: `Seguimiento a ${lead.firstName} ${lead.lastName ?? ''}`.trim(),
+        description: 'Contactar para continuar el proceso comercial.',
+        type: 'SALES',
+        status: 'PENDING',
+        dueAt: dueAt.toISOString(),
+      });
+      setError('Tarea de seguimiento creada correctamente.');
+    } catch {
+      setError('No se pudo crear la tarea de seguimiento.');
     }
   }
 
@@ -228,9 +241,9 @@ export default function LeadsPage() {
           <div className="search-box">
             <Search size={18} />
             <input
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar por nombre, email, teléfono o interés..."
-              value={query}
+              onChange={(event) => setFilters((current) => ({ ...current, query: event.target.value }))}
+              placeholder="Buscar socios, leads o clases..."
+              value={filters.query}
             />
           </div>
           <div className="topbar-actions">
@@ -247,204 +260,63 @@ export default function LeadsPage() {
           </div>
         </header>
 
-        <div className="content">
-          <div className="page-heading">
+        <div className="content leads-content">
+          <div className="page-heading leads-heading">
             <div>
               <h2>Leads</h2>
-              <p>Listado comercial para seguimiento, cambio de etapa y conversión a socio.</p>
+              <p>Gestiona oportunidades comerciales desde el primer contacto hasta el alta como socio.</p>
             </div>
-            <button className="primary-action primary-action--compact" onClick={() => setShowForm(true)} type="button">
-              <Plus size={18} />
-              Nuevo lead
-            </button>
           </div>
 
-          {error ? <div className="notice notice-error">{error}</div> : null}
+          {error ? <div className={error.includes('correctamente') ? 'notice notice-success' : 'notice notice-error'}>{error}</div> : null}
 
-          <section className="lead-summary-strip">
-            <MiniMetric label="Abiertos" value={openLeads} />
-            <MiniMetric label="Convertidos" value={convertedLeads} />
-            <MiniMetric label="Perdidos" value={lostLeads} />
-            <MiniMetric label="Conversión" value={`${conversionRate}%`} />
-          </section>
+          <LeadMetrics
+            conversionRate={conversionRate}
+            noFollowUp={noFollowUp}
+            openLeads={openLeads}
+            trialScheduled={trialScheduled}
+          />
+
+          <LeadFilters
+            filters={filters}
+            onChange={setFilters}
+            onCreate={() => setShowCreateModal(true)}
+            stages={stages}
+          />
 
           {loading ? (
-            <div className="loading-card">Cargando leads...</div>
+            <div className="loading-card">Cargando pipeline comercial...</div>
           ) : (
-            <section className="panel-card leads-list-card">
-              <header>
-                <div>
-                  <h3>Listado de leads</h3>
-                  <span>{filteredLeads.length} registros filtrados</span>
-                </div>
-                <div className="stage-legend">
-                  {stages.map((stage) => (
-                    <span key={stage.id}>
-                      {stage.name}: {leads.filter((lead) => lead.pipelineStageId === stage.id).length}
-                    </span>
-                  ))}
-                </div>
-              </header>
-
-              <div className="lead-table">
-                <div className="lead-table-row lead-table-row--head">
-                  <span>Lead</span>
-                  <span>Contacto</span>
-                  <span>Origen</span>
-                  <span>Etapa</span>
-                  <span>Estado</span>
-                  <span>Acciones</span>
-                </div>
-                {filteredLeads.map((lead) => (
-                  <div className="lead-table-row" key={lead.id}>
-                    <div>
-                      <strong>
-                        {lead.firstName} {lead.lastName ?? ''}
-                      </strong>
-                      <small>{lead.interest ?? 'Sin interés indicado'}</small>
-                    </div>
-                    <div>
-                      <span>{lead.email ?? 'Sin email'}</span>
-                      <small>{lead.phone ?? 'Sin teléfono'}</small>
-                    </div>
-                    <span>{translateSource(lead.source)}</span>
-                    <select
-                      aria-label="Mover lead de etapa"
-                      className="stage-select"
-                      onChange={(event) => moveLead(lead, event.target.value)}
-                      value={lead.pipelineStageId}
-                    >
-                      {stages.map((stage) => (
-                        <option key={stage.id} value={stage.id}>
-                          {stage.name}
-                        </option>
-                      ))}
-                    </select>
-                    <StatusBadge status={lead.status} />
-                    <div className="row-actions">
-                      {lead.status === 'OPEN' ? (
-                        <button onClick={() => convertLead(lead)} type="button">
-                          Convertir a socio
-                        </button>
-                      ) : (
-                        <span>Sin acciones</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+            <LeadKanban
+              leads={filteredLeads}
+              onConvert={convertLead}
+              onFollowUp={createFollowUpTask}
+              onOpen={setSelectedLead}
+              stages={stages}
+            />
           )}
         </div>
       </section>
 
-      {showForm ? (
-        <div className="modal-backdrop" role="presentation">
-          <form className="modal-card" onSubmit={createLead}>
-            <header>
-              <div>
-                <h2>Nuevo lead</h2>
-                <p>Registra una oportunidad comercial para hacer seguimiento.</p>
-              </div>
-              <button onClick={() => setShowForm(false)} type="button">
-                Cerrar
-              </button>
-            </header>
-
-            <div className="form-grid">
-              <label className="field">
-                <span>Nombre</span>
-                <input
-                  onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))}
-                  required
-                  value={form.firstName}
-                />
-              </label>
-              <label className="field">
-                <span>Apellidos</span>
-                <input
-                  onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))}
-                  value={form.lastName}
-                />
-              </label>
-              <label className="field">
-                <span>Email</span>
-                <input
-                  onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                  type="email"
-                  value={form.email}
-                />
-              </label>
-              <label className="field">
-                <span>Teléfono</span>
-                <input
-                  onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                  value={form.phone}
-                />
-              </label>
-              <label className="field">
-                <span>Etapa</span>
-                <select
-                  onChange={(event) => setForm((current) => ({ ...current, pipelineStageId: event.target.value }))}
-                  required
-                  value={form.pipelineStageId}
-                >
-                  {stages.map((stage) => (
-                    <option key={stage.id} value={stage.id}>
-                      {stage.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                <span>Origen</span>
-                <select
-                  onChange={(event) => setForm((current) => ({ ...current, source: event.target.value }))}
-                  value={form.source}
-                >
-                  {leadSources.map((source) => (
-                    <option key={source.value} value={source.value}>
-                      {source.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field field--wide">
-                <span>Interés principal</span>
-                <input
-                  onChange={(event) => setForm((current) => ({ ...current, interest: event.target.value }))}
-                  placeholder="Ej. Prueba de HIIT, plan premium, bono mensual..."
-                  value={form.interest}
-                />
-              </label>
-            </div>
-
-            <button className="primary-action" disabled={saving} type="submit">
-              {saving ? 'Guardando...' : 'Crear lead'}
-              <ArrowRight size={18} />
-            </button>
-          </form>
-        </div>
+      {showCreateModal ? (
+        <CreateLeadModal
+          initialStageId={stages[0]?.id ?? ''}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={createLead}
+          saving={saving}
+          stages={stages}
+        />
       ) : null}
+
+      <LeadDetailDrawer
+        lead={selectedLead}
+        onClose={() => setSelectedLead(null)}
+        onConvert={convertLead}
+        onCreateTask={createFollowUpTask}
+        onMarkLost={markLost}
+        onMove={moveLead}
+        stages={stages}
+      />
     </main>
   );
-}
-
-function MiniMetric({ label, value }: { label: string; value: number | string }) {
-  return (
-    <article className="mini-metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const label = status === 'CONVERTED' ? 'Convertido' : status === 'LOST' ? 'Perdido' : 'Abierto';
-  return <span className={`status-badge status-badge--${status.toLowerCase()}`}>{label}</span>;
-}
-
-function translateSource(source: string) {
-  const match = leadSources.find((item) => item.value === source);
-  return match?.label ?? 'Otro';
 }
