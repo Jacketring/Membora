@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { CheckInsModule } from './check-ins/check-ins.module';
 import { ClassSessionsModule } from './class-sessions/class-sessions.module';
 import { ClassTypesModule } from './class-types/class-types.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { LeadsModule } from './leads/leads.module';
 import { MembershipPlansModule } from './membership-plans/membership-plans.module';
 import { MembersModule } from './members/members.module';
@@ -32,6 +33,7 @@ import { TasksModule } from './tasks/tasks.module';
     CheckInsModule,
     TasksModule,
     RiskAlertsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
