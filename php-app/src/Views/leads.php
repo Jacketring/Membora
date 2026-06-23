@@ -6,31 +6,31 @@
   <button class="primary-action primary-action--compact" data-open-modal="lead-modal" type="button">Nuevo lead</button>
 </div>
 
-<section class="lead-metrics">
-  <article class="lead-metric lead-metric--blue">
+<section class="lead-metrics" aria-label="Resumen de leads">
+  <article class="lead-metric lead-metric--blue" aria-label="Leads abiertos: <?= (int) $metrics['open'] ?>">
     <span>Abiertos</span>
     <strong><?= (int) $metrics['open'] ?></strong>
   </article>
-  <article class="lead-metric lead-metric--green">
+  <article class="lead-metric lead-metric--green" aria-label="Leads convertidos: <?= (int) $metrics['converted'] ?>">
     <span>Convertidos</span>
     <strong><?= (int) $metrics['converted'] ?></strong>
   </article>
-  <article class="lead-metric lead-metric--orange">
+  <article class="lead-metric lead-metric--orange" aria-label="Leads perdidos: <?= (int) $metrics['lost'] ?>">
     <span>Perdidos</span>
     <strong><?= (int) $metrics['lost'] ?></strong>
   </article>
-  <article class="lead-metric lead-metric--dark">
+  <article class="lead-metric lead-metric--dark" aria-label="Conversion: <?= (int) $metrics['conversion'] ?>%">
     <span>Conversion</span>
     <strong><?= (int) $metrics['conversion'] ?>%</strong>
   </article>
 </section>
 
-<form class="lead-toolbar" method="get">
+<form class="lead-toolbar" method="get" aria-label="Filtros de leads">
   <input type="hidden" name="route" value="leads">
-  <div class="lead-search">
+  <label class="lead-search">
     <span>Buscar</span>
-    <input name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, telefono, email o interes">
-  </div>
+    <input name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, telefono, email o interes" aria-label="Buscar leads por nombre, telefono, email o interes">
+  </label>
   <div class="lead-filter-group">
     <label class="filter-control filter-control--select">
       <span>Etapa</span>
@@ -74,23 +74,24 @@
 
   <div class="leads-table-wrap">
     <table class="leads-table">
+      <caption class="sr-only">Listado de leads con contacto, etapa, estado, responsable, fecha de creacion y acciones disponibles</caption>
       <thead>
         <tr>
-          <th>Nombre</th>
-          <th>Telefono</th>
-          <th>Email</th>
-          <th>Origen</th>
-          <th>Interes</th>
-          <th>Etapa</th>
-          <th>Estado</th>
-          <th>Responsable</th>
-          <th>Creacion</th>
-          <th>Acciones</th>
+          <th scope="col">Nombre</th>
+          <th scope="col">Telefono</th>
+          <th scope="col">Email</th>
+          <th scope="col">Origen</th>
+          <th scope="col">Interes</th>
+          <th scope="col">Etapa</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Responsable</th>
+          <th scope="col">Creacion</th>
+          <th scope="col">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <?php foreach ($leads as $lead): ?>
-          <tr class="lead-data-row clickable-row" data-open-modal="lead-detail-<?= e($lead['id']) ?>" tabindex="0" role="button" aria-label="Editar lead <?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?>">
+          <tr class="lead-data-row clickable-row" data-open-modal="lead-detail-<?= e($lead['id']) ?>">
             <td>
               <strong><?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?></strong>
             </td>
@@ -99,7 +100,7 @@
             <td><span class="source-badge"><?= e(source_label($lead['source'])) ?></span></td>
             <td><?= e($lead['interest'] ?: 'Sin interes') ?></td>
             <td>
-              <button class="stage-badge-button stage-badge--<?= e(stage_color_class($lead['stage_key'] ?: $lead['stage_name'])) ?>" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Cambiar etapa">
+              <button class="stage-badge-button stage-badge--<?= e(stage_color_class($lead['stage_key'] ?: $lead['stage_name'])) ?>" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Cambiar etapa" aria-label="Cambiar etapa de <?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?>. Etapa actual: <?= e($lead['stage_name']) ?>">
                 <span class="stage-dot" aria-hidden="true"></span>
                 <?= e($lead['stage_name']) ?>
               </button>
@@ -113,19 +114,19 @@
             <td><?= e(format_date($lead['created_at'])) ?></td>
             <td>
               <div class="row-actions">
-                <button class="icon-action" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Editar y ver detalles" aria-label="Editar y ver detalles">
+                <button class="icon-action" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Editar y ver detalles" aria-label="Editar y ver detalles de <?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?>">
                   <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20h4.8L19.4 9.4a2.1 2.1 0 0 0 0-3L17.6 4.6a2.1 2.1 0 0 0-3 0L4 15.2V20Zm2-2v-1.95l7.25-7.25 1.95 1.95L7.95 18H6Zm10.6-8.65L14.65 7.4 16 6.05 17.95 8l-1.35 1.35Z"/></svg>
                 </button>
                 <?php if ($lead['status'] !== 'CONVERTED'): ?>
                   <form method="post">
                     <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
-                    <button name="action" value="convert_lead">Convertir</button>
+                    <button name="action" value="convert_lead" aria-label="Convertir a socio a <?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?>">Convertir</button>
                   </form>
                 <?php endif; ?>
                 <form method="post" data-confirm-message="Eliminar este lead? Esta accion no se puede deshacer.">
                   <input type="hidden" name="action" value="delete_lead">
                   <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
-                  <button class="icon-action danger-action" type="submit" title="Eliminar lead" aria-label="Eliminar lead">
+                  <button class="icon-action danger-action" type="submit" title="Eliminar lead" aria-label="Eliminar lead <?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?>">
                     <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 21a2 2 0 0 1-2-2V8h14v11a2 2 0 0 1-2 2H7ZM9 6V4h6v2h5v2H4V6h5Zm0 5v7h2v-7H9Zm4 0v7h2v-7h-2Z"/></svg>
                   </button>
                 </form>
@@ -146,16 +147,16 @@
 
 <?php foreach ($leads as $lead): ?>
   <?php $notes = $leadNotes[$lead['id']] ?? []; ?>
-  <dialog id="lead-detail-<?= e($lead['id']) ?>" class="modal-card lead-detail-modal">
+  <dialog id="lead-detail-<?= e($lead['id']) ?>" class="modal-card lead-detail-modal" aria-labelledby="lead-detail-title-<?= e($lead['id']) ?>">
     <header>
       <div>
-        <h2><?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?></h2>
+        <h2 id="lead-detail-title-<?= e($lead['id']) ?>"><?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?></h2>
         <p><?= e($lead['phone'] ?: 'Sin telefono') ?> &middot; <?= e($lead['email'] ?: 'Sin email') ?></p>
       </div>
-      <button data-close-modal type="button">Cerrar</button>
+      <button data-close-modal type="button" aria-label="Cerrar detalles de <?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?>">Cerrar</button>
     </header>
 
-    <form method="post">
+    <form method="post" aria-label="Editar datos del lead <?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?>">
       <input type="hidden" name="action" value="update_lead">
       <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
       <div class="form-grid">
@@ -173,7 +174,7 @@
           <div class="phone-combo">
             <div class="phone-prefix-picker" data-phone-picker>
               <input type="hidden" name="phone_country" value="<?= e($phoneCountry['code']) ?>" data-phone-country-value>
-              <button class="phone-prefix-trigger" type="button" data-phone-country-trigger aria-label="Seleccionar prefijo">
+              <button class="phone-prefix-trigger" type="button" data-phone-country-trigger aria-label="Seleccionar prefijo telefonico" aria-expanded="false">
                 <img src="https://flagcdn.com/w40/<?= e($phoneCountry['iso']) ?>.png" alt="" data-phone-country-flag>
                 <span data-phone-country-code><?= e($phoneCountry['code']) ?></span>
               </button>
@@ -190,7 +191,7 @@
                 </div>
               </div>
             </div>
-            <input class="phone-number-input" name="phone_number" value="<?= e(phone_local_value($lead['phone'])) ?>" inputmode="tel" placeholder="Numero">
+          <input class="phone-number-input" name="phone_number" value="<?= e(phone_local_value($lead['phone'])) ?>" inputmode="tel" placeholder="Numero" aria-label="Numero de telefono">
           </div>
         </label>
         <label class="field">
@@ -227,12 +228,12 @@
 
     <section class="notes-panel">
       <h3>Notas internas</h3>
-      <form method="post" class="note-form">
+      <form method="post" class="note-form" aria-label="Anadir nota interna">
         <input type="hidden" name="action" value="add_lead_note">
         <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
         <label class="field">
           <span>Nueva nota</span>
-          <textarea name="note" rows="3" placeholder="Escribe una nota sobre la llamada, visita o seguimiento..." required></textarea>
+          <textarea name="note" rows="3" placeholder="Escribe una nota sobre la llamada, visita o seguimiento..." required aria-label="Texto de la nueva nota"></textarea>
         </label>
         <button class="primary-action primary-action--compact" type="submit">Anadir nota</button>
       </form>
@@ -244,10 +245,10 @@
               <input type="hidden" name="action" value="update_lead_note">
               <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
               <input type="hidden" name="note_id" value="<?= e($note['id']) ?>">
-              <textarea name="note" rows="3" required><?= e($note['note']) ?></textarea>
+              <textarea name="note" rows="3" required aria-label="Editar nota interna"><?= e($note['note']) ?></textarea>
               <div class="note-meta-row">
                 <span><?= e($note['user_name'] ?: 'Usuario') ?> &middot; <?= e(format_date($note['created_at'])) ?></span>
-                <button class="note-save-button" type="submit" title="Guardar nota">
+                <button class="note-save-button" type="submit" title="Guardar nota" aria-label="Guardar cambios de esta nota">
                   <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9.2 16.6 4.9 12.3l-1.4 1.4 5.7 5.7L21 7.6l-1.4-1.4L9.2 16.6Z"/></svg>
                   Guardar
                 </button>
@@ -257,7 +258,7 @@
               <input type="hidden" name="action" value="delete_lead_note">
               <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
               <input type="hidden" name="note_id" value="<?= e($note['id']) ?>">
-              <button class="note-delete-button" type="submit" title="Eliminar nota" aria-label="Eliminar nota">
+              <button class="note-delete-button" type="submit" title="Eliminar nota" aria-label="Eliminar esta nota interna">
                 <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 21a2 2 0 0 1-2-2V8h14v11a2 2 0 0 1-2 2H7ZM9 6V4h6v2h5v2H4V6h5Zm0 5v7h2v-7H9Zm4 0v7h2v-7h-2Z"/></svg>
               </button>
             </form>
@@ -271,12 +272,12 @@
   </dialog>
 <?php endforeach; ?>
 
-<dialog id="lead-modal" class="modal-card">
+<dialog id="lead-modal" class="modal-card" aria-labelledby="lead-modal-title">
   <form method="post">
     <input type="hidden" name="action" value="create_lead">
     <header>
-      <h2>Nuevo lead</h2>
-      <button data-close-modal type="button">Cerrar</button>
+      <h2 id="lead-modal-title">Nuevo lead</h2>
+      <button data-close-modal type="button" aria-label="Cerrar formulario de nuevo lead">Cerrar</button>
     </header>
     <div class="form-grid">
       <label class="field">
@@ -293,7 +294,7 @@
         <div class="phone-combo">
           <div class="phone-prefix-picker" data-phone-picker>
             <input type="hidden" name="phone_country" value="<?= e($defaultPhoneCountry['code']) ?>" data-phone-country-value>
-            <button class="phone-prefix-trigger" type="button" data-phone-country-trigger aria-label="Seleccionar prefijo">
+            <button class="phone-prefix-trigger" type="button" data-phone-country-trigger aria-label="Seleccionar prefijo telefonico" aria-expanded="false">
               <img src="https://flagcdn.com/w40/<?= e($defaultPhoneCountry['iso']) ?>.png" alt="" data-phone-country-flag>
               <span data-phone-country-code><?= e($defaultPhoneCountry['code']) ?></span>
             </button>
@@ -310,7 +311,7 @@
               </div>
             </div>
           </div>
-          <input class="phone-number-input" name="phone_number" inputmode="tel" placeholder="Numero">
+          <input class="phone-number-input" name="phone_number" inputmode="tel" placeholder="Numero" aria-label="Numero de telefono">
         </div>
       </label>
       <label class="field">

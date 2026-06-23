@@ -51,7 +51,7 @@
 
       <div class="content">
         <?php if ($flash): ?>
-          <div class="notice <?= $flash['type'] === 'error' ? 'notice-error' : 'notice-success' ?>"><?= e($flash['message']) ?></div>
+          <div class="notice <?= $flash['type'] === 'error' ? 'notice-error' : 'notice-success' ?>" role="<?= $flash['type'] === 'error' ? 'alert' : 'status' ?>"><?= e($flash['message']) ?></div>
         <?php endif; ?>
         <?php require __DIR__ . '/' . $contentView . '.php'; ?>
       </div>

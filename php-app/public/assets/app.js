@@ -2,9 +2,19 @@ function shouldIgnoreModalOpen(event) {
   return Boolean(event.target.closest('button, a, input, select, textarea, form, label'));
 }
 
+let lastModalTrigger = null;
+
 function openModalById(id) {
   const modal = document.getElementById(id);
-  if (modal) modal.showModal();
+  if (!modal) {
+    return;
+  }
+
+  modal.showModal();
+  const focusTarget = modal.querySelector('[data-close-modal], input:not([type="hidden"]), select, textarea, button');
+  if (focusTarget) {
+    focusTarget.focus();
+  }
 }
 
 function clearModalUrlParam(modal) {
@@ -25,7 +35,12 @@ if (modalToOpen) {
 }
 
 document.querySelectorAll('dialog').forEach((modal) => {
-  modal.addEventListener('close', () => clearModalUrlParam(modal));
+  modal.addEventListener('close', () => {
+    clearModalUrlParam(modal);
+    if (lastModalTrigger && document.contains(lastModalTrigger)) {
+      lastModalTrigger.focus();
+    }
+  });
 });
 
 document.querySelectorAll('[data-open-modal]').forEach((trigger) => {
@@ -35,7 +50,10 @@ document.querySelectorAll('[data-open-modal]').forEach((trigger) => {
     }
 
     const modal = document.getElementById(trigger.dataset.openModal);
-    if (modal) modal.showModal();
+    if (modal) {
+      lastModalTrigger = trigger;
+      openModalById(trigger.dataset.openModal);
+    }
   });
 
   trigger.addEventListener('keydown', (event) => {
@@ -45,6 +63,7 @@ document.querySelectorAll('[data-open-modal]').forEach((trigger) => {
 
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
+      lastModalTrigger = trigger;
       openModalById(trigger.dataset.openModal);
     }
   });
@@ -61,7 +80,9 @@ function closePhonePickers(exceptPicker) {
   document.querySelectorAll('[data-phone-picker]').forEach((picker) => {
     if (picker !== exceptPicker) {
       const menu = picker.querySelector('[data-phone-country-menu]');
+      const trigger = picker.querySelector('[data-phone-country-trigger]');
       if (menu) menu.hidden = true;
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
     }
   });
 }
@@ -83,6 +104,7 @@ document.querySelectorAll('[data-phone-picker]').forEach((picker) => {
     const nextHiddenState = !menu.hidden;
     closePhonePickers(picker);
     menu.hidden = nextHiddenState;
+    trigger.setAttribute('aria-expanded', String(!menu.hidden));
     if (!menu.hidden && searchInput) {
       searchInput.value = '';
       options.forEach((option) => { option.hidden = false; });
@@ -105,6 +127,7 @@ document.querySelectorAll('[data-phone-picker]').forEach((picker) => {
       codeLabel.textContent = option.dataset.code;
       flag.src = `https://flagcdn.com/w40/${option.dataset.iso}.png`;
       menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
     });
   });
 });
