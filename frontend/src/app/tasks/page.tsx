@@ -26,6 +26,7 @@ import {
   CreateTaskPayload,
   getStoredToken,
   getStoredUser,
+  Member,
   Task,
 } from '@/lib/api';
 
@@ -59,6 +60,7 @@ export default function TasksPage() {
   const router = useRouter();
   const user = useMemo(() => getStoredUser(), []);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [filters, setFilters] = useState<TaskFiltersState>(initialFilters);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -73,21 +75,30 @@ export default function TasksPage() {
       return;
     }
 
-    loadTasks();
+    loadData();
   }, [router]);
 
-  async function loadTasks() {
+  async function loadData() {
     setMessage('');
     setLoading(true);
 
     try {
-      const loadedTasks = await apiGet<Task[]>('/tasks');
+      const [loadedTasks, loadedMembers] = await Promise.all([
+        apiGet<Task[]>('/tasks'),
+        apiGet<Member[]>('/members'),
+      ]);
       setTasks(loadedTasks);
+      setMembers(loadedMembers);
     } catch {
       showError('No se pudieron cargar las tareas.');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function loadTasks() {
+    const loadedTasks = await apiGet<Task[]>('/tasks');
+    setTasks(loadedTasks);
   }
 
   function logout() {
@@ -128,15 +139,20 @@ export default function TasksPage() {
   const overdueTasks = tasks.filter((task) => task.status === 'PENDING' && task.dueAt && new Date(task.dueAt) < now).length;
   const todayTasks = tasks.filter((task) => task.dueAt && toDateKey(new Date(task.dueAt)) === todayKey).length;
 
-  async function createTask(payload: CreateTaskPayload) {
+  async function createTask(payload: CreateTaskPayload, memberIds: string[]) {
     setSaving(true);
     setMessage('');
 
     try {
-      await apiPost<Task>('/tasks', payload);
+      if (memberIds.length) {
+        await Promise.all(memberIds.map((memberId) => apiPost<Task>('/tasks', { ...payload, memberId })));
+      } else {
+        await apiPost<Task>('/tasks', payload);
+      }
+
       setShowCreateModal(false);
       await loadTasks();
-      showSuccess('Tarea creada correctamente.');
+      showSuccess(memberIds.length > 1 ? 'Tareas creadas correctamente.' : 'Tarea creada correctamente.');
     } catch {
       showError('No se pudo crear la tarea.');
     } finally {
@@ -263,7 +279,12 @@ export default function TasksPage() {
       </section>
 
       {showCreateModal ? (
-        <CreateTaskModal onClose={() => setShowCreateModal(false)} onSubmit={createTask} saving={saving} />
+        <CreateTaskModal
+          members={members}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={createTask}
+          saving={saving}
+        />
       ) : null}
 
       <TaskDetailDrawer
@@ -514,12 +535,14 @@ function TaskActionsMenu({
 }
 
 function CreateTaskModal({
+  members,
   onClose,
   onSubmit,
   saving,
 }: {
+  members: Member[];
   onClose: () => void;
-  onSubmit: (payload: CreateTaskPayload) => void;
+  onSubmit: (payload: CreateTaskPayload, memberIds: string[]) => void;
   saving: boolean;
 }) {
   const [form, setForm] = useState<CreateTaskPayload>({
@@ -529,7 +552,27 @@ function CreateTaskModal({
     status: 'PENDING',
     dueAt: '',
   });
+  const [memberQuery, setMemberQuery] = useState('');
+  const [selectedMembers, setSelectedMembers] = useState<Member[]>([]);
   const [validation, setValidation] = useState('');
+
+  const filteredMembers = useMemo(() => {
+    const term = memberQuery.trim().toLowerCase();
+    const selectedIds = new Set(selectedMembers.map((member) => member.id));
+
+    if (!term) {
+      return [];
+    }
+
+    return members
+      .filter((member) => !selectedIds.has(member.id))
+      .filter((member) =>
+        [member.firstName, member.lastName, member.email, member.phone]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(term)),
+      )
+      .slice(0, 8);
+  }, [memberQuery, members, selectedMembers]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -545,7 +588,16 @@ function CreateTaskModal({
       title: form.title.trim(),
       description: form.description?.trim() || undefined,
       dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : null,
-    });
+    }, selectedMembers.map((member) => member.id));
+  }
+
+  function selectMember(member: Member) {
+    setSelectedMembers((current) => [...current, member]);
+    setMemberQuery('');
+  }
+
+  function removeMember(memberId: string) {
+    setSelectedMembers((current) => current.filter((member) => member.id !== memberId));
   }
 
   return (
@@ -601,6 +653,45 @@ function CreateTaskModal({
               value={form.description ?? ''}
             />
           </label>
+          <div className="field field--wide member-picker">
+            <span>Socios vinculados</span>
+            <div className="member-picker__search">
+              <Search size={18} />
+              <input
+                onChange={(event) => setMemberQuery(event.target.value)}
+                placeholder="Escribe el nombre, email o teléfono de un socio"
+                value={memberQuery}
+              />
+            </div>
+            {selectedMembers.length ? (
+              <div className="member-picker__selected">
+                {selectedMembers.map((member) => (
+                  <button key={member.id} onClick={() => removeMember(member.id)} type="button">
+                    {getMemberName(member)}
+                    <X size={14} />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <small className="member-picker__hint">
+                Si seleccionas varios socios, se creará una tarea independiente para cada uno.
+              </small>
+            )}
+            {memberQuery ? (
+              <div className="member-picker__results">
+                {filteredMembers.length ? (
+                  filteredMembers.map((member) => (
+                    <button key={member.id} onClick={() => selectMember(member)} type="button">
+                      <strong>{getMemberName(member)}</strong>
+                      <small>{member.email ?? member.phone ?? translateMemberStatus(member.status)}</small>
+                    </button>
+                  ))
+                ) : (
+                  <p>No hay socios que coincidan.</p>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <button className="primary-action" disabled={saving} type="submit">
@@ -717,6 +808,22 @@ function getRelatedName(task: Task) {
   }
 
   return 'Sin vincular';
+}
+
+function getMemberName(member: Member) {
+  return `${member.firstName} ${member.lastName ?? ''}`.trim();
+}
+
+function translateMemberStatus(status: Member['status']) {
+  const labels: Record<Member['status'], string> = {
+    ACTIVE: 'Activo',
+    INACTIVE: 'Inactivo',
+    AT_RISK: 'En riesgo',
+    CANCELLED: 'Cancelado',
+    PAYMENT_PENDING: 'Pago pendiente',
+  };
+
+  return labels[status];
 }
 
 function isOverdue(task: Task) {

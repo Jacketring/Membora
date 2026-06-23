@@ -137,6 +137,22 @@ export interface Task {
   } | null;
 }
 
+export interface Member {
+  id: string;
+  tenantId: string;
+  leadId: string | null;
+  firstName: string;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'AT_RISK' | 'CANCELLED' | 'PAYMENT_PENDING';
+  joinedAt: string;
+  cancelledAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateTaskPayload {
   title: string;
   description?: string | null;
