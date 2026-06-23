@@ -61,6 +61,37 @@ function status_label(?string $status): string
     ]);
 }
 
+function stage_color_class(?string $value): string
+{
+    $stage = strtolower((string) $value);
+
+    if (str_contains($stage, 'lost') || str_contains($stage, 'perdido')) {
+        return 'lost';
+    }
+
+    if (str_contains($stage, 'convert') || str_contains($stage, 'socio')) {
+        return 'converted';
+    }
+
+    if (str_contains($stage, 'trial') || str_contains($stage, 'prueba') || str_contains($stage, 'visit')) {
+        return 'trial';
+    }
+
+    if (str_contains($stage, 'proposal') || str_contains($stage, 'propuesta') || str_contains($stage, 'alta')) {
+        return 'proposal';
+    }
+
+    if (str_contains($stage, 'contact')) {
+        return 'contacted';
+    }
+
+    if (str_contains($stage, 'new') || str_contains($stage, 'nuevo')) {
+        return 'new';
+    }
+
+    return 'default';
+}
+
 function source_label(?string $source): string
 {
     return enum_label((string) $source, [

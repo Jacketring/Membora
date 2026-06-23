@@ -57,6 +57,8 @@ final class Actions
     {
         $tenantId = Auth::tenantId();
         $stageId = post_value('pipeline_stage_id') ?: PipelineRepository::firstId($tenantId);
+        $stage = $stageId ? PipelineRepository::find($tenantId, $stageId) : null;
+        $status = PipelineRepository::statusForStage($stage);
         $firstName = post_value('first_name', '');
 
         if (!$stageId || $firstName === '') {
@@ -66,7 +68,7 @@ final class Actions
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO leads (id, tenant_id, pipeline_stage_id, assigned_user_id, first_name, last_name, email, phone, source, interest, status, created_at, updated_at)
-             VALUES (:id, :tenant_id, :stage_id, :assigned_user_id, :first_name, :last_name, :email, :phone, :source, :interest, "OPEN", NOW(), NOW())'
+             VALUES (:id, :tenant_id, :stage_id, :assigned_user_id, :first_name, :last_name, :email, :phone, :source, :interest, :status, NOW(), NOW())'
         );
         $stmt->execute([
             'id' => cuid(),
@@ -79,6 +81,7 @@ final class Actions
             'phone' => post_value('phone') ?: null,
             'source' => post_value('source', 'OTHER'),
             'interest' => post_value('interest') ?: null,
+            'status' => $status,
         ]);
 
         flash('Lead creado correctamente.');
@@ -87,20 +90,31 @@ final class Actions
 
     private static function updateLeadStage(): never
     {
+        $tenantId = Auth::tenantId();
+        $stageId = post_value('pipeline_stage_id');
+        $stage = $stageId ? PipelineRepository::find($tenantId, $stageId) : null;
+        $status = PipelineRepository::statusForStage($stage);
+
         $stmt = Database::connection()->prepare(
-            'UPDATE leads SET pipeline_stage_id = :stage_id, updated_at = NOW()
+            'UPDATE leads SET pipeline_stage_id = :stage_id, status = :status, updated_at = NOW()
              WHERE id = :id AND tenant_id = :tenant_id'
         );
         $stmt->execute([
-            'stage_id' => post_value('pipeline_stage_id'),
+            'stage_id' => $stageId,
+            'status' => $status,
             'id' => post_value('id'),
-            'tenant_id' => Auth::tenantId(),
+            'tenant_id' => $tenantId,
         ]);
         redirect('leads');
     }
 
     private static function updateLead(): never
     {
+        $tenantId = Auth::tenantId();
+        $stageId = post_value('pipeline_stage_id');
+        $stage = $stageId ? PipelineRepository::find($tenantId, $stageId) : null;
+        $status = PipelineRepository::statusForStage($stage);
+
         $stmt = Database::connection()->prepare(
             'UPDATE leads
              SET first_name = :first_name,
@@ -110,6 +124,7 @@ final class Actions
                  source = :source,
                  interest = :interest,
                  pipeline_stage_id = :pipeline_stage_id,
+                 status = :status,
                  next_action_at = :next_action_at,
                  updated_at = NOW()
              WHERE id = :id AND tenant_id = :tenant_id'
@@ -121,10 +136,11 @@ final class Actions
             'email' => post_value('email') ?: null,
             'source' => post_value('source', 'OTHER'),
             'interest' => post_value('interest') ?: null,
-            'pipeline_stage_id' => post_value('pipeline_stage_id'),
+            'pipeline_stage_id' => $stageId,
+            'status' => $status,
             'next_action_at' => post_value('next_action_at') ?: null,
             'id' => post_value('id'),
-            'tenant_id' => Auth::tenantId(),
+            'tenant_id' => $tenantId,
         ]);
 
         flash('Lead actualizado correctamente.');
@@ -206,6 +222,7 @@ final class Actions
         $lead = $leadStmt->fetch();
 
         if ($lead && $lead['status'] !== 'CONVERTED') {
+            $convertedStageId = PipelineRepository::convertedId($tenantId);
             $memberId = cuid();
             $insert = $pdo->prepare(
                 'INSERT INTO members (id, tenant_id, lead_id, first_name, last_name, email, phone, status, joined_at, created_at, updated_at)
@@ -220,8 +237,18 @@ final class Actions
                 'email' => $lead['email'],
                 'phone' => $lead['phone'],
             ]);
-            $update = $pdo->prepare('UPDATE leads SET status = "CONVERTED", updated_at = NOW() WHERE id = :id');
-            $update->execute(['id' => $leadId]);
+            $update = $pdo->prepare(
+                'UPDATE leads
+                 SET status = "CONVERTED",
+                     pipeline_stage_id = COALESCE(:stage_id, pipeline_stage_id),
+                     updated_at = NOW()
+                 WHERE id = :id AND tenant_id = :tenant_id'
+            );
+            $update->execute([
+                'stage_id' => $convertedStageId,
+                'id' => $leadId,
+                'tenant_id' => $tenantId,
+            ]);
             flash('Lead convertido a socio.');
         } else {
             flash('El lead ya estaba convertido o no existe.', 'error');

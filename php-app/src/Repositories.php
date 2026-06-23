@@ -67,6 +67,46 @@ final class PipelineRepository
         $stmt->execute(['tenant_id' => $tenantId]);
         return $stmt->fetchColumn() ?: null;
     }
+
+    public static function convertedId(string $tenantId): ?string
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT id FROM pipeline_stages
+             WHERE tenant_id = :tenant_id
+             AND (`key` LIKE "%CONVERT%" OR LOWER(name) LIKE "%convert%")
+             ORDER BY `order` ASC
+             LIMIT 1'
+        );
+        $stmt->execute(['tenant_id' => $tenantId]);
+        return $stmt->fetchColumn() ?: null;
+    }
+
+    public static function find(string $tenantId, string $stageId): ?array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM pipeline_stages WHERE tenant_id = :tenant_id AND id = :id LIMIT 1'
+        );
+        $stmt->execute(['tenant_id' => $tenantId, 'id' => $stageId]);
+        $stage = $stmt->fetch();
+
+        return $stage ?: null;
+    }
+
+    public static function statusForStage(?array $stage): string
+    {
+        $key = strtoupper((string) ($stage['key'] ?? ''));
+        $name = strtolower((string) ($stage['name'] ?? ''));
+
+        if (str_contains($key, 'LOST') || str_contains($name, 'perdido')) {
+            return 'LOST';
+        }
+
+        if (str_contains($key, 'CONVERT') || str_contains($name, 'convertido')) {
+            return 'CONVERTED';
+        }
+
+        return 'OPEN';
+    }
 }
 
 final class LeadRepository
@@ -108,7 +148,7 @@ final class LeadRepository
             $params['date_to'] = $dateTo;
         }
 
-        $sql = 'SELECT leads.*, pipeline_stages.name AS stage_name, users.name AS assigned_name
+        $sql = 'SELECT leads.*, pipeline_stages.name AS stage_name, pipeline_stages.key AS stage_key, users.name AS assigned_name
                 FROM leads
                 INNER JOIN pipeline_stages ON pipeline_stages.id = leads.pipeline_stage_id
                 LEFT JOIN users ON users.id = leads.assigned_user_id

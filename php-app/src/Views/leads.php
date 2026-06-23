@@ -99,7 +99,7 @@
             <td><span class="source-badge"><?= e(source_label($lead['source'])) ?></span></td>
             <td><?= e($lead['interest'] ?: 'Sin interes') ?></td>
             <td>
-              <button class="stage-badge-button" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Cambiar etapa">
+              <button class="stage-badge-button stage-badge--<?= e(stage_color_class($lead['stage_key'] ?: $lead['stage_name'])) ?>" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Cambiar etapa">
                 <span class="stage-dot" aria-hidden="true"></span>
                 <?= e($lead['stage_name']) ?>
               </button>
