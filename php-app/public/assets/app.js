@@ -174,7 +174,10 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
       menu.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
       const selected = select.querySelector('[data-custom-select-option].selected');
-      (selected || options[0])?.focus();
+      const nextFocus = selected || options[0];
+      if (nextFocus) {
+        nextFocus.focus();
+      }
     }
   });
 

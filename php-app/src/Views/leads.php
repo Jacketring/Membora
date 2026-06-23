@@ -32,34 +32,31 @@
     <input name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, telefono, email o interes" aria-label="Buscar leads por nombre, telefono, email o interes">
   </label>
   <div class="lead-filter-group">
-    <div class="filter-control filter-control--select">
-      <span id="lead-filter-stage-label">Etapa</span>
-      <div class="custom-select" data-custom-select>
-        <input type="hidden" name="stage" value="<?= e($filters['stage']) ?>" data-custom-select-value>
-        <?php
-          $selectedStageLabel = 'Todas';
-          foreach ($stages as $stage) {
-            if ($filters['stage'] === $stage['id']) {
-              $selectedStageLabel = $stage['name'];
-              break;
-            }
+    <div class="filter-control filter-control--select custom-select custom-select--filter" data-custom-select>
+      <input type="hidden" name="stage" value="<?= e($filters['stage']) ?>" data-custom-select-value>
+      <?php
+        $selectedStageLabel = 'Todas';
+        foreach ($stages as $stage) {
+          if ($filters['stage'] === $stage['id']) {
+            $selectedStageLabel = $stage['name'];
+            break;
           }
-        ?>
-        <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false" aria-labelledby="lead-filter-stage-label">
-          <span data-custom-select-label><?= e($selectedStageLabel) ?></span>
-        </button>
-        <div class="custom-select-menu" data-custom-select-menu hidden>
-          <button class="custom-select-option <?= $filters['stage'] === '' ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="">Todas</button>
+        }
+      ?>
+      <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+        <small>Etapa</small>
+        <span data-custom-select-label><?= e($selectedStageLabel) ?></span>
+      </button>
+      <div class="custom-select-menu" data-custom-select-menu hidden>
+        <button class="custom-select-option <?= $filters['stage'] === '' ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="">Todas</button>
         <?php foreach ($stages as $stage): ?>
           <button class="custom-select-option <?= $filters['stage'] === $stage['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($stage['id']) ?>">
             <?= e($stage['name']) ?>
           </button>
         <?php endforeach; ?>
-        </div>
       </div>
     </div>
-    <div class="filter-control filter-control--select">
-      <span id="lead-filter-status-label">Estado</span>
+    <div class="filter-control filter-control--select custom-select custom-select--filter" data-custom-select>
       <?php
         $statusOptions = [
           '' => 'Todos',
@@ -68,18 +65,17 @@
           'LOST' => 'Perdidos',
         ];
       ?>
-      <div class="custom-select" data-custom-select>
-        <input type="hidden" name="status" value="<?= e($filters['status']) ?>" data-custom-select-value>
-        <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false" aria-labelledby="lead-filter-status-label">
-          <span data-custom-select-label><?= e($statusOptions[$filters['status']] ?? 'Todos') ?></span>
-        </button>
-        <div class="custom-select-menu" data-custom-select-menu hidden>
-          <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
-            <button class="custom-select-option <?= $filters['status'] === $statusValue ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($statusValue) ?>">
-              <?= e($statusLabel) ?>
-            </button>
-          <?php endforeach; ?>
-        </div>
+      <input type="hidden" name="status" value="<?= e($filters['status']) ?>" data-custom-select-value>
+      <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+        <small>Estado</small>
+        <span data-custom-select-label><?= e($statusOptions[$filters['status']] ?? 'Todos') ?></span>
+      </button>
+      <div class="custom-select-menu" data-custom-select-menu hidden>
+        <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
+          <button class="custom-select-option <?= $filters['status'] === $statusValue ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($statusValue) ?>">
+            <?= e($statusLabel) ?>
+          </button>
+        <?php endforeach; ?>
       </div>
     </div>
     <label class="filter-control filter-control--date">

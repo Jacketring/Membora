@@ -1,10 +1,16 @@
+<?php
+$cssPath = __DIR__ . '/../../public/assets/app.css';
+$jsPath = __DIR__ . '/../../public/assets/app.js';
+$cssVersion = is_file($cssPath) ? (string) filemtime($cssPath) : '1';
+$jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
+?>
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($title) ?> - Membora CRM</title>
-  <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="assets/app.css?v=<?= e($cssVersion) ?>">
 </head>
 <body>
   <main class="app-shell">
@@ -74,6 +80,6 @@
       </div>
     </form>
   </dialog>
-  <script src="assets/app.js"></script>
+  <script src="assets/app.js?v=<?= e($jsVersion) ?>"></script>
 </body>
 </html>

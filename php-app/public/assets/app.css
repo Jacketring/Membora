@@ -843,6 +843,12 @@ a.global-search-result:hover {
   border-color: #9bb7ec;
   box-shadow: 0 0 0 3px rgba(7, 84, 214, 0.09);
 }
+.filter-control.custom-select--filter {
+  display: block;
+  min-width: 224px;
+  overflow: visible;
+  position: relative;
+}
 .custom-select {
   min-width: 0;
   position: relative;
@@ -870,6 +876,15 @@ a.global-search-result:hover {
   position: relative;
   text-align: left;
   width: 100%;
+}
+.custom-select--filter .custom-select-trigger {
+  align-items: flex-start;
+  border-radius: 12px;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: center;
+  min-height: 54px;
+  padding: 8px 38px 8px 13px;
 }
 .custom-select--field .custom-select-trigger {
   background: #fff;
@@ -901,6 +916,15 @@ a.global-search-result:hover {
   text-transform: none;
   white-space: nowrap;
 }
+.custom-select-trigger small {
+  color: var(--muted);
+  display: block;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
 .custom-select-menu {
   background: #fff;
   border: 1px solid #dbe3f1;
@@ -915,6 +939,9 @@ a.global-search-result:hover {
   position: absolute;
   top: calc(100% + 8px);
   z-index: 45;
+}
+.custom-select--filter .custom-select-menu {
+  min-width: 100%;
 }
 .custom-select-menu[hidden] {
   display: none;
