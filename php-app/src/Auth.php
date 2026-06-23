@@ -11,6 +11,12 @@ final class Auth
     {
         $tenantId = self::user()['tenant_id'] ?? null;
         if (!$tenantId) {
+            $tenantId = self::fallbackTenantId();
+        }
+
+        if (!$tenantId) {
+            self::logout();
+            flash('No hay ningun centro configurado para este usuario.', 'error');
             redirect('login');
         }
 
@@ -35,14 +41,20 @@ final class Auth
              FROM users
              LEFT JOIN tenants ON tenants.id = users.tenant_id
              INNER JOIN roles ON roles.id = users.role_id
-             WHERE users.email = :email AND users.status = "ACTIVE"
+             WHERE users.email = :email
              LIMIT 1'
         );
         $stmt->execute(['email' => $email]);
         $user = $stmt->fetch();
 
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (!$user || $user['status'] !== 'ACTIVE' || !password_verify($password, $user['password_hash'])) {
             return false;
+        }
+
+        if (!$user['tenant_id']) {
+            $tenant = self::fallbackTenant();
+            $user['tenant_id'] = $tenant['id'] ?? null;
+            $user['tenant_name'] = $tenant['name'] ?? 'Membora CRM';
         }
 
         $_SESSION['user'] = [
@@ -63,5 +75,25 @@ final class Auth
     public static function logout(): void
     {
         unset($_SESSION['user']);
+    }
+
+    private static function fallbackTenantId(): ?string
+    {
+        $tenant = self::fallbackTenant();
+
+        if ($tenant && isset($_SESSION['user'])) {
+            $_SESSION['user']['tenant_id'] = $tenant['id'];
+            $_SESSION['user']['tenant_name'] = $tenant['name'];
+        }
+
+        return $tenant['id'] ?? null;
+    }
+
+    private static function fallbackTenant(): ?array
+    {
+        $stmt = Database::connection()->query('SELECT id, name FROM tenants ORDER BY created_at ASC LIMIT 1');
+        $tenant = $stmt->fetch();
+
+        return $tenant ?: null;
     }
 }

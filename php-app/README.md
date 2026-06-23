@@ -16,7 +16,11 @@ Crear `php-app/.env` a partir de `.env.example`:
 ```env
 APP_NAME="Membora CRM"
 APP_ENV="production"
-DATABASE_URL="mysql://usuario:password@localhost:3306/membora_crm"
+DB_HOST="localhost"
+DB_PORT="3306"
+DB_DATABASE="membora_crm"
+DB_USERNAME="usuario"
+DB_PASSWORD="password"
 ```
 
 ## Despliegue en Plesk

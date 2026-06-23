@@ -36,8 +36,8 @@
     <section class="workspace">
       <header class="topbar">
         <div class="search-box">
-          <span>⌕</span>
-          <input placeholder="Buscar socios, leads o tareas..." disabled>
+          <span>Buscar</span>
+          <input placeholder="Buscar desde cada pantalla..." disabled>
         </div>
         <div class="user-chip">
           <span><?= e(substr($user['name'], 0, 1)) ?></span>

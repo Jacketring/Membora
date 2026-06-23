@@ -1,30 +1,15 @@
 # Membora CRM
 
-**Membora CRM** es una plataforma web SaaS responsive para gimnasios, centros fitness y estudios deportivos pequeños o medianos. El proyecto se desarrolla como Trabajo de Fin de Máster y tiene como objetivo crear un CRM vertical capaz de centralizar la captación de leads, la gestión de socios, membresías, reservas, check-ins, pagos registrados y acciones básicas de retención.
+**Membora CRM** es una plataforma web SaaS responsive para gimnasios, centros fitness y estudios deportivos pequenos o medianos. Es una aplicacion de gestion para propietarios, recepcion, comerciales y entrenadores.
 
-No es una app móvil fitness para usuarios finales. Es una plataforma web de gestión para propietarios, recepción, comerciales y entrenadores.
+El proyecto se ha migrado a una app PHP monolitica para simplificar el despliegue en Plesk y evitar procesos Node.js en produccion.
 
-## 1. Estado actual
-
-Estado del proyecto:
+## Estado actual
 
 ```text
-Backend MVP funcional desplegado en Plesk.
-Frontend base desplegado en Plesk.
-Pantallas implementadas: login, dashboard, leads y tareas.
-Pantallas pendientes: socios, membresías, pagos, clases, reservas, check-ins y alertas.
-```
-
-Backend desplegado:
-
-```text
-https://crm.josehurtado.dev/api
-```
-
-Health check:
-
-```text
-https://crm.josehurtado.dev/api/health
+Aplicacion PHP en migracion funcional.
+Pantallas disponibles: login, panel, leads y tareas.
+Pendiente: socios, membresias, pagos, clases, reservas, check-ins y alertas.
 ```
 
 Repositorio:
@@ -33,305 +18,101 @@ Repositorio:
 https://github.com/Jacketring/Membora-CRM.git
 ```
 
-## 2. Descripción general
-
-Membora CRM nace como respuesta a una necesidad habitual en gimnasios independientes: la gestión dispersa de leads, socios, pagos, clases y asistencia mediante hojas de cálculo, agendas manuales, WhatsApp o herramientas no especializadas.
-
-La aplicación propone una solución más específica que un CRM generalista, pero más simple y viable que una suite fitness completa. El foco del MVP está en cubrir el ciclo principal del cliente dentro de un centro fitness:
+Subdominio previsto:
 
 ```text
-lead -> prueba -> alta -> socio -> membresía -> reserva -> check-in -> pago -> retención
+https://app.crm.josehurtado.dev
 ```
 
-## 3. Stack tecnológico
-
-### Nueva app PHP en migración
+## Stack
 
 - PHP 8.2 o superior.
-- MariaDB existente.
+- MariaDB.
 - PDO.
-- HTML, CSS y JavaScript navegador.
-- Sin Node.js en producción.
-- Carpeta pública prevista: `php-app/public`.
+- HTML, CSS y JavaScript de navegador.
+- Sin Node.js en produccion.
+- Sin `npm install`.
+- Sin `npm run build`.
 
-### Frontend previsto
+## Estructura
 
-- React.
-- Next.js.
-- TypeScript.
-- Diseño responsive.
-- Tailwind CSS o alternativa equivalente.
-
-### Backend implementado
-
-- Node.js.
-- NestJS.
-- TypeScript.
-- API REST.
-- JWT.
-- bcryptjs para contraseñas demo.
-- Prisma ORM.
-
-### Base de datos
-
-- MariaDB gestionada desde Plesk.
-- Modelo relacional.
-- Separación lógica por `tenantId`.
-
-## 4. Funcionalidades del MVP
-
-### Implementado en backend
-
-- Login JWT.
-- Roles básicos.
-- Multiempresa con `tenantId`.
-- Seed demo de NexoFit Studio.
-- Gestión de leads.
-- Pipeline comercial.
-- Conversión de lead a socio.
-- Listado y detalle de socios.
-- Planes de membresía.
-- Suscripciones.
-- Pagos manuales.
-- Tipos de clase.
-- Sesiones de clase.
-- Reservas.
-- Check-ins.
-- Tareas.
-- Alertas.
-- Dashboard con KPIs.
-
-### Implementado en frontend
-
-- Interfaz web responsive base.
-- Pantalla de login conectada al backend.
-- Dashboard visual.
-- Pantalla de leads con tabla CRM, filtros, KPIs, creación, conversión, reversión y eliminación.
-- Pantalla de tareas con tabla, filtros, KPIs, creación, vinculación a varios socios y cambios de estado.
-- Navegación principal entre panel, leads y tareas.
-
-### Pendiente de frontend
-
-- Pantallas de socios.
-- Pantallas de membresías y pagos.
-- Pantallas de clases, reservas y check-ins.
-- Pantallas de alertas.
-- Formularios avanzados de edición.
-- Pulido responsive final.
-
-## 5. Funcionalidades fuera del MVP
-
-Para mantener un alcance viable, el MVP no incluye:
-
-- App móvil nativa.
-- Rutinas de entrenamiento.
-- Nutrición.
-- Wearables.
-- Seguimiento deportivo avanzado.
-- Pasarela de pagos real.
-- Integración bancaria.
-- SEPA completo.
-- Facturación legal avanzada.
-- Verifactu o TicketBAI completos.
-- Control de acceso con hardware.
-- RFID, Bluetooth o tornos.
-- Inteligencia artificial predictiva real.
-- POS.
-- Inventario.
-- Nóminas.
-- Multi-sede avanzada.
-- Marketplace de profesionales.
-
-## 6. Estructura del proyecto
-
-```bash
+```text
 membora-crm/
-|-- backend/
-|   |-- prisma/
-|   |   |-- schema.prisma
-|   |   |-- seed.js
+|-- php-app/
+|   |-- config/
+|   |-- public/
+|   |   |-- assets/
+|   |   |-- .htaccess
+|   |   |-- index.php
 |   |-- src/
-|   |   |-- auth/
-|   |   |-- check-ins/
-|   |   |-- class-sessions/
-|   |   |-- class-types/
-|   |   |-- dashboard/
-|   |   |-- leads/
-|   |   |-- membership-plans/
-|   |   |-- members/
-|   |   |-- payments/
-|   |   |-- pipeline-stages/
-|   |   |-- prisma/
-|   |   |-- reservations/
-|   |   |-- risk-alerts/
-|   |   |-- subscriptions/
-|   |   |-- tasks/
+|   |   |-- Views/
+|   |   |-- Actions.php
+|   |   |-- Auth.php
+|   |   |-- Database.php
+|   |   |-- Repositories.php
+|   |   |-- Support.php
+|   |   |-- View.php
+|   |   |-- bootstrap.php
 |   |-- .env.example
-|   |-- package.json
-|
+|   |-- README.md
 |-- docs/
-|   |-- 01-alcance-mvp.md
-|   |-- 04-modelo-datos.md
-|   |-- 05-pruebas.md
-|   |-- 06-api-backend.md
-|
 |-- README.md
 |-- .gitignore
 ```
 
-## 7. Instalación backend local
+## Configuracion
 
-### 7.1 Requisitos
+Crear `php-app/.env` en local o en Plesk.
 
-- Node.js 20 o superior.
-- npm.
-- MariaDB o MySQL compatible.
-- Git.
-
-### 7.2 Clonar repositorio
-
-```bash
-git clone https://github.com/Jacketring/Membora-CRM.git
-cd Membora-CRM
-```
-
-### 7.3 Configurar backend
-
-```bash
-cd backend
-npm install
-cp .env.example .env
-```
-
-Variables mínimas:
+Opcion recomendada en Plesk, especialmente si la contrasena tiene caracteres especiales:
 
 ```env
-DATABASE_URL="mysql://usuario:password@localhost:3306/membora_crm"
-JWT_SECRET="cambiar_este_valor_por_un_secreto_largo"
-JWT_EXPIRES_IN="1d"
-PORT=3001
-```
-
-Sincronizar base de datos:
-
-```bash
-npm exec prisma db push -- --schema prisma/schema.prisma
-```
-
-Generar datos demo:
-
-```bash
-npm run prisma:seed
-```
-
-Arrancar backend en desarrollo:
-
-```bash
-npm run start:dev
-```
-
-Backend local:
-
-```text
-http://localhost:3001/api
-```
-
-## 8. Despliegue actual
-
-### Despliegue nuevo previsto en PHP
-
-Objetivo de migración:
-
-```text
-app.crm.josehurtado.dev
-```
-
-Configuración Plesk prevista:
-
-- Tipo de hosting: PHP.
-- Raíz del documento: `php-app/public`.
-- Base de datos: MariaDB existente.
-- Configuración sensible en `php-app/.env`.
-- Sin `npm install`.
-- Sin `npm run build`.
-- Sin aplicación Node.js para el frontend.
-
-Variables mínimas para `php-app/.env`:
-
-```env
-DATABASE_URL="mysql://usuario:password@localhost:3306/membora_crm"
 APP_NAME="Membora CRM"
 APP_ENV="production"
+DB_HOST="localhost"
+DB_PORT="3306"
+DB_DATABASE="nombre_base_datos"
+DB_USERNAME="usuario_base_datos"
+DB_PASSWORD="password_base_datos"
 ```
 
-La app PHP inicial incluye:
+Tambien se admite `DATABASE_URL`:
 
-- Login.
-- Panel.
-- Leads.
-- Tareas.
-- Diseño base heredado del frontend actual.
+```env
+APP_NAME="Membora CRM"
+APP_ENV="production"
+DATABASE_URL="mysql://usuario:password@localhost:3306/nombre_base_datos"
+```
 
-### Despliegue Node anterior
+## Despliegue en Plesk
 
-El backend Node está desplegado en Plesk bajo el subdominio:
+1. Clonar el repositorio desde GitHub.
+2. Configurar el subdominio como hosting PHP.
+3. Usar PHP 8.2 o superior.
+4. Activar `pdo_mysql`.
+5. Configurar la raiz del documento apuntando a:
 
 ```text
-crm.josehurtado.dev
+php-app/public
 ```
 
-Configuración Plesk:
-
-- Aplicación Node.js.
-- Raíz de aplicación: `backend`.
-- Archivo de inicio: `dist/main.js`.
-- Base de datos: MariaDB.
-- Prisma conectado mediante `DATABASE_URL`.
-
-Flujo de despliegue usado:
-
-```bash
-npm install --include=dev
-npm exec prisma db push -- --schema prisma/schema.prisma
-npm run build
-npm run prisma:seed
-```
-
-Después de cada pull/build en Plesk se debe reiniciar la app Node.js.
-
-## 9. Datos demo
-
-Tenant demo:
+Si Plesk ha clonado el repositorio dentro de otra carpeta, la ruta debe acabar igualmente en:
 
 ```text
-NexoFit Studio
-Slug: nexofit-studio
+.../php-app/public
 ```
 
-El seed incluye:
+6. Crear `php-app/.env` con los datos reales de MariaDB.
+7. Abrir el subdominio.
 
-- Roles.
-- Usuarios internos.
-- Leads en distintas fases.
-- Socios activos, en riesgo y con pagos pendientes.
-- Planes de membresía.
-- Suscripciones.
-- Pagos pagados, pendientes y vencidos.
-- Tipos de clase.
-- Sesiones.
-- Reservas.
-- Check-ins.
-- Tareas.
-- Alertas.
-
-## 10. Credenciales de prueba
+## Credenciales demo
 
 ```text
 Administrador
 Email: admin@nexofit.demo
 Password: MemboraDemo2026!
 
-Recepción / Comercial
+Recepcion / Comercial
 Email: recepcion@nexofit.demo
 Password: MemboraDemo2026!
 
@@ -344,119 +125,20 @@ Email: superadmin@membora.demo
 Password: MemboraDemo2026!
 ```
 
-## 11. Endpoints principales
+## Funcionalidades actuales
 
-Documentación completa:
+- Login con usuarios existentes.
+- Panel de control.
+- Listado y creacion de leads.
+- Cambio de etapa comercial.
+- Conversion de lead a socio.
+- Marcado de lead como perdido.
+- Eliminacion de leads.
+- Listado y creacion de tareas.
+- Asignacion de responsable interno.
+- Cambio de estado de tareas.
+- Eliminacion de tareas.
 
-```text
-docs/06-api-backend.md
-```
+## Notas
 
-Rutas principales:
-
-- `GET /api/health`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `GET /api/dashboard`
-- `GET /api/users`
-- `GET /api/pipeline-stages`
-- `GET /api/leads`
-- `POST /api/leads`
-- `PATCH /api/leads/:id`
-- `POST /api/leads/:id/convert`
-- `POST /api/leads/:id/revert-conversion`
-- `DELETE /api/leads/:id`
-- `GET /api/members`
-- `GET /api/membership-plans`
-- `GET /api/subscriptions`
-- `POST /api/subscriptions`
-- `GET /api/payments`
-- `POST /api/payments`
-- `GET /api/class-types`
-- `GET /api/class-sessions`
-- `POST /api/class-sessions`
-- `GET /api/reservations`
-- `POST /api/reservations`
-- `GET /api/check-ins`
-- `POST /api/check-ins`
-- `GET /api/tasks`
-- `POST /api/tasks`
-- `PATCH /api/tasks/:id`
-- `DELETE /api/tasks/:id`
-- `GET /api/risk-alerts`
-- `PATCH /api/risk-alerts/:id`
-
-## 12. Scripts backend
-
-```bash
-npm run build
-npm run start:dev
-npm run start:prod
-npm run prisma:generate
-npm run prisma:seed
-npm run prisma:studio
-```
-
-## 13. Documentación
-
-- `docs/01-alcance-mvp.md`: alcance funcional del MVP.
-- `docs/04-modelo-datos.md`: modelo relacional inicial y decisiones de datos.
-- `docs/05-pruebas.md`: pruebas manuales backend y plan de pruebas.
-- `docs/06-api-backend.md`: documentación de endpoints backend.
-
-## 14. Seguridad básica
-
-Medidas aplicadas o previstas:
-
-- Contraseñas cifradas con bcryptjs en datos demo.
-- Autenticación con JWT.
-- Rutas protegidas mediante guard.
-- Separación de datos por `tenantId`.
-- Validación de relaciones dentro del mismo tenant.
-- Variables sensibles fuera del repositorio.
-- `.env` ignorado por Git.
-
-## 15. Próximos pasos
-
-Prioridad inmediata:
-
-1. Cerrar revisión backend.
-2. Crear frontend con Next.js.
-3. Integrar diseño visual cuando esté disponible.
-4. Conectar login real.
-5. Construir dashboard.
-6. Construir pantallas principales del MVP.
-7. Pulir responsive.
-8. Preparar slides y vídeo final.
-
-## 16. Presentación
-
-URL de slides:
-
-```text
-Pendiente de definir.
-```
-
-## 17. Vídeo explicativo
-
-URL del vídeo:
-
-```text
-Pendiente de definir.
-```
-
-## 18. Autor
-
-Proyecto desarrollado como Trabajo de Fin de Máster.
-
-```text
-Nombre: <NOMBRE_COMPLETO>
-Email: <EMAIL_DEL_MASTER>
-Portfolio: https://josehurtado.dev/
-```
-
-## 19. Licencia
-
-Este proyecto se desarrolla con finalidad académica.
-
-La licencia definitiva se definirá antes de publicar el repositorio.
+La aplicacion PHP reutiliza la base de datos MariaDB ya existente. No es necesario compilar assets ni reiniciar una aplicacion Node.js.

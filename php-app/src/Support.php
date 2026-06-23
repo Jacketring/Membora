@@ -48,3 +48,38 @@ function enum_label(string $value, array $labels): string
 {
     return $labels[$value] ?? $value;
 }
+
+function status_label(?string $status): string
+{
+    return enum_label((string) $status, [
+        'OPEN' => 'Abierto',
+        'CONVERTED' => 'Convertido',
+        'LOST' => 'Perdido',
+        'PENDING' => 'Pendiente',
+        'COMPLETED' => 'Completada',
+        'CANCELLED' => 'Cancelada',
+    ]);
+}
+
+function source_label(?string $source): string
+{
+    return enum_label((string) $source, [
+        'WALK_IN' => 'Visita',
+        'WEBSITE' => 'Web',
+        'PHONE' => 'Telefono',
+        'SOCIAL_MEDIA' => 'Redes',
+        'REFERRAL' => 'Recomendacion',
+        'OTHER' => 'Otro',
+    ]);
+}
+
+function task_type_label(?string $type): string
+{
+    return enum_label((string) $type, [
+        'SALES' => 'Comercial',
+        'RETENTION' => 'Retencion',
+        'PAYMENT' => 'Pago',
+        'OPERATIONAL' => 'Operativa',
+        'OTHER' => 'Otra',
+    ]);
+}

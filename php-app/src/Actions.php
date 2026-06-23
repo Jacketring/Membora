@@ -30,8 +30,13 @@ final class Actions
         $email = post_value('email', '');
         $password = post_value('password', '');
 
-        if (Auth::attempt($email, $password)) {
-            redirect('dashboard');
+        try {
+            if (Auth::attempt($email, $password)) {
+                redirect('dashboard');
+            }
+        } catch (Throwable $exception) {
+            flash('No se pudo conectar con la base de datos. Revisa php-app/.env.', 'error');
+            redirect('login');
         }
 
         flash('Credenciales incorrectas.', 'error');
@@ -48,6 +53,12 @@ final class Actions
     {
         $tenantId = Auth::tenantId();
         $stageId = post_value('pipeline_stage_id') ?: PipelineRepository::firstId($tenantId);
+        $firstName = post_value('first_name', '');
+
+        if (!$stageId || $firstName === '') {
+            flash('Indica al menos nombre y etapa.', 'error');
+            redirect('leads');
+        }
 
         $stmt = Database::connection()->prepare(
             'INSERT INTO leads (id, tenant_id, pipeline_stage_id, assigned_user_id, first_name, last_name, email, phone, source, interest, status, created_at, updated_at)
@@ -58,7 +69,7 @@ final class Actions
             'tenant_id' => $tenantId,
             'stage_id' => $stageId,
             'assigned_user_id' => Auth::user()['id'] ?? null,
-            'first_name' => post_value('first_name', ''),
+            'first_name' => $firstName,
             'last_name' => post_value('last_name') ?: null,
             'email' => post_value('email') ?: null,
             'phone' => post_value('phone') ?: null,
@@ -94,7 +105,7 @@ final class Actions
         $leadStmt->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
         $lead = $leadStmt->fetch();
 
-        if ($lead) {
+        if ($lead && $lead['status'] !== 'CONVERTED') {
             $memberId = cuid();
             $insert = $pdo->prepare(
                 'INSERT INTO members (id, tenant_id, lead_id, first_name, last_name, email, phone, status, joined_at, created_at, updated_at)
@@ -112,6 +123,8 @@ final class Actions
             $update = $pdo->prepare('UPDATE leads SET status = "CONVERTED", updated_at = NOW() WHERE id = :id');
             $update->execute(['id' => $leadId]);
             flash('Lead convertido a socio.');
+        } else {
+            flash('El lead ya estaba convertido o no existe.', 'error');
         }
 
         redirect('leads');
@@ -135,14 +148,42 @@ final class Actions
 
     private static function deleteLead(): never
     {
-        $stmt = Database::connection()->prepare('DELETE FROM leads WHERE id = :id AND tenant_id = :tenant_id');
-        $stmt->execute(['id' => post_value('id'), 'tenant_id' => Auth::tenantId()]);
+        $pdo = Database::connection();
+        $leadId = post_value('id');
+        $tenantId = Auth::tenantId();
+
+        $pdo->beginTransaction();
+        try {
+            $deleteAlerts = $pdo->prepare('DELETE FROM risk_alerts WHERE lead_id = :id AND tenant_id = :tenant_id');
+            $deleteAlerts->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
+
+            $deleteTasks = $pdo->prepare('DELETE FROM tasks WHERE lead_id = :id AND tenant_id = :tenant_id');
+            $deleteTasks->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
+
+            $deleteMembers = $pdo->prepare('DELETE FROM members WHERE lead_id = :id AND tenant_id = :tenant_id');
+            $deleteMembers->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
+
+            $stmt = $pdo->prepare('DELETE FROM leads WHERE id = :id AND tenant_id = :tenant_id');
+            $stmt->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
+            $pdo->commit();
+        } catch (Throwable $exception) {
+            $pdo->rollBack();
+            flash('No se pudo eliminar el lead porque tiene datos relacionados.', 'error');
+            redirect('leads');
+        }
+
         flash('Lead eliminado.');
         redirect('leads');
     }
 
     private static function createTask(): never
     {
+        $title = post_value('title', '');
+        if ($title === '') {
+            flash('Indica un titulo para la tarea.', 'error');
+            redirect('tasks');
+        }
+
         $stmt = Database::connection()->prepare(
             'INSERT INTO tasks (id, tenant_id, assigned_user_id, title, description, type, status, due_at, created_at, updated_at)
              VALUES (:id, :tenant_id, :assigned_user_id, :title, :description, :type, "PENDING", :due_at, NOW(), NOW())'
@@ -151,7 +192,7 @@ final class Actions
             'id' => cuid(),
             'tenant_id' => Auth::tenantId(),
             'assigned_user_id' => post_value('assigned_user_id') ?: null,
-            'title' => post_value('title', ''),
+            'title' => $title,
             'description' => post_value('description') ?: null,
             'type' => post_value('type', 'OTHER'),
             'due_at' => post_value('due_at') ?: null,
