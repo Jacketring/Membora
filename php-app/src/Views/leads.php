@@ -46,6 +46,8 @@
       <option value="CONVERTED" <?= $filters['status'] === 'CONVERTED' ? 'selected' : '' ?>>Convertidos</option>
       <option value="LOST" <?= $filters['status'] === 'LOST' ? 'selected' : '' ?>>Perdidos</option>
     </select>
+    <input class="date-filter" name="date_from" type="date" value="<?= e($filters['date_from']) ?>" aria-label="Fecha desde">
+    <input class="date-filter" name="date_to" type="date" value="<?= e($filters['date_to']) ?>" aria-label="Fecha hasta">
   </div>
   <button class="primary-action primary-action--compact" type="submit">Filtrar</button>
 </form>
@@ -88,13 +90,16 @@
               <form method="post" class="inline-form">
                 <input type="hidden" name="action" value="update_lead_stage">
                 <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
-                <select class="stage-select stage-select--table" name="pipeline_stage_id" onchange="this.form.submit()">
-                  <?php foreach ($stages as $stage): ?>
-                    <option value="<?= e($stage['id']) ?>" <?= $lead['pipeline_stage_id'] === $stage['id'] ? 'selected' : '' ?>>
-                      <?= e($stage['name']) ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
+                <div class="stage-picker">
+                  <span class="stage-dot"></span>
+                  <select class="stage-select stage-select--table" name="pipeline_stage_id" onchange="this.form.submit()">
+                    <?php foreach ($stages as $stage): ?>
+                      <option value="<?= e($stage['id']) ?>" <?= $lead['pipeline_stage_id'] === $stage['id'] ? 'selected' : '' ?>>
+                        <?= e($stage['name']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
               </form>
             </td>
             <td>
@@ -106,21 +111,16 @@
             <td><?= e(format_date($lead['created_at'])) ?></td>
             <td>
               <div class="row-actions">
+                <button class="icon-action" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Editar y ver detalles">Editar</button>
                 <?php if ($lead['status'] !== 'CONVERTED'): ?>
                   <form method="post">
                     <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
                     <button name="action" value="convert_lead">Convertir</button>
                   </form>
                 <?php endif; ?>
-                <?php if ($lead['status'] !== 'LOST'): ?>
-                  <form method="post">
-                    <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
-                    <button name="action" value="mark_lead_lost">Perdido</button>
-                  </form>
-                <?php endif; ?>
                 <form method="post" onsubmit="return confirm('Eliminar este lead?')">
                   <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
-                  <button class="danger-action" name="action" value="delete_lead">Eliminar</button>
+                  <button class="icon-action danger-action" name="action" value="delete_lead" title="Eliminar lead">&#128465;</button>
                 </form>
               </div>
             </td>
@@ -136,6 +136,92 @@
     </table>
   </div>
 </section>
+
+<?php foreach ($leads as $lead): ?>
+  <?php $notes = $leadNotes[$lead['id']] ?? []; ?>
+  <dialog id="lead-detail-<?= e($lead['id']) ?>" class="modal-card lead-detail-modal">
+    <header>
+      <div>
+        <h2><?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?></h2>
+        <p><?= e($lead['phone'] ?: 'Sin telefono') ?> · <?= e($lead['email'] ?: 'Sin email') ?></p>
+      </div>
+      <button data-close-modal type="button">Cerrar</button>
+    </header>
+
+    <form method="post">
+      <input type="hidden" name="action" value="update_lead">
+      <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
+      <div class="form-grid">
+        <label class="field">
+          <span>Nombre</span>
+          <input name="first_name" required value="<?= e($lead['first_name']) ?>">
+        </label>
+        <label class="field">
+          <span>Apellidos</span>
+          <input name="last_name" value="<?= e($lead['last_name']) ?>">
+        </label>
+        <label class="field">
+          <span>Telefono</span>
+          <input name="phone" value="<?= e($lead['phone']) ?>">
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input name="email" type="email" value="<?= e($lead['email']) ?>">
+        </label>
+        <label class="field">
+          <span>Origen</span>
+          <select name="source">
+            <?php foreach (['WALK_IN', 'WEBSITE', 'PHONE', 'SOCIAL_MEDIA', 'REFERRAL', 'OTHER'] as $source): ?>
+              <option value="<?= e($source) ?>" <?= $lead['source'] === $source ? 'selected' : '' ?>><?= e(source_label($source)) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </label>
+        <label class="field">
+          <span>Etapa</span>
+          <select name="pipeline_stage_id">
+            <?php foreach ($stages as $stage): ?>
+              <option value="<?= e($stage['id']) ?>" <?= $lead['pipeline_stage_id'] === $stage['id'] ? 'selected' : '' ?>><?= e($stage['name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </label>
+        <label class="field">
+          <span>Proxima accion</span>
+          <input name="next_action_at" type="datetime-local" value="<?= $lead['next_action_at'] ? e(date('Y-m-d\TH:i', strtotime($lead['next_action_at']))) : '' ?>">
+        </label>
+        <label class="field field--wide">
+          <span>Interes principal</span>
+          <input name="interest" value="<?= e($lead['interest']) ?>">
+        </label>
+      </div>
+      <button class="primary-action" type="submit">Guardar cambios</button>
+    </form>
+
+    <section class="notes-panel">
+      <h3>Notas internas</h3>
+      <form method="post" class="note-form">
+        <input type="hidden" name="action" value="add_lead_note">
+        <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
+        <label class="field">
+          <span>Nueva nota</span>
+          <textarea name="note" rows="3" placeholder="Escribe una nota sobre la llamada, visita o seguimiento..." required></textarea>
+        </label>
+        <button class="primary-action primary-action--compact" type="submit">Anadir nota</button>
+      </form>
+
+      <div class="notes-list">
+        <?php foreach ($notes as $note): ?>
+          <article>
+            <p><?= nl2br(e($note['note'])) ?></p>
+            <span><?= e($note['user_name'] ?: 'Usuario') ?> · <?= e(format_date($note['created_at'])) ?></span>
+          </article>
+        <?php endforeach; ?>
+        <?php if (!$notes): ?>
+          <p class="empty-note">Todavia no hay notas para este lead.</p>
+        <?php endif; ?>
+      </div>
+    </section>
+  </dialog>
+<?php endforeach; ?>
 
 <dialog id="lead-modal" class="modal-card">
   <form method="post">

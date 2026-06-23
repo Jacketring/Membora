@@ -31,12 +31,23 @@ switch ($route) {
             'q' => trim((string) ($_GET['q'] ?? '')),
             'stage' => trim((string) ($_GET['stage'] ?? '')),
             'status' => trim((string) ($_GET['status'] ?? '')),
+            'date_from' => trim((string) ($_GET['date_from'] ?? '')),
+            'date_to' => trim((string) ($_GET['date_to'] ?? '')),
         ];
+        $leads = LeadRepository::all(
+            $tenantId,
+            $filters['q'],
+            $filters['stage'],
+            $filters['status'],
+            $filters['date_from'],
+            $filters['date_to']
+        );
         render_layout('Leads', 'leads', [
             'filters' => $filters,
             'stages' => PipelineRepository::all($tenantId),
             'metrics' => LeadRepository::metrics($tenantId),
-            'leads' => LeadRepository::all($tenantId, $filters['q'], $filters['stage'], $filters['status']),
+            'leads' => $leads,
+            'leadNotes' => LeadRepository::notesByLeadIds($tenantId, array_column($leads, 'id')),
         ]);
         break;
 

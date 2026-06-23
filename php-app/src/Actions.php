@@ -14,6 +14,8 @@ final class Actions
             'login' => self::login(),
             'logout' => self::logout(),
             'create_lead' => self::createLead(),
+            'update_lead' => self::updateLead(),
+            'add_lead_note' => self::addLeadNote(),
             'update_lead_stage' => self::updateLeadStage(),
             'convert_lead' => self::convertLead(),
             'mark_lead_lost' => self::markLeadLost(),
@@ -95,6 +97,63 @@ final class Actions
         redirect('leads');
     }
 
+    private static function updateLead(): never
+    {
+        $stmt = Database::connection()->prepare(
+            'UPDATE leads
+             SET first_name = :first_name,
+                 last_name = :last_name,
+                 phone = :phone,
+                 email = :email,
+                 source = :source,
+                 interest = :interest,
+                 pipeline_stage_id = :pipeline_stage_id,
+                 next_action_at = :next_action_at,
+                 updated_at = NOW()
+             WHERE id = :id AND tenant_id = :tenant_id'
+        );
+        $stmt->execute([
+            'first_name' => post_value('first_name', ''),
+            'last_name' => post_value('last_name') ?: null,
+            'phone' => post_value('phone') ?: null,
+            'email' => post_value('email') ?: null,
+            'source' => post_value('source', 'OTHER'),
+            'interest' => post_value('interest') ?: null,
+            'pipeline_stage_id' => post_value('pipeline_stage_id'),
+            'next_action_at' => post_value('next_action_at') ?: null,
+            'id' => post_value('id'),
+            'tenant_id' => Auth::tenantId(),
+        ]);
+
+        flash('Lead actualizado correctamente.');
+        redirect('leads');
+    }
+
+    private static function addLeadNote(): never
+    {
+        $note = post_value('note', '');
+        if ($note === '') {
+            flash('La nota no puede estar vacia.', 'error');
+            redirect('leads');
+        }
+
+        LeadRepository::ensureNotesTable();
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO lead_notes (id, tenant_id, lead_id, user_id, note, created_at)
+             VALUES (:id, :tenant_id, :lead_id, :user_id, :note, NOW())'
+        );
+        $stmt->execute([
+            'id' => cuid(),
+            'tenant_id' => Auth::tenantId(),
+            'lead_id' => post_value('id'),
+            'user_id' => Auth::user()['id'] ?? null,
+            'note' => $note,
+        ]);
+
+        flash('Nota anadida correctamente.');
+        redirect('leads');
+    }
+
     private static function convertLead(): never
     {
         $pdo = Database::connection();
@@ -160,8 +219,12 @@ final class Actions
             $deleteTasks = $pdo->prepare('DELETE FROM tasks WHERE lead_id = :id AND tenant_id = :tenant_id');
             $deleteTasks->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
 
-            $deleteMembers = $pdo->prepare('DELETE FROM members WHERE lead_id = :id AND tenant_id = :tenant_id');
-            $deleteMembers->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
+            LeadRepository::ensureNotesTable();
+            $deleteNotes = $pdo->prepare('DELETE FROM lead_notes WHERE lead_id = :id AND tenant_id = :tenant_id');
+            $deleteNotes->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
+
+            $unlinkMembers = $pdo->prepare('UPDATE members SET lead_id = NULL, updated_at = NOW() WHERE lead_id = :id AND tenant_id = :tenant_id');
+            $unlinkMembers->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
 
             $stmt = $pdo->prepare('DELETE FROM leads WHERE id = :id AND tenant_id = :tenant_id');
             $stmt->execute(['id' => $leadId, 'tenant_id' => $tenantId]);
