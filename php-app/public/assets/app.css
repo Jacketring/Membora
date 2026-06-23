@@ -349,6 +349,9 @@ a { color: inherit; text-decoration: none; }
   top: calc(100% + 10px);
   z-index: 40;
 }
+.global-search-dropdown[hidden] {
+  display: none;
+}
 .global-search-dropdown-heading {
   color: var(--muted);
   font-size: 12px;
