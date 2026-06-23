@@ -32,22 +32,34 @@
     <input name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, telefono, email o interes">
   </div>
   <div class="lead-filter-group">
-    <select name="stage">
-      <option value="">Todas las etapas</option>
-      <?php foreach ($stages as $stage): ?>
-        <option value="<?= e($stage['id']) ?>" <?= $filters['stage'] === $stage['id'] ? 'selected' : '' ?>>
-          <?= e($stage['name']) ?>
-        </option>
-      <?php endforeach; ?>
-    </select>
-    <select name="status">
-      <option value="">Todos los estados</option>
-      <option value="OPEN" <?= $filters['status'] === 'OPEN' ? 'selected' : '' ?>>Abiertos</option>
-      <option value="CONVERTED" <?= $filters['status'] === 'CONVERTED' ? 'selected' : '' ?>>Convertidos</option>
-      <option value="LOST" <?= $filters['status'] === 'LOST' ? 'selected' : '' ?>>Perdidos</option>
-    </select>
-    <input class="date-filter" name="date_from" type="date" value="<?= e($filters['date_from']) ?>" aria-label="Fecha desde">
-    <input class="date-filter" name="date_to" type="date" value="<?= e($filters['date_to']) ?>" aria-label="Fecha hasta">
+    <label class="filter-control filter-control--select">
+      <span>Etapa</span>
+      <select name="stage">
+        <option value="">Todas</option>
+        <?php foreach ($stages as $stage): ?>
+          <option value="<?= e($stage['id']) ?>" <?= $filters['stage'] === $stage['id'] ? 'selected' : '' ?>>
+            <?= e($stage['name']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+    <label class="filter-control filter-control--select">
+      <span>Estado</span>
+      <select name="status">
+        <option value="">Todos</option>
+        <option value="OPEN" <?= $filters['status'] === 'OPEN' ? 'selected' : '' ?>>Abiertos</option>
+        <option value="CONVERTED" <?= $filters['status'] === 'CONVERTED' ? 'selected' : '' ?>>Convertidos</option>
+        <option value="LOST" <?= $filters['status'] === 'LOST' ? 'selected' : '' ?>>Perdidos</option>
+      </select>
+    </label>
+    <label class="filter-control filter-control--date">
+      <span>Desde</span>
+      <input name="date_from" type="date" value="<?= e($filters['date_from']) ?>" aria-label="Fecha desde">
+    </label>
+    <label class="filter-control filter-control--date">
+      <span>Hasta</span>
+      <input name="date_to" type="date" value="<?= e($filters['date_to']) ?>" aria-label="Fecha hasta">
+    </label>
   </div>
   <button class="primary-action primary-action--compact" type="submit">Filtrar</button>
 </form>
@@ -91,7 +103,7 @@
                 <input type="hidden" name="action" value="update_lead_stage">
                 <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
                 <div class="stage-picker">
-                  <span class="stage-dot"></span>
+                  <span class="stage-dot" aria-hidden="true"></span>
                   <select class="stage-select stage-select--table" name="pipeline_stage_id" onchange="this.form.submit()">
                     <?php foreach ($stages as $stage): ?>
                       <option value="<?= e($stage['id']) ?>" <?= $lead['pipeline_stage_id'] === $stage['id'] ? 'selected' : '' ?>>
@@ -99,6 +111,7 @@
                       </option>
                     <?php endforeach; ?>
                   </select>
+                  <span class="stage-arrow" aria-hidden="true">⌄</span>
                 </div>
               </form>
             </td>
@@ -111,7 +124,9 @@
             <td><?= e(format_date($lead['created_at'])) ?></td>
             <td>
               <div class="row-actions">
-                <button class="icon-action" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Editar y ver detalles">Editar</button>
+                <button class="icon-action" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Editar y ver detalles" aria-label="Editar y ver detalles">
+                  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20h4.8L19.4 9.4a2.1 2.1 0 0 0 0-3L17.6 4.6a2.1 2.1 0 0 0-3 0L4 15.2V20Zm2-2v-1.95l7.25-7.25 1.95 1.95L7.95 18H6Zm10.6-8.65L14.65 7.4 16 6.05 17.95 8l-1.35 1.35Z"/></svg>
+                </button>
                 <?php if ($lead['status'] !== 'CONVERTED'): ?>
                   <form method="post">
                     <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
@@ -120,7 +135,9 @@
                 <?php endif; ?>
                 <form method="post" onsubmit="return confirm('Eliminar este lead?')">
                   <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
-                  <button class="icon-action danger-action" name="action" value="delete_lead" title="Eliminar lead">&#128465;</button>
+                  <button class="icon-action danger-action" name="action" value="delete_lead" title="Eliminar lead" aria-label="Eliminar lead">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 21a2 2 0 0 1-2-2V8h14v11a2 2 0 0 1-2 2H7ZM9 6V4h6v2h5v2H4V6h5Zm0 5v7h2v-7H9Zm4 0v7h2v-7h-2Z"/></svg>
+                  </button>
                 </form>
               </div>
             </td>
@@ -143,7 +160,7 @@
     <header>
       <div>
         <h2><?= e(trim($lead['first_name'] . ' ' . ($lead['last_name'] ?? ''))) ?></h2>
-        <p><?= e($lead['phone'] ?: 'Sin telefono') ?> · <?= e($lead['email'] ?: 'Sin email') ?></p>
+        <p><?= e($lead['phone'] ?: 'Sin telefono') ?> &middot; <?= e($lead['email'] ?: 'Sin email') ?></p>
       </div>
       <button data-close-modal type="button">Cerrar</button>
     </header>
@@ -212,7 +229,7 @@
         <?php foreach ($notes as $note): ?>
           <article>
             <p><?= nl2br(e($note['note'])) ?></p>
-            <span><?= e($note['user_name'] ?: 'Usuario') ?> · <?= e(format_date($note['created_at'])) ?></span>
+            <span><?= e($note['user_name'] ?: 'Usuario') ?> &middot; <?= e(format_date($note['created_at'])) ?></span>
           </article>
         <?php endforeach; ?>
         <?php if (!$notes): ?>
@@ -274,3 +291,4 @@
     <button class="primary-action" type="submit">Crear lead</button>
   </form>
 </dialog>
+
