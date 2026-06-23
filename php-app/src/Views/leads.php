@@ -99,21 +99,10 @@
             <td><span class="source-badge"><?= e(source_label($lead['source'])) ?></span></td>
             <td><?= e($lead['interest'] ?: 'Sin interes') ?></td>
             <td>
-              <form method="post" class="inline-form">
-                <input type="hidden" name="action" value="update_lead_stage">
-                <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
-                <div class="stage-picker">
-                  <span class="stage-dot" aria-hidden="true"></span>
-                  <select class="stage-select stage-select--table" name="pipeline_stage_id" onchange="this.form.submit()">
-                    <?php foreach ($stages as $stage): ?>
-                      <option value="<?= e($stage['id']) ?>" <?= $lead['pipeline_stage_id'] === $stage['id'] ? 'selected' : '' ?>>
-                        <?= e($stage['name']) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                  <span class="stage-arrow" aria-hidden="true">⌄</span>
-                </div>
-              </form>
+              <button class="stage-badge-button" data-open-modal="lead-detail-<?= e($lead['id']) ?>" type="button" title="Cambiar etapa">
+                <span class="stage-dot" aria-hidden="true"></span>
+                <?= e($lead['stage_name']) ?>
+              </button>
             </td>
             <td>
               <span class="status-badge status-badge--<?= e(strtolower($lead['status'])) ?>">
