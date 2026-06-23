@@ -44,6 +44,111 @@ function format_date(?string $value): string
     return $timestamp ? date('d/m/Y H:i', $timestamp) : 'Sin fecha';
 }
 
+function country_dial_codes(): array
+{
+    return [
+        'Espana' => '+34',
+        'Portugal' => '+351',
+        'Francia' => '+33',
+        'Italia' => '+39',
+        'Alemania' => '+49',
+        'Reino Unido' => '+44',
+        'Irlanda' => '+353',
+        'Paises Bajos' => '+31',
+        'Belgica' => '+32',
+        'Suiza' => '+41',
+        'Austria' => '+43',
+        'Dinamarca' => '+45',
+        'Suecia' => '+46',
+        'Noruega' => '+47',
+        'Finlandia' => '+358',
+        'Polonia' => '+48',
+        'Rumania' => '+40',
+        'Marruecos' => '+212',
+        'Estados Unidos' => '+1',
+        'Canada' => '+1',
+        'Mexico' => '+52',
+        'Argentina' => '+54',
+        'Chile' => '+56',
+        'Colombia' => '+57',
+        'Peru' => '+51',
+        'Ecuador' => '+593',
+        'Venezuela' => '+58',
+        'Uruguay' => '+598',
+        'Paraguay' => '+595',
+        'Brasil' => '+55',
+        'China' => '+86',
+        'Japon' => '+81',
+        'Corea del Sur' => '+82',
+        'India' => '+91',
+        'Australia' => '+61',
+    ];
+}
+
+function country_dial_options(): array
+{
+    $options = [];
+    foreach (country_dial_codes() as $country => $code) {
+        $options[] = $country . ' ' . $code;
+    }
+
+    return $options;
+}
+
+function phone_country_value(?string $phone): string
+{
+    $phone = trim((string) $phone);
+    if ($phone === '') {
+        return 'Espana +34';
+    }
+
+    $codes = country_dial_codes();
+    uasort($codes, fn (string $a, string $b): int => strlen($b) <=> strlen($a));
+
+    foreach ($codes as $country => $code) {
+        if (str_starts_with($phone, $code)) {
+            return $country . ' ' . $code;
+        }
+    }
+
+    if (preg_match('/^(\+\d{1,4})/', $phone, $matches)) {
+        return $matches[1];
+    }
+
+    return 'Espana +34';
+}
+
+function phone_local_value(?string $phone): string
+{
+    $phone = trim((string) $phone);
+    if ($phone === '') {
+        return '';
+    }
+
+    $countryValue = phone_country_value($phone);
+    if (preg_match('/(\+\d{1,4})/', $countryValue, $matches) && str_starts_with($phone, $matches[1])) {
+        return trim(substr($phone, strlen($matches[1])));
+    }
+
+    return $phone;
+}
+
+function phone_from_post(): ?string
+{
+    $country = post_value('phone_country', '');
+    $number = post_value('phone_number', '');
+
+    if ($number === '') {
+        return null;
+    }
+
+    preg_match('/(\+\d{1,4})/', (string) $country, $matches);
+    $prefix = $matches[1] ?? '';
+    $cleanNumber = preg_replace('/[^\d\s().-]/', '', $number) ?? $number;
+
+    return trim($prefix . ' ' . trim($cleanNumber));
+}
+
 function enum_label(string $value, array $labels): string
 {
     return $labels[$value] ?? $value;

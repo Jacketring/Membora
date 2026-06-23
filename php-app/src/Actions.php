@@ -78,7 +78,7 @@ final class Actions
             'first_name' => $firstName,
             'last_name' => post_value('last_name') ?: null,
             'email' => post_value('email') ?: null,
-            'phone' => post_value('phone') ?: null,
+            'phone' => phone_from_post(),
             'source' => post_value('source', 'OTHER'),
             'interest' => post_value('interest') ?: null,
             'status' => $status,
@@ -132,7 +132,7 @@ final class Actions
         $stmt->execute([
             'first_name' => post_value('first_name', ''),
             'last_name' => post_value('last_name') ?: null,
-            'phone' => post_value('phone') ?: null,
+            'phone' => phone_from_post(),
             'email' => post_value('email') ?: null,
             'source' => post_value('source', 'OTHER'),
             'interest' => post_value('interest') ?: null,
