@@ -32,26 +32,56 @@
     <input name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, telefono, email o interes" aria-label="Buscar leads por nombre, telefono, email o interes">
   </label>
   <div class="lead-filter-group">
-    <label class="filter-control filter-control--select">
-      <span>Etapa</span>
-      <select name="stage">
-        <option value="">Todas</option>
+    <div class="filter-control filter-control--select">
+      <span id="lead-filter-stage-label">Etapa</span>
+      <div class="custom-select" data-custom-select>
+        <input type="hidden" name="stage" value="<?= e($filters['stage']) ?>" data-custom-select-value>
+        <?php
+          $selectedStageLabel = 'Todas';
+          foreach ($stages as $stage) {
+            if ($filters['stage'] === $stage['id']) {
+              $selectedStageLabel = $stage['name'];
+              break;
+            }
+          }
+        ?>
+        <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false" aria-labelledby="lead-filter-stage-label">
+          <span data-custom-select-label><?= e($selectedStageLabel) ?></span>
+        </button>
+        <div class="custom-select-menu" data-custom-select-menu hidden>
+          <button class="custom-select-option <?= $filters['stage'] === '' ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="">Todas</button>
         <?php foreach ($stages as $stage): ?>
-          <option value="<?= e($stage['id']) ?>" <?= $filters['stage'] === $stage['id'] ? 'selected' : '' ?>>
+          <button class="custom-select-option <?= $filters['stage'] === $stage['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($stage['id']) ?>">
             <?= e($stage['name']) ?>
-          </option>
+          </button>
         <?php endforeach; ?>
-      </select>
-    </label>
-    <label class="filter-control filter-control--select">
-      <span>Estado</span>
-      <select name="status">
-        <option value="">Todos</option>
-        <option value="OPEN" <?= $filters['status'] === 'OPEN' ? 'selected' : '' ?>>Abiertos</option>
-        <option value="CONVERTED" <?= $filters['status'] === 'CONVERTED' ? 'selected' : '' ?>>Convertidos</option>
-        <option value="LOST" <?= $filters['status'] === 'LOST' ? 'selected' : '' ?>>Perdidos</option>
-      </select>
-    </label>
+        </div>
+      </div>
+    </div>
+    <div class="filter-control filter-control--select">
+      <span id="lead-filter-status-label">Estado</span>
+      <?php
+        $statusOptions = [
+          '' => 'Todos',
+          'OPEN' => 'Abiertos',
+          'CONVERTED' => 'Convertidos',
+          'LOST' => 'Perdidos',
+        ];
+      ?>
+      <div class="custom-select" data-custom-select>
+        <input type="hidden" name="status" value="<?= e($filters['status']) ?>" data-custom-select-value>
+        <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false" aria-labelledby="lead-filter-status-label">
+          <span data-custom-select-label><?= e($statusOptions[$filters['status']] ?? 'Todos') ?></span>
+        </button>
+        <div class="custom-select-menu" data-custom-select-menu hidden>
+          <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
+            <button class="custom-select-option <?= $filters['status'] === $statusValue ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($statusValue) ?>">
+              <?= e($statusLabel) ?>
+            </button>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
     <label class="filter-control filter-control--date">
       <span>Desde</span>
       <input name="date_from" type="date" value="<?= e($filters['date_from']) ?>" aria-label="Fecha desde">
@@ -206,14 +236,20 @@
             <?php endforeach; ?>
           </select>
         </label>
-        <label class="field">
-          <span>Etapa</span>
-          <select name="pipeline_stage_id">
+        <div class="field">
+          <span id="lead-stage-label-<?= e($lead['id']) ?>">Etapa</span>
+          <div class="custom-select custom-select--field" data-custom-select>
+            <input type="hidden" name="pipeline_stage_id" value="<?= e($lead['pipeline_stage_id']) ?>" data-custom-select-value>
+            <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false" aria-labelledby="lead-stage-label-<?= e($lead['id']) ?>">
+              <span data-custom-select-label><?= e($lead['stage_name']) ?></span>
+            </button>
+            <div class="custom-select-menu" data-custom-select-menu hidden>
             <?php foreach ($stages as $stage): ?>
-              <option value="<?= e($stage['id']) ?>" <?= $lead['pipeline_stage_id'] === $stage['id'] ? 'selected' : '' ?>><?= e($stage['name']) ?></option>
+              <button class="custom-select-option <?= $lead['pipeline_stage_id'] === $stage['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($stage['id']) ?>"><?= e($stage['name']) ?></button>
             <?php endforeach; ?>
-          </select>
-        </label>
+            </div>
+          </div>
+        </div>
         <label class="field">
           <span>Proxima accion</span>
           <input name="next_action_at" type="datetime-local" value="<?= $lead['next_action_at'] ? e(date('Y-m-d\TH:i', strtotime($lead['next_action_at']))) : '' ?>">
@@ -329,14 +365,20 @@
           <option value="OTHER">Otro</option>
         </select>
       </label>
-      <label class="field">
-        <span>Etapa inicial</span>
-        <select name="pipeline_stage_id">
+      <div class="field">
+        <span id="new-lead-stage-label">Etapa inicial</span>
+        <div class="custom-select custom-select--field" data-custom-select>
+          <input type="hidden" name="pipeline_stage_id" value="<?= e($stages[0]['id'] ?? '') ?>" data-custom-select-value>
+          <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false" aria-labelledby="new-lead-stage-label">
+            <span data-custom-select-label><?= e($stages[0]['name'] ?? 'Seleccionar etapa') ?></span>
+          </button>
+          <div class="custom-select-menu" data-custom-select-menu hidden>
           <?php foreach ($stages as $stage): ?>
-            <option value="<?= e($stage['id']) ?>"><?= e($stage['name']) ?></option>
+            <button class="custom-select-option <?= ($stages[0]['id'] ?? '') === $stage['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($stage['id']) ?>"><?= e($stage['name']) ?></button>
           <?php endforeach; ?>
-        </select>
-      </label>
+          </div>
+        </div>
+      </div>
       <label class="field field--wide">
         <span>Interes principal</span>
         <input name="interest" placeholder="Ej. Prueba de HIIT, plan premium, bono mensual">

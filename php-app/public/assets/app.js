@@ -138,6 +138,88 @@ document.addEventListener('click', (event) => {
   }
 });
 
+function closeCustomSelects(exceptSelect) {
+  document.querySelectorAll('[data-custom-select]').forEach((select) => {
+    if (select !== exceptSelect) {
+      const menu = select.querySelector('[data-custom-select-menu]');
+      const trigger = select.querySelector('[data-custom-select-trigger]');
+      if (menu) menu.hidden = true;
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+document.querySelectorAll('[data-custom-select]').forEach((select) => {
+  const trigger = select.querySelector('[data-custom-select-trigger]');
+  const menu = select.querySelector('[data-custom-select-menu]');
+  const valueInput = select.querySelector('[data-custom-select-value]');
+  const label = select.querySelector('[data-custom-select-label]');
+  const options = select.querySelectorAll('[data-custom-select-option]');
+
+  if (!trigger || !menu || !valueInput || !label) {
+    return;
+  }
+
+  trigger.addEventListener('click', () => {
+    const nextHiddenState = !menu.hidden;
+    closeCustomSelects(select);
+    menu.hidden = nextHiddenState;
+    trigger.setAttribute('aria-expanded', String(!menu.hidden));
+  });
+
+  trigger.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      closeCustomSelects(select);
+      menu.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      const selected = select.querySelector('[data-custom-select-option].selected');
+      (selected || options[0])?.focus();
+    }
+  });
+
+  options.forEach((option) => {
+    option.addEventListener('click', () => {
+      valueInput.value = option.dataset.value || '';
+      label.textContent = option.textContent.trim();
+      options.forEach((item) => item.classList.toggle('selected', item === option));
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.focus();
+    });
+
+    option.addEventListener('keydown', (event) => {
+      const currentIndex = Array.from(options).indexOf(option);
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        options[Math.min(currentIndex + 1, options.length - 1)]?.focus();
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        options[Math.max(currentIndex - 1, 0)]?.focus();
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        menu.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.focus();
+      }
+    });
+  });
+});
+
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('[data-custom-select]')) {
+    closeCustomSelects(null);
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeCustomSelects(null);
+  }
+});
+
 document.querySelectorAll('[data-prevent-double-submit]').forEach((form) => {
   form.addEventListener('submit', () => {
     const submitter = form.querySelector('button[type="submit"], button:not([type])');
