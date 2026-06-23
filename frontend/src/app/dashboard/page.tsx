@@ -13,9 +13,10 @@ import {
   WalletCards,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  AuthUser,
   apiGet,
   clearSession,
   DashboardSummary,
@@ -33,7 +34,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState('');
-  const user = useMemo(() => getStoredUser(), []);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     if (!getStoredToken()) {
@@ -41,6 +42,7 @@ export default function DashboardPage() {
       return;
     }
 
+    setUser(getStoredUser());
     apiGet<DashboardSummary>('/dashboard')
       .then(setDashboard)
       .catch(() => setError('No se pudo cargar el dashboard.'));

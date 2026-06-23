@@ -25,6 +25,7 @@ import {
   apiPost,
   clearSession,
   CreateTaskPayload,
+  AuthUser,
   getStoredToken,
   getStoredUser,
   Member,
@@ -62,7 +63,7 @@ const TASKS_PAGE_SIZE = 10;
 
 export default function TasksPage() {
   const router = useRouter();
-  const user = useMemo(() => getStoredUser(), []);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
@@ -82,6 +83,7 @@ export default function TasksPage() {
       return;
     }
 
+    setUser(getStoredUser());
     loadData();
   }, [router]);
 

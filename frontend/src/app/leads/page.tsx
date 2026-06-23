@@ -12,9 +12,10 @@ import {
   WalletCards,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  AuthUser,
   apiGet,
   apiDelete,
   apiPatch,
@@ -47,7 +48,7 @@ const LEADS_PAGE_SIZE = 10;
 
 export default function LeadsPage() {
   const router = useRouter();
-  const user = useMemo(() => getStoredUser(), []);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stages, setStages] = useState<PipelineStage[]>([]);
   const [filters, setFilters] = useState<LeadFiltersState>(initialFilters);
@@ -64,6 +65,7 @@ export default function LeadsPage() {
       return;
     }
 
+    setUser(getStoredUser());
     loadData();
   }, [router]);
 
