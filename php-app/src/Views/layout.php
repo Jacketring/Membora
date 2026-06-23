@@ -36,7 +36,6 @@
     <section class="workspace">
       <header class="topbar">
         <form class="search-box global-search-box" method="get" action="index.php" data-global-search-form>
-          <span>Buscar</span>
           <input name="q" value="" placeholder="Buscar tareas, socios, leads, clases o membresias..." autocomplete="off" data-global-search-input>
           <button class="global-search-submit" type="submit" aria-label="Buscar">Buscar</button>
           <div class="global-search-dropdown" data-global-search-results hidden></div>
