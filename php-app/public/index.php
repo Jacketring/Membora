@@ -77,6 +77,14 @@ switch ($route) {
         ]);
         break;
 
+    case 'search':
+        $query = trim((string) ($_GET['q'] ?? ''));
+        render_layout('Busqueda global', 'global-search', [
+            'query' => $query,
+            'results' => GlobalSearchRepository::search($tenantId, $query),
+        ]);
+        break;
+
     default:
         redirect('dashboard');
 }

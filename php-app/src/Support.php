@@ -188,6 +188,8 @@ function status_label(?string $status): string
         'PENDING' => 'Pendiente',
         'COMPLETED' => 'Completada',
         'CANCELLED' => 'Cancelada',
+        'ACTIVE' => 'Activo',
+        'INACTIVE' => 'Inactivo',
     ]);
 }
 
