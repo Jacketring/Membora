@@ -113,19 +113,18 @@ if (confirmDialog) {
   const cancelButton = confirmDialog.querySelector('[data-confirm-cancel]');
   const acceptButton = confirmDialog.querySelector('[data-confirm-accept]');
 
-  document.querySelectorAll('[data-confirm-message]').forEach((form) => {
-    form.addEventListener('submit', (event) => {
-      if (form.dataset.confirmed === 'true') {
-        return;
-      }
+  document.addEventListener('submit', (event) => {
+    const form = event.target.closest('[data-confirm-message]');
+    if (!form || form.dataset.confirmed === 'true') {
+      return;
+    }
 
-      event.preventDefault();
-      pendingConfirmForm = form;
-      if (confirmText) {
-        confirmText.textContent = form.dataset.confirmMessage || 'Esta accion no se puede deshacer.';
-      }
-      confirmDialog.showModal();
-    });
+    event.preventDefault();
+    pendingConfirmForm = form;
+    if (confirmText) {
+      confirmText.textContent = form.dataset.confirmMessage || 'Esta accion no se puede deshacer.';
+    }
+    confirmDialog.showModal();
   });
 
   if (cancelButton) {
@@ -143,7 +142,7 @@ if (confirmDialog) {
       }
 
       pendingConfirmForm.dataset.confirmed = 'true';
-      pendingConfirmForm.submit();
+      pendingConfirmForm.requestSubmit();
     });
   }
 
