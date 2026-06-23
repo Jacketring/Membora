@@ -25,6 +25,23 @@
   </article>
 </section>
 
+<?php
+$taskTypeOptions = [
+  '' => 'Todos',
+  'SALES' => task_type_label('SALES'),
+  'RETENTION' => task_type_label('RETENTION'),
+  'PAYMENT' => task_type_label('PAYMENT'),
+  'OPERATIONAL' => task_type_label('OPERATIONAL'),
+  'OTHER' => task_type_label('OTHER'),
+];
+$taskStatusOptions = [
+  '' => 'Todos',
+  'PENDING' => 'Pendientes',
+  'COMPLETED' => 'Completadas',
+  'CANCELLED' => 'Canceladas',
+];
+?>
+
 <form class="lead-toolbar" method="get">
   <input type="hidden" name="route" value="tasks">
   <div class="lead-search">
@@ -32,38 +49,63 @@
     <input name="q" value="<?= e($filters['q']) ?>" placeholder="Titulo, descripcion, socio, lead o responsable">
   </div>
   <div class="lead-filter-group">
-    <label class="filter-control filter-control--select">
-      <span>Tipo</span>
-      <select name="type">
-        <option value="">Todos</option>
-        <?php foreach (['SALES', 'RETENTION', 'PAYMENT', 'OPERATIONAL', 'OTHER'] as $type): ?>
-          <option value="<?= e($type) ?>" <?= $filters['type'] === $type ? 'selected' : '' ?>><?= e(task_type_label($type)) ?></option>
+    <div class="filter-control filter-control--select custom-select custom-select--filter" data-custom-select>
+      <input type="hidden" name="type" value="<?= e($filters['type']) ?>" data-custom-select-value>
+      <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+        <small>Tipo</small>
+        <span data-custom-select-label><?= e($taskTypeOptions[$filters['type']] ?? 'Todos') ?></span>
+      </button>
+      <div class="custom-select-menu" data-custom-select-menu hidden>
+        <?php foreach ($taskTypeOptions as $typeValue => $typeLabel): ?>
+          <button class="custom-select-option <?= $filters['type'] === $typeValue ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($typeValue) ?>">
+            <?= e($typeLabel) ?>
+          </button>
         <?php endforeach; ?>
-      </select>
-    </label>
-    <label class="filter-control filter-control--select">
-      <span>Estado</span>
-      <select name="status">
-        <option value="">Todos</option>
-        <option value="PENDING" <?= $filters['status'] === 'PENDING' ? 'selected' : '' ?>>Pendientes</option>
-        <option value="COMPLETED" <?= $filters['status'] === 'COMPLETED' ? 'selected' : '' ?>>Completadas</option>
-        <option value="CANCELLED" <?= $filters['status'] === 'CANCELLED' ? 'selected' : '' ?>>Canceladas</option>
-      </select>
-    </label>
-    <label class="filter-control filter-control--select">
-      <span>Responsable</span>
-      <select name="assigned_user_id">
-        <option value="">Todos</option>
+      </div>
+    </div>
+    <div class="filter-control filter-control--select custom-select custom-select--filter" data-custom-select>
+      <input type="hidden" name="status" value="<?= e($filters['status']) ?>" data-custom-select-value>
+      <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+        <small>Estado</small>
+        <span data-custom-select-label><?= e($taskStatusOptions[$filters['status']] ?? 'Todos') ?></span>
+      </button>
+      <div class="custom-select-menu" data-custom-select-menu hidden>
+        <?php foreach ($taskStatusOptions as $statusValue => $statusLabel): ?>
+          <button class="custom-select-option <?= $filters['status'] === $statusValue ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($statusValue) ?>">
+            <?= e($statusLabel) ?>
+          </button>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php
+      $selectedStaffLabel = 'Todos';
+      foreach ($staff as $staffUser) {
+        if ($filters['assigned_user_id'] === $staffUser['id']) {
+          $selectedStaffLabel = $staffUser['name'];
+          break;
+        }
+      }
+    ?>
+    <div class="filter-control filter-control--select custom-select custom-select--filter" data-custom-select>
+      <input type="hidden" name="assigned_user_id" value="<?= e($filters['assigned_user_id']) ?>" data-custom-select-value>
+      <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+        <small>Responsable</small>
+        <span data-custom-select-label><?= e($selectedStaffLabel) ?></span>
+      </button>
+      <div class="custom-select-menu" data-custom-select-menu hidden>
+        <button class="custom-select-option <?= $filters['assigned_user_id'] === '' ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="">Todos</button>
         <?php foreach ($staff as $staffUser): ?>
-          <option value="<?= e($staffUser['id']) ?>" <?= $filters['assigned_user_id'] === $staffUser['id'] ? 'selected' : '' ?>><?= e($staffUser['name']) ?></option>
+          <button class="custom-select-option <?= $filters['assigned_user_id'] === $staffUser['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($staffUser['id']) ?>">
+            <?= e($staffUser['name']) ?>
+          </button>
         <?php endforeach; ?>
-      </select>
-    </label>
-    <label class="filter-control filter-control--date">
+      </div>
+    </div>
+    <label class="filter-control filter-control--date date-filter-control">
       <span>Desde</span>
       <input name="date_from" type="date" value="<?= e($filters['date_from']) ?>">
     </label>
-    <label class="filter-control filter-control--date">
+    <label class="filter-control filter-control--date date-filter-control">
       <span>Hasta</span>
       <input name="date_to" type="date" value="<?= e($filters['date_to']) ?>">
     </label>
@@ -213,35 +255,53 @@
           <span>Titulo</span>
           <input name="title" required value="<?= e($task['title']) ?>">
         </label>
-        <label class="field">
+        <div class="field">
           <span>Tipo</span>
-          <select name="type">
+          <div class="custom-select custom-select--field" data-custom-select>
+            <input type="hidden" name="type" value="<?= e($task['type']) ?>" data-custom-select-value>
+            <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+              <span data-custom-select-label><?= e(task_type_label($task['type'])) ?></span>
+            </button>
+            <div class="custom-select-menu" data-custom-select-menu hidden>
             <?php foreach (['SALES', 'RETENTION', 'PAYMENT', 'OPERATIONAL', 'OTHER'] as $type): ?>
-              <option value="<?= e($type) ?>" <?= $task['type'] === $type ? 'selected' : '' ?>><?= e(task_type_label($type)) ?></option>
+              <button class="custom-select-option <?= $task['type'] === $type ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($type) ?>"><?= e(task_type_label($type)) ?></button>
             <?php endforeach; ?>
-          </select>
-        </label>
-        <label class="field">
+            </div>
+          </div>
+        </div>
+        <div class="field">
           <span>Estado</span>
-          <select name="status">
+          <div class="custom-select custom-select--field" data-custom-select>
+            <input type="hidden" name="status" value="<?= e($task['status']) ?>" data-custom-select-value>
+            <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+              <span data-custom-select-label><?= e(status_label($task['status'])) ?></span>
+            </button>
+            <div class="custom-select-menu" data-custom-select-menu hidden>
             <?php foreach (['PENDING', 'COMPLETED', 'CANCELLED'] as $status): ?>
-              <option value="<?= e($status) ?>" <?= $task['status'] === $status ? 'selected' : '' ?>><?= e(status_label($status)) ?></option>
+              <button class="custom-select-option <?= $task['status'] === $status ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($status) ?>"><?= e(status_label($status)) ?></button>
             <?php endforeach; ?>
-          </select>
-        </label>
+            </div>
+          </div>
+        </div>
         <label class="field">
           <span>Vencimiento</span>
           <input name="due_at" type="datetime-local" value="<?= $task['due_at'] ? e(date('Y-m-d\TH:i', strtotime($task['due_at']))) : '' ?>">
         </label>
-        <label class="field">
+        <div class="field">
           <span>Responsable</span>
-          <select name="assigned_user_id">
-            <option value="">Sin responsable</option>
+          <div class="custom-select custom-select--field" data-custom-select>
+            <input type="hidden" name="assigned_user_id" value="<?= e($task['assigned_user_id'] ?? '') ?>" data-custom-select-value>
+            <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+              <span data-custom-select-label><?= e($task['assigned_name'] ?: 'Sin responsable') ?></span>
+            </button>
+            <div class="custom-select-menu" data-custom-select-menu hidden>
+            <button class="custom-select-option <?= empty($task['assigned_user_id']) ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="">Sin responsable</button>
             <?php foreach ($staff as $staffUser): ?>
-              <option value="<?= e($staffUser['id']) ?>" <?= $task['assigned_user_id'] === $staffUser['id'] ? 'selected' : '' ?>><?= e($staffUser['name']) ?> - <?= e($staffUser['role_key']) ?></option>
+              <button class="custom-select-option <?= $task['assigned_user_id'] === $staffUser['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($staffUser['id']) ?>"><?= e($staffUser['name']) ?> - <?= e($staffUser['role_key']) ?></button>
             <?php endforeach; ?>
-          </select>
-        </label>
+            </div>
+          </div>
+        </div>
         <div class="field field--wide">
           <span>Socios vinculados</span>
           <div class="member-picker-shell" data-member-picker>
@@ -291,29 +351,39 @@
         <span>Titulo</span>
         <input name="title" required placeholder="Ej. Llamar para confirmar renovacion">
       </label>
-      <label class="field">
+      <div class="field">
         <span>Tipo</span>
-        <select name="type">
-          <option value="SALES">Comercial</option>
-          <option value="RETENTION">Retencion</option>
-          <option value="PAYMENT">Pago</option>
-          <option value="OPERATIONAL">Operativa</option>
-          <option value="OTHER">Otra</option>
-        </select>
-      </label>
+        <div class="custom-select custom-select--field" data-custom-select>
+          <input type="hidden" name="type" value="SALES" data-custom-select-value>
+          <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+            <span data-custom-select-label><?= e(task_type_label('SALES')) ?></span>
+          </button>
+          <div class="custom-select-menu" data-custom-select-menu hidden>
+            <?php foreach (['SALES', 'RETENTION', 'PAYMENT', 'OPERATIONAL', 'OTHER'] as $type): ?>
+              <button class="custom-select-option <?= $type === 'SALES' ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($type) ?>"><?= e(task_type_label($type)) ?></button>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
       <label class="field">
         <span>Vencimiento</span>
         <input name="due_at" type="datetime-local">
       </label>
-      <label class="field field--wide">
+      <div class="field field--wide">
         <span>Responsable</span>
-        <select name="assigned_user_id">
-          <option value="">Sin responsable</option>
+        <div class="custom-select custom-select--field" data-custom-select>
+          <input type="hidden" name="assigned_user_id" value="" data-custom-select-value>
+          <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+            <span data-custom-select-label>Sin responsable</span>
+          </button>
+          <div class="custom-select-menu" data-custom-select-menu hidden>
+          <button class="custom-select-option selected" type="button" data-custom-select-option data-value="">Sin responsable</button>
           <?php foreach ($staff as $staffUser): ?>
-            <option value="<?= e($staffUser['id']) ?>"><?= e($staffUser['name']) ?> - <?= e($staffUser['role_key']) ?></option>
+            <button class="custom-select-option" type="button" data-custom-select-option data-value="<?= e($staffUser['id']) ?>"><?= e($staffUser['name']) ?> - <?= e($staffUser['role_key']) ?></button>
           <?php endforeach; ?>
-        </select>
-      </label>
+          </div>
+        </div>
+      </div>
       <div class="field field--wide">
         <span>Socios vinculados</span>
         <div class="member-picker-shell" data-member-picker>
