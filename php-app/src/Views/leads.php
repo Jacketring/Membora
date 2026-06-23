@@ -25,11 +25,11 @@
   </article>
 </section>
 
-<form class="lead-toolbar" method="get" aria-label="Filtros de leads">
+<form class="lead-toolbar" method="get" aria-label="Filtros de leads" data-auto-filter-form>
   <input type="hidden" name="route" value="leads">
   <label class="lead-search">
     <span>Buscar</span>
-    <input name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, telefono, email o interes" aria-label="Buscar leads por nombre, telefono, email o interes">
+    <input name="q" value="<?= e($filters['q']) ?>" placeholder="Nombre, telefono, email o interes" aria-label="Buscar leads por nombre, telefono, email o interes" data-auto-filter-input>
   </label>
   <div class="lead-filter-group">
     <div class="filter-control filter-control--select custom-select custom-select--filter" data-custom-select>
@@ -80,11 +80,11 @@
     </div>
     <label class="filter-control filter-control--date date-filter-control">
       <span>Desde</span>
-      <input name="date_from" type="date" value="<?= e($filters['date_from']) ?>" aria-label="Fecha desde">
+      <input name="date_from" type="date" value="<?= e($filters['date_from']) ?>" aria-label="Fecha desde" data-auto-filter-input>
     </label>
     <label class="filter-control filter-control--date date-filter-control">
       <span>Hasta</span>
-      <input name="date_to" type="date" value="<?= e($filters['date_to']) ?>" aria-label="Fecha hasta">
+      <input name="date_to" type="date" value="<?= e($filters['date_to']) ?>" aria-label="Fecha hasta" data-auto-filter-input>
     </label>
   </div>
   <button class="primary-action primary-action--compact" type="submit">Filtrar</button>

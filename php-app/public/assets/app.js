@@ -138,6 +138,20 @@ document.addEventListener('click', (event) => {
   }
 });
 
+const autoFilterTimers = new WeakMap();
+
+function submitAutoFilterForm(form, delay = 0) {
+  if (!form) {
+    return;
+  }
+
+  window.clearTimeout(autoFilterTimers.get(form));
+  const timer = window.setTimeout(() => {
+    form.requestSubmit();
+  }, delay);
+  autoFilterTimers.set(form, timer);
+}
+
 function closeCustomSelects(exceptSelect) {
   document.querySelectorAll('[data-custom-select]').forEach((select) => {
     if (select !== exceptSelect) {
@@ -189,6 +203,7 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
       menu.hidden = true;
       trigger.setAttribute('aria-expanded', 'false');
       trigger.focus();
+      submitAutoFilterForm(select.closest('[data-auto-filter-form]'), 0);
     });
 
     option.addEventListener('keydown', (event) => {
@@ -221,6 +236,18 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     closeCustomSelects(null);
   }
+});
+
+document.querySelectorAll('[data-auto-filter-form]').forEach((form) => {
+  form.querySelectorAll('[data-auto-filter-input]').forEach((input) => {
+    input.addEventListener('input', () => {
+      submitAutoFilterForm(form, input.type === 'date' ? 0 : 420);
+    });
+
+    input.addEventListener('change', () => {
+      submitAutoFilterForm(form, 0);
+    });
+  });
 });
 
 document.querySelectorAll('[data-prevent-double-submit]').forEach((form) => {

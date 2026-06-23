@@ -42,11 +42,11 @@ $taskStatusOptions = [
 ];
 ?>
 
-<form class="lead-toolbar task-toolbar" method="get">
+<form class="lead-toolbar task-toolbar" method="get" data-auto-filter-form>
   <input type="hidden" name="route" value="tasks">
   <div class="lead-search">
     <span>Buscar</span>
-    <input name="q" value="<?= e($filters['q']) ?>" placeholder="Titulo, descripcion, socio, lead o responsable">
+    <input name="q" value="<?= e($filters['q']) ?>" placeholder="Titulo, descripcion, socio, lead o responsable" data-auto-filter-input>
   </div>
   <div class="lead-filter-group">
     <div class="filter-control filter-control--select custom-select custom-select--filter" data-custom-select>
@@ -103,11 +103,11 @@ $taskStatusOptions = [
     </div>
     <label class="filter-control filter-control--date date-filter-control">
       <span>Desde</span>
-      <input name="date_from" type="date" value="<?= e($filters['date_from']) ?>">
+      <input name="date_from" type="date" value="<?= e($filters['date_from']) ?>" data-auto-filter-input>
     </label>
     <label class="filter-control filter-control--date date-filter-control">
       <span>Hasta</span>
-      <input name="date_to" type="date" value="<?= e($filters['date_to']) ?>">
+      <input name="date_to" type="date" value="<?= e($filters['date_to']) ?>" data-auto-filter-input>
     </label>
   </div>
   <button class="primary-action primary-action--compact" type="submit">Filtrar</button>
