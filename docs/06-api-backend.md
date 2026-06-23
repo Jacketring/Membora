@@ -591,6 +591,18 @@ Si una tarea pasa a `COMPLETED` y no se envia `completedAt`, se asigna la fecha 
 
 Tambien se puede reemplazar la lista de socios vinculados enviando `memberIds`.
 
+### DELETE `/tasks/:id`
+
+Elimina una tarea del tenant.
+
+Requiere JWT.
+
+Reglas:
+
+- La tarea debe pertenecer al tenant.
+- Si existen alertas de riesgo asociadas a la tarea, se eliminan junto con la tarea.
+- Si existen socios vinculados en `taskMembers`, se eliminan los vinculos junto con la tarea.
+
 ## 18. Risk alerts
 
 ### GET `/risk-alerts`

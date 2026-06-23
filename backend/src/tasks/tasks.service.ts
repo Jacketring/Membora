@@ -173,6 +173,26 @@ export class TasksService {
     });
   }
 
+  async remove(user: AuthUser, id: string) {
+    const tenantId = this.requireTenant(user);
+    const task = await this.prisma.task.findFirst({
+      where: { id, tenantId },
+      select: { id: true },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.riskAlert.deleteMany({ where: { taskId: id, tenantId } }),
+      this.prisma.taskMember.deleteMany({ where: { taskId: id } }),
+      this.prisma.task.delete({ where: { id } }),
+    ]);
+
+    return { deleted: true };
+  }
+
   private requireTenant(user: AuthUser): string {
     if (!user.tenantId || user.role === RoleKey.SUPERADMIN) {
       throw new ForbiddenException('A tenant user is required');

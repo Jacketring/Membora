@@ -1159,6 +1159,91 @@ button {
   min-width: 1120px;
 }
 
+.select-column {
+  text-align: center !important;
+  width: 46px;
+}
+
+.select-column input {
+  accent-color: var(--primary);
+  cursor: pointer;
+  height: 16px;
+  width: 16px;
+}
+
+.bulk-actions-bar {
+  align-items: center;
+  background: #f8faff;
+  border: 1px solid #dbe6fb;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+}
+
+.bulk-actions-bar strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.bulk-actions-bar div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bulk-actions-bar button,
+.pagination-pages button {
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  color: var(--text);
+  font-weight: 800;
+  padding: 9px 12px;
+}
+
+.bulk-actions-bar button:hover,
+.pagination-pages button:hover:not(:disabled) {
+  background: var(--surface-soft);
+}
+
+.bulk-actions-bar .danger-action {
+  border-color: #fecaca;
+  color: var(--danger);
+}
+
+.bulk-actions-bar .ghost-action {
+  color: var(--muted);
+}
+
+.pagination-controls {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 14px;
+  justify-content: space-between;
+  padding: 14px 2px 0;
+}
+
+.pagination-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pagination-pages button.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.pagination-pages button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .next-action {
   align-items: center;
   color: var(--muted);
@@ -1577,6 +1662,22 @@ button {
     font-weight: 800;
     margin-bottom: 3px;
     text-transform: uppercase;
+  }
+
+  .select-column {
+    text-align: left !important;
+    width: auto;
+  }
+
+  .bulk-actions-bar,
+  .pagination-controls {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pagination-pages button {
+    flex: 1;
   }
 
   .user-chip div {

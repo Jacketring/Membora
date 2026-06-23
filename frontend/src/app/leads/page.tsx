@@ -33,6 +33,7 @@ import {
   LeadFiltersState,
   LeadMetrics,
   LeadsTable,
+  PaginationControls,
 } from './components/lead-components';
 
 const initialFilters: LeadFiltersState = {
@@ -41,6 +42,8 @@ const initialFilters: LeadFiltersState = {
   stageId: '',
   status: '',
 };
+
+const LEADS_PAGE_SIZE = 10;
 
 export default function LeadsPage() {
   const router = useRouter();
@@ -53,6 +56,7 @@ export default function LeadsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (!getStoredToken()) {
@@ -62,6 +66,10 @@ export default function LeadsPage() {
 
     loadData();
   }, [router]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   async function loadData() {
     setError('');
@@ -108,6 +116,12 @@ export default function LeadsPage() {
   const conversionRate = leads.length ? Math.round((convertedLeads / leads.length) * 100) : 0;
   const trialScheduled = leads.filter((lead) => lead.pipelineStage.key === 'TRIAL_SCHEDULED').length;
   const noFollowUp = leads.filter((lead) => lead.status === 'OPEN' && !lead.nextActionAt).length;
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / LEADS_PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedLeads = filteredLeads.slice(
+    (safeCurrentPage - 1) * LEADS_PAGE_SIZE,
+    safeCurrentPage * LEADS_PAGE_SIZE,
+  );
 
   async function createLead(payload: CreateLeadPayload) {
     setSaving(true);
@@ -322,17 +336,28 @@ export default function LeadsPage() {
           {loading ? (
             <div className="loading-card">Cargando tabla de leads...</div>
           ) : (
-            <LeadsTable
-              leads={filteredLeads}
-              onConvert={convertLead}
-              onCreateTask={createFollowUpTask}
-              onDelete={deleteLead}
-              onMarkLost={markLost}
-              onMove={moveLead}
-              onOpen={setSelectedLead}
-              onRevertConversion={revertConversion}
-              stages={stages}
-            />
+            <>
+              <LeadsTable
+                leads={paginatedLeads}
+                onConvert={convertLead}
+                onCreateTask={createFollowUpTask}
+                onDelete={deleteLead}
+                onMarkLost={markLost}
+                onMove={moveLead}
+                onOpen={setSelectedLead}
+                onRevertConversion={revertConversion}
+                stages={stages}
+                totalLeads={filteredLeads.length}
+              />
+
+              <PaginationControls
+                currentPage={safeCurrentPage}
+                onPageChange={setCurrentPage}
+                pageSize={LEADS_PAGE_SIZE}
+                totalItems={filteredLeads.length}
+                totalPages={totalPages}
+              />
+            </>
           )}
         </div>
       </section>

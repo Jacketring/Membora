@@ -399,6 +399,7 @@ Endpoints:
 GET /api/tasks
 POST /api/tasks
 PATCH /api/tasks/:id
+DELETE /api/tasks/:id
 ```
 
 Estado:
@@ -406,6 +407,7 @@ Estado:
 - `GET`: OK.
 - `POST`: implementado, pendiente de prueba manual especifica.
 - `PATCH`: implementado, pendiente de prueba manual especifica.
+- `DELETE`: implementado, pendiente de prueba manual especifica.
 
 Resultado esperado:
 

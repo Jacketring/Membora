@@ -125,6 +125,7 @@ export function LeadsTable({
   onOpen,
   onRevertConversion,
   stages,
+  totalLeads,
 }: {
   leads: Lead[];
   onConvert: (lead: Lead) => void;
@@ -135,13 +136,14 @@ export function LeadsTable({
   onOpen: (lead: Lead) => void;
   onRevertConversion: (lead: Lead) => void;
   stages: PipelineStage[];
+  totalLeads: number;
 }) {
   return (
     <section className="leads-table-card">
       <header>
         <div>
           <h3>Listado de leads</h3>
-          <span>{leads.length} resultados</span>
+          <span>{totalLeads} resultados</span>
         </div>
       </header>
 
@@ -189,6 +191,54 @@ export function LeadsTable({
         </table>
       </div>
     </section>
+  );
+}
+
+export function PaginationControls({
+  currentPage,
+  onPageChange,
+  pageSize,
+  totalItems,
+  totalPages,
+}: {
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}) {
+  if (totalItems <= pageSize) {
+    return null;
+  }
+
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const firstItem = (currentPage - 1) * pageSize + 1;
+  const lastItem = Math.min(currentPage * pageSize, totalItems);
+
+  return (
+    <nav className="pagination-controls" aria-label="PaginaciÃ³n">
+      <span>
+        Mostrando {firstItem}-{lastItem} de {totalItems}
+      </span>
+      <div className="pagination-pages">
+        <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} type="button">
+          Anterior
+        </button>
+        {pages.map((page) => (
+          <button
+            className={page === currentPage ? 'active' : ''}
+            key={page}
+            onClick={() => onPageChange(page)}
+            type="button"
+          >
+            {page}
+          </button>
+        ))}
+        <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} type="button">
+          Siguiente
+        </button>
+      </div>
+    </nav>
   );
 }
 

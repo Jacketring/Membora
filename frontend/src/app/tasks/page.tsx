@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  apiDelete,
   apiGet,
   apiPatch,
   apiPost,
@@ -56,6 +57,8 @@ const initialFilters: TaskFiltersState = {
   status: '',
 };
 
+const TASKS_PAGE_SIZE = 10;
+
 export default function TasksPage() {
   const router = useRouter();
   const user = useMemo(() => getStoredUser(), []);
@@ -68,6 +71,8 @@ export default function TasksPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('error');
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (!getStoredToken()) {
@@ -77,6 +82,11 @@ export default function TasksPage() {
 
     loadData();
   }, [router]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedTaskIds([]);
+  }, [filters]);
 
   async function loadData() {
     setMessage('');
@@ -138,6 +148,13 @@ export default function TasksPage() {
   const completedTasks = tasks.filter((task) => task.status === 'COMPLETED').length;
   const overdueTasks = tasks.filter((task) => task.status === 'PENDING' && task.dueAt && new Date(task.dueAt) < now).length;
   const todayTasks = tasks.filter((task) => task.dueAt && toDateKey(new Date(task.dueAt)) === todayKey).length;
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / TASKS_PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedTasks = filteredTasks.slice(
+    (safeCurrentPage - 1) * TASKS_PAGE_SIZE,
+    safeCurrentPage * TASKS_PAGE_SIZE,
+  );
+  const selectedTasksCount = selectedTaskIds.length;
 
   async function createTask(payload: CreateTaskPayload, memberIds: string[]) {
     setSaving(true);
@@ -169,6 +186,93 @@ export default function TasksPage() {
       showSuccess(status === 'COMPLETED' ? 'Tarea completada correctamente.' : 'Tarea actualizada correctamente.');
     } catch {
       showError('No se pudo actualizar la tarea.');
+    }
+  }
+
+  function toggleTaskSelection(taskId: string) {
+    setSelectedTaskIds((current) =>
+      current.includes(taskId) ? current.filter((id) => id !== taskId) : [...current, taskId],
+    );
+  }
+
+  function toggleVisibleTasksSelection(taskIds: string[]) {
+    setSelectedTaskIds((current) => {
+      const allVisibleSelected = taskIds.length > 0 && taskIds.every((id) => current.includes(id));
+
+      if (allVisibleSelected) {
+        return current.filter((id) => !taskIds.includes(id));
+      }
+
+      return Array.from(new Set([...current, ...taskIds]));
+    });
+  }
+
+  async function completeSelectedTasks() {
+    const selectedTasks = tasks.filter((task) => selectedTaskIds.includes(task.id));
+
+    if (!selectedTasks.length) {
+      return;
+    }
+
+    setMessage('');
+
+    try {
+      await Promise.all(
+        selectedTasks.map((task) => apiPatch<Task>(`/tasks/${task.id}`, { status: 'COMPLETED' })),
+      );
+      setSelectedTaskIds([]);
+      await loadTasks();
+      showSuccess(`${selectedTasks.length} tareas marcadas como completadas.`);
+    } catch {
+      showError('No se pudieron completar las tareas seleccionadas.');
+    }
+  }
+
+  async function deleteTask(task: Task) {
+    const confirmed = window.confirm(`¿Eliminar la tarea "${task.title}"? Esta acción no se puede deshacer.`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setMessage('');
+
+    try {
+      await apiDelete<{ deleted: boolean }>(`/tasks/${task.id}`);
+      setSelectedTaskIds((current) => current.filter((id) => id !== task.id));
+      setSelectedTask((current) => (current?.id === task.id ? null : current));
+      await loadTasks();
+      showSuccess('Tarea eliminada correctamente.');
+    } catch {
+      showError('No se pudo eliminar la tarea.');
+    }
+  }
+
+  async function deleteSelectedTasks() {
+    const selectedTasks = tasks.filter((task) => selectedTaskIds.includes(task.id));
+
+    if (!selectedTasks.length) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Eliminar ${selectedTasks.length} tareas seleccionadas? Esta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setMessage('');
+
+    try {
+      await Promise.all(selectedTasks.map((task) => apiDelete<{ deleted: boolean }>(`/tasks/${task.id}`)));
+      setSelectedTaskIds([]);
+      setSelectedTask((current) => (current && selectedTaskIds.includes(current.id) ? null : current));
+      await loadTasks();
+      showSuccess(`${selectedTasks.length} tareas eliminadas correctamente.`);
+    } catch {
+      showError('No se pudieron eliminar las tareas seleccionadas.');
     }
   }
 
@@ -266,13 +370,37 @@ export default function TasksPage() {
           {loading ? (
             <div className="loading-card">Cargando tabla de tareas...</div>
           ) : (
-            <TasksTable
-              onCancel={(task) => updateTaskStatus(task, 'CANCELLED')}
-              onComplete={(task) => updateTaskStatus(task, 'COMPLETED')}
-              onOpen={setSelectedTask}
-              onReopen={(task) => updateTaskStatus(task, 'PENDING')}
-              tasks={filteredTasks}
-            />
+            <>
+              {selectedTasksCount ? (
+                <BulkTaskActions
+                  onClear={() => setSelectedTaskIds([])}
+                  onComplete={completeSelectedTasks}
+                  onDelete={deleteSelectedTasks}
+                  selectedCount={selectedTasksCount}
+                />
+              ) : null}
+
+              <TasksTable
+                onCancel={(task) => updateTaskStatus(task, 'CANCELLED')}
+                onComplete={(task) => updateTaskStatus(task, 'COMPLETED')}
+                onDelete={deleteTask}
+                onOpen={setSelectedTask}
+                onReopen={(task) => updateTaskStatus(task, 'PENDING')}
+                onToggleTask={toggleTaskSelection}
+                onToggleVisibleTasks={toggleVisibleTasksSelection}
+                selectedTaskIds={selectedTaskIds}
+                tasks={paginatedTasks}
+                totalTasks={filteredTasks.length}
+              />
+
+              <PaginationControls
+                currentPage={safeCurrentPage}
+                onPageChange={setCurrentPage}
+                pageSize={TASKS_PAGE_SIZE}
+                totalItems={filteredTasks.length}
+                totalPages={totalPages}
+              />
+            </>
           )}
         </div>
       </section>
@@ -290,6 +418,7 @@ export default function TasksPage() {
         onCancel={(task) => updateTaskStatus(task, 'CANCELLED')}
         onClose={() => setSelectedTask(null)}
         onComplete={(task) => updateTaskStatus(task, 'COMPLETED')}
+        onDelete={deleteTask}
         onReopen={(task) => updateTaskStatus(task, 'PENDING')}
         task={selectedTask}
       />
@@ -381,22 +510,35 @@ function TaskFilters({
 function TasksTable({
   onCancel,
   onComplete,
+  onDelete,
   onOpen,
   onReopen,
+  onToggleTask,
+  onToggleVisibleTasks,
+  selectedTaskIds,
   tasks,
+  totalTasks,
 }: {
   onCancel: (task: Task) => void;
   onComplete: (task: Task) => void;
+  onDelete: (task: Task) => void;
   onOpen: (task: Task) => void;
   onReopen: (task: Task) => void;
+  onToggleTask: (taskId: string) => void;
+  onToggleVisibleTasks: (taskIds: string[]) => void;
+  selectedTaskIds: string[];
   tasks: Task[];
+  totalTasks: number;
 }) {
+  const visibleTaskIds = tasks.map((task) => task.id);
+  const allVisibleSelected = visibleTaskIds.length > 0 && visibleTaskIds.every((id) => selectedTaskIds.includes(id));
+
   return (
     <section className="leads-table-card">
       <header>
         <div>
           <h3>Listado de tareas</h3>
-          <span>{tasks.length} resultados</span>
+          <span>{totalTasks} resultados</span>
         </div>
       </header>
 
@@ -404,6 +546,15 @@ function TasksTable({
         <table className="leads-table tasks-table">
           <thead>
             <tr>
+              <th className="select-column">
+                <input
+                  aria-label="Seleccionar tareas visibles"
+                  checked={allVisibleSelected}
+                  disabled={!visibleTaskIds.length}
+                  onChange={() => onToggleVisibleTasks(visibleTaskIds)}
+                  type="checkbox"
+                />
+              </th>
               <th>Tarea</th>
               <th>Tipo</th>
               <th>Vinculado a</th>
@@ -421,14 +572,17 @@ function TasksTable({
                   key={task.id}
                   onCancel={() => onCancel(task)}
                   onComplete={() => onComplete(task)}
+                  onDelete={() => onDelete(task)}
                   onOpen={() => onOpen(task)}
                   onReopen={() => onReopen(task)}
+                  onToggle={() => onToggleTask(task.id)}
+                  selected={selectedTaskIds.includes(task.id)}
                   task={task}
                 />
               ))
             ) : (
               <tr>
-                <td className="leads-empty-cell" colSpan={8}>
+                <td className="leads-empty-cell" colSpan={9}>
                   No hay tareas que coincidan con los filtros actuales.
                 </td>
               </tr>
@@ -443,18 +597,32 @@ function TasksTable({
 function TaskTableRow({
   onCancel,
   onComplete,
+  onDelete,
   onOpen,
   onReopen,
+  onToggle,
+  selected,
   task,
 }: {
   onCancel: () => void;
   onComplete: () => void;
+  onDelete: () => void;
   onOpen: () => void;
   onReopen: () => void;
+  onToggle: () => void;
+  selected: boolean;
   task: Task;
 }) {
   return (
     <tr className="lead-data-row">
+      <td className="select-column" data-label="Seleccionar">
+        <input
+          aria-label={`Seleccionar tarea ${task.title}`}
+          checked={selected}
+          onChange={onToggle}
+          type="checkbox"
+        />
+      </td>
       <td data-label="Tarea">
         <button className="lead-name-button" onClick={onOpen} type="button">
           {task.title}
@@ -479,7 +647,14 @@ function TaskTableRow({
       </td>
       <td data-label="Creación">{formatDate(task.createdAt)}</td>
       <td data-label="Acciones">
-        <TaskActionsMenu onCancel={onCancel} onComplete={onComplete} onOpen={onOpen} onReopen={onReopen} task={task} />
+        <TaskActionsMenu
+          onCancel={onCancel}
+          onComplete={onComplete}
+          onDelete={onDelete}
+          onOpen={onOpen}
+          onReopen={onReopen}
+          task={task}
+        />
       </td>
     </tr>
   );
@@ -488,12 +663,14 @@ function TaskTableRow({
 function TaskActionsMenu({
   onCancel,
   onComplete,
+  onDelete,
   onOpen,
   onReopen,
   task,
 }: {
   onCancel: () => void;
   onComplete: () => void;
+  onDelete: () => void;
   onOpen: () => void;
   onReopen: () => void;
   task: Task;
@@ -529,9 +706,89 @@ function TaskActionsMenu({
               Cancelar tarea
             </button>
           ) : null}
+          <button className="danger-action" onClick={() => run(onDelete)} type="button">
+            Eliminar tarea
+          </button>
         </div>
       ) : null}
     </div>
+  );
+}
+
+function BulkTaskActions({
+  onClear,
+  onComplete,
+  onDelete,
+  selectedCount,
+}: {
+  onClear: () => void;
+  onComplete: () => void;
+  onDelete: () => void;
+  selectedCount: number;
+}) {
+  return (
+    <section className="bulk-actions-bar">
+      <strong>{selectedCount} tareas seleccionadas</strong>
+      <div>
+        <button onClick={onComplete} type="button">
+          Marcar completadas
+        </button>
+        <button className="danger-action" onClick={onDelete} type="button">
+          Eliminar
+        </button>
+        <button className="ghost-action" onClick={onClear} type="button">
+          Limpiar selección
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function PaginationControls({
+  currentPage,
+  onPageChange,
+  pageSize,
+  totalItems,
+  totalPages,
+}: {
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}) {
+  if (totalItems <= pageSize) {
+    return null;
+  }
+
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  const firstItem = (currentPage - 1) * pageSize + 1;
+  const lastItem = Math.min(currentPage * pageSize, totalItems);
+
+  return (
+    <nav className="pagination-controls" aria-label="PaginaciÃ³n de tareas">
+      <span>
+        Mostrando {firstItem}-{lastItem} de {totalItems}
+      </span>
+      <div className="pagination-pages">
+        <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} type="button">
+          Anterior
+        </button>
+        {pages.map((page) => (
+          <button
+            className={page === currentPage ? 'active' : ''}
+            key={page}
+            onClick={() => onPageChange(page)}
+            type="button"
+          >
+            {page}
+          </button>
+        ))}
+        <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} type="button">
+          Siguiente
+        </button>
+      </div>
+    </nav>
   );
 }
 
@@ -738,12 +995,14 @@ function TaskDetailDrawer({
   onCancel,
   onClose,
   onComplete,
+  onDelete,
   onReopen,
   task,
 }: {
   onCancel: (task: Task) => void;
   onClose: () => void;
   onComplete: (task: Task) => void;
+  onDelete: (task: Task) => void;
   onReopen: (task: Task) => void;
   task: Task | null;
 }) {
@@ -808,6 +1067,9 @@ function TaskDetailDrawer({
               Cancelar tarea
             </button>
           ) : null}
+          <button className="drawer-actions__danger" onClick={() => onDelete(task)} type="button">
+            Eliminar tarea
+          </button>
         </footer>
       </aside>
     </div>

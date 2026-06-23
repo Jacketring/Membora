@@ -336,6 +336,7 @@ Rutas principales:
 - `GET /api/tasks`
 - `POST /api/tasks`
 - `PATCH /api/tasks/:id`
+- `DELETE /api/tasks/:id`
 - `GET /api/risk-alerts`
 - `PATCH /api/risk-alerts/:id`
 
