@@ -89,7 +89,7 @@ function country_dial_options(): array
 {
     $options = [];
     foreach (country_dial_codes() as $entry) {
-        $options[] = $entry['flag'] . ' ' . $entry['code'] . ' ' . $entry['country'];
+        $options[] = $entry['flag'] . ' ' . $entry['code'];
     }
 
     return $options;
@@ -99,7 +99,7 @@ function phone_country_value(?string $phone): string
 {
     $phone = trim((string) $phone);
     if ($phone === '') {
-        return '🇪🇸 +34 Espana';
+        return '🇪🇸 +34';
     }
 
     $codes = country_dial_codes();
@@ -108,7 +108,7 @@ function phone_country_value(?string $phone): string
     foreach ($codes as $entry) {
         $code = $entry['code'];
         if (str_starts_with($phone, $code)) {
-            return $entry['flag'] . ' ' . $code . ' ' . $entry['country'];
+            return $entry['flag'] . ' ' . $code;
         }
     }
 
@@ -116,7 +116,7 @@ function phone_country_value(?string $phone): string
         return $matches[1];
     }
 
-    return '🇪🇸 +34 Espana';
+    return '🇪🇸 +34';
 }
 
 function phone_local_value(?string $phone): string

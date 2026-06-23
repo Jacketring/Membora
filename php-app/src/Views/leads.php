@@ -274,7 +274,7 @@
         <div class="phone-combo">
           <select class="phone-country-input" name="phone_country" aria-label="Prefijo de pais">
             <?php foreach (country_dial_options() as $option): ?>
-              <option value="<?= e($option) ?>" <?= $option === '🇪🇸 +34 Espana' ? 'selected' : '' ?>><?= e($option) ?></option>
+              <option value="<?= e($option) ?>" <?= $option === '🇪🇸 +34' ? 'selected' : '' ?>><?= e($option) ?></option>
             <?php endforeach; ?>
           </select>
           <input class="phone-number-input" name="phone_number" inputmode="tel" placeholder="Numero">
