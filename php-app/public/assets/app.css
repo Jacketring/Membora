@@ -648,6 +648,76 @@ a { color: inherit; text-decoration: none; }
 .modal-card header h2 { margin: 0; }
 .modal-card header button { background: #f8faff; border: 1px solid #dbe3f1; border-radius: 8px; padding: 8px 10px; }
 .form-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.confirm-dialog {
+  background: #fff;
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 22px 70px rgba(2, 8, 23, 0.26);
+  max-width: 430px;
+  padding: 0;
+  width: min(430px, calc(100vw - 32px));
+}
+.confirm-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.44);
+}
+.confirm-dialog form {
+  margin: 0;
+  padding: 22px;
+}
+.confirm-dialog header {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+}
+.confirm-dialog h2 {
+  font-size: 20px;
+  margin: 0 0 6px;
+}
+.confirm-dialog p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+.confirm-icon {
+  align-items: center;
+  background: #fff1f1;
+  border-radius: 12px;
+  color: var(--danger);
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+.confirm-icon svg {
+  fill: currentColor;
+  height: 22px;
+  width: 22px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+.secondary-action,
+.danger-confirm-action {
+  border: 0;
+  border-radius: 10px;
+  font-weight: 900;
+  padding: 11px 14px;
+}
+.secondary-action {
+  background: #eef4ff;
+  color: #2d4265;
+}
+.danger-confirm-action {
+  background: var(--danger);
+  color: #fff;
+}
+.danger-confirm-action:hover {
+  background: #991b1b;
+}
 .notes-panel {
   border-top: 1px solid #edf0f7;
   margin-top: 22px;

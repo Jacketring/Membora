@@ -167,7 +167,7 @@
                     </button>
                   </form>
                 <?php endif; ?>
-                <form method="post" onsubmit="return confirm('Eliminar esta tarea?')">
+                <form method="post" data-confirm-message="Eliminar esta tarea? Esta accion no se puede deshacer.">
                   <input type="hidden" name="id" value="<?= e($task['id']) ?>">
                   <button class="icon-action danger-action" name="action" value="delete_task" title="Eliminar tarea" aria-label="Eliminar tarea">
                     <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 21a2 2 0 0 1-2-2V8h14v11a2 2 0 0 1-2 2H7ZM9 6V4h6v2h5v2H4V6h5Zm0 5v7h2v-7H9Zm4 0v7h2v-7h-2Z"/></svg>

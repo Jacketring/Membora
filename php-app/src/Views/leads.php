@@ -122,7 +122,7 @@
                     <button name="action" value="convert_lead">Convertir</button>
                   </form>
                 <?php endif; ?>
-                <form method="post" onsubmit="return confirm('Eliminar este lead?')">
+                <form method="post" data-confirm-message="Eliminar este lead? Esta accion no se puede deshacer.">
                   <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
                   <button class="icon-action danger-action" name="action" value="delete_lead" title="Eliminar lead" aria-label="Eliminar lead">
                     <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 21a2 2 0 0 1-2-2V8h14v11a2 2 0 0 1-2 2H7ZM9 6V4h6v2h5v2H4V6h5Zm0 5v7h2v-7H9Zm4 0v7h2v-7h-2Z"/></svg>
@@ -251,7 +251,7 @@
                 </button>
               </div>
             </form>
-            <form method="post" class="note-delete-form" onsubmit="return confirm('Eliminar esta nota?')">
+            <form method="post" class="note-delete-form" data-confirm-message="Eliminar esta nota? Esta accion no se puede deshacer.">
               <input type="hidden" name="action" value="delete_lead_note">
               <input type="hidden" name="note_id" value="<?= e($note['id']) ?>">
               <button class="note-delete-button" type="submit" title="Eliminar nota" aria-label="Eliminar nota">

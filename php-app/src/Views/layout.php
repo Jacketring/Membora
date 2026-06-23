@@ -56,6 +56,23 @@
       </div>
     </section>
   </main>
+  <dialog id="confirm-dialog" class="confirm-dialog">
+    <form method="dialog">
+      <header>
+        <span class="confirm-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2 1.8 20h20.4L12 2Zm1 15h-2v-2h2v2Zm0-4h-2V8h2v5Z"/></svg>
+        </span>
+        <div>
+          <h2>Confirmar accion</h2>
+          <p data-confirm-text>Esta accion no se puede deshacer.</p>
+        </div>
+      </header>
+      <div class="confirm-actions">
+        <button class="secondary-action" value="cancel" type="button" data-confirm-cancel>Cancelar</button>
+        <button class="danger-confirm-action" value="confirm" type="button" data-confirm-accept>Eliminar</button>
+      </div>
+    </form>
+  </dialog>
   <script src="assets/app.js"></script>
 </body>
 </html>
