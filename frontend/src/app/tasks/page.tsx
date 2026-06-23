@@ -144,15 +144,14 @@ export default function TasksPage() {
     setMessage('');
 
     try {
-      if (memberIds.length) {
-        await Promise.all(memberIds.map((memberId) => apiPost<Task>('/tasks', { ...payload, memberId })));
-      } else {
-        await apiPost<Task>('/tasks', payload);
-      }
+      await apiPost<Task>('/tasks', {
+        ...payload,
+        memberIds,
+      });
 
       setShowCreateModal(false);
       await loadTasks();
-      showSuccess(memberIds.length > 1 ? 'Tareas creadas correctamente.' : 'Tarea creada correctamente.');
+      showSuccess('Tarea creada correctamente.');
     } catch {
       showError('No se pudo crear la tarea.');
     } finally {
@@ -465,7 +464,9 @@ function TaskTableRow({
       <td data-label="Tipo">
         <TaskTypeBadge type={task.type} />
       </td>
-      <td data-label="Vinculado a">{getRelatedName(task)}</td>
+      <td data-label="Vinculado a">
+        <TaskLinkedMembers task={task} />
+      </td>
       <td data-label="Responsable">{task.assignedUser?.name ?? 'Sin asignar'}</td>
       <td data-label="Vencimiento">
         <span className={isOverdue(task) ? 'next-action next-action--warning' : 'next-action'}>
@@ -528,6 +529,37 @@ function TaskActionsMenu({
               Cancelar tarea
             </button>
           ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function TaskLinkedMembers({ task }: { task: Task }) {
+  const [open, setOpen] = useState(false);
+  const linkedMembers = getTaskMembers(task);
+
+  if (linkedMembers.length === 0) {
+    return <span>Sin vincular</span>;
+  }
+
+  if (linkedMembers.length === 1) {
+    return <span>{getTaskMemberName(linkedMembers[0])}</span>;
+  }
+
+  return (
+    <div className="linked-members-menu">
+      <button onClick={() => setOpen((current) => !current)} type="button">
+        {linkedMembers.length} socios vinculados
+      </button>
+      {open ? (
+        <div className="linked-members-popover">
+          {linkedMembers.map((member) => (
+            <div key={member.id}>
+              <strong>{getTaskMemberName(member)}</strong>
+              <small>{member.email ?? member.phone ?? 'Sin contacto'}</small>
+            </div>
+          ))}
         </div>
       ) : null}
     </div>
@@ -674,7 +706,7 @@ function CreateTaskModal({
               </div>
             ) : (
               <small className="member-picker__hint">
-                Si seleccionas varios socios, se creará una tarea independiente para cada uno.
+                Si seleccionas varios socios, quedarán vinculados dentro de la misma tarea.
               </small>
             )}
             {memberQuery ? (
@@ -746,7 +778,9 @@ function TaskDetailDrawer({
             </div>
             <div>
               <dt>Vinculada a</dt>
-              <dd>{getRelatedName(task)}</dd>
+              <dd>
+                <TaskLinkedMembers task={task} />
+              </dd>
             </div>
           </dl>
         </section>
@@ -799,6 +833,12 @@ function translateTaskType(type: Task['type']) {
 }
 
 function getRelatedName(task: Task) {
+  const linkedMembers = getTaskMembers(task);
+
+  if (linkedMembers.length) {
+    return linkedMembers.map(getTaskMemberName).join(', ');
+  }
+
   if (task.lead) {
     return `${task.lead.firstName} ${task.lead.lastName ?? ''}`.trim();
   }
@@ -808,6 +848,21 @@ function getRelatedName(task: Task) {
   }
 
   return 'Sin vincular';
+}
+
+function getTaskMembers(task: Task) {
+  if (task.taskMembers?.length) {
+    return task.taskMembers.map((item) => item.member);
+  }
+
+  return task.member ? [{ ...task.member, phone: null }] : [];
+}
+
+function getTaskMemberName(member: {
+  firstName: string;
+  lastName: string | null;
+}) {
+  return `${member.firstName} ${member.lastName ?? ''}`.trim();
 }
 
 function getMemberName(member: Member) {

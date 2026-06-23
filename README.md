@@ -98,7 +98,7 @@ lead -> prueba -> alta -> socio -> membresía -> reserva -> check-in -> pago -> 
 - Pantalla de login conectada al backend.
 - Dashboard visual.
 - Pantalla de leads con tabla CRM, filtros, KPIs, creación, conversión, reversión y eliminación.
-- Pantalla de tareas con tabla, filtros, KPIs, creación y cambios de estado.
+- Pantalla de tareas con tabla, filtros, KPIs, creación, vinculación a varios socios y cambios de estado.
 - Navegación principal entre panel, leads y tareas.
 
 ### Pendiente de frontend
@@ -247,6 +247,7 @@ Flujo de despliegue usado:
 
 ```bash
 npm install --include=dev
+npm exec prisma db push -- --schema prisma/schema.prisma
 npm run build
 npm run prisma:seed
 ```

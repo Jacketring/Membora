@@ -542,6 +542,7 @@ Incluye:
 - usuario asignado
 - lead asociado
 - socio asociado
+- socios vinculados en `taskMembers`
 
 ### POST `/tasks`
 
@@ -555,6 +556,7 @@ Body:
 {
   "assignedUserId": "user_id",
   "leadId": "lead_id",
+  "memberIds": ["member_id_1", "member_id_2"],
   "title": "Llamar al lead",
   "description": "Confirmar interes y agendar prueba",
   "type": "SALES",
@@ -567,7 +569,9 @@ Reglas:
 
 - El usuario asignado debe pertenecer al tenant.
 - El lead, si se envia, debe pertenecer al tenant.
-- El socio, si se envia, debe pertenecer al tenant.
+- El socio, si se envia como `memberId`, debe pertenecer al tenant.
+- Los socios, si se envian como `memberIds`, deben pertenecer al tenant.
+- `memberIds` permite vincular una unica tarea a varios socios.
 
 ### PATCH `/tasks/:id`
 
@@ -584,6 +588,8 @@ Body ejemplo:
 ```
 
 Si una tarea pasa a `COMPLETED` y no se envia `completedAt`, se asigna la fecha actual.
+
+Tambien se puede reemplazar la lista de socios vinculados enviando `memberIds`.
 
 ## 18. Risk alerts
 

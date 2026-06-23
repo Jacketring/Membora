@@ -166,6 +166,7 @@ model Tenant {
   reservations      Reservation[]
   checkIns          CheckIn[]
   tasks             Task[]
+  taskMembers       TaskMember[]
   communicationLogs CommunicationLog[]
   riskAlerts        RiskAlert[]
   auditLogs         AuditLog[]
@@ -290,6 +291,7 @@ model Member {
   reservations      Reservation[]
   checkIns          CheckIn[]
   tasks             Task[]
+  taskMembers       TaskMember[]
   communicationLogs CommunicationLog[]
   riskAlerts        RiskAlert[]
 
@@ -484,6 +486,7 @@ model Task {
   lead         Lead?       @relation(fields: [leadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   member       Member?     @relation(fields: [memberId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   riskAlerts   RiskAlert[]
+  taskMembers  TaskMember[]
 
   @@index([tenantId])
   @@index([tenantId, status])
@@ -492,6 +495,24 @@ model Task {
   @@index([tenantId, memberId])
   @@index([assignedUserId])
   @@map("tasks")
+}
+
+model TaskMember {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  taskId    String   @map("task_id")
+  memberId  String   @map("member_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  member Member @relation(fields: [memberId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([taskId, memberId])
+  @@index([tenantId])
+  @@index([tenantId, memberId])
+  @@index([memberId])
+  @@map("task_members")
 }
 
 model CommunicationLog {
