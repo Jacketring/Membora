@@ -36,8 +36,10 @@ final class Auth
     public static function attempt(string $email, string $password): bool
     {
         $pdo = Database::connection();
+        UserRepository::ensureAvatarColumn();
+        TenantRepository::ensureSettingsColumns();
         $stmt = $pdo->prepare(
-            'SELECT users.*, tenants.name AS tenant_name, roles.key AS role_key
+            'SELECT users.*, tenants.name AS tenant_name, tenants.primary_color AS tenant_primary_color, roles.key AS role_key
              FROM users
              LEFT JOIN tenants ON tenants.id = users.tenant_id
              INNER JOIN roles ON roles.id = users.role_id
@@ -55,14 +57,17 @@ final class Auth
             $tenant = self::fallbackTenant();
             $user['tenant_id'] = $tenant['id'] ?? null;
             $user['tenant_name'] = $tenant['name'] ?? 'Membora CRM';
+            $user['tenant_primary_color'] = $tenant['primary_color'] ?? '#0754d6';
         }
 
         $_SESSION['user'] = [
             'id' => $user['id'],
             'tenant_id' => $user['tenant_id'],
             'tenant_name' => $user['tenant_name'],
+            'tenant_primary_color' => $user['tenant_primary_color'] ?: '#0754d6',
             'name' => $user['name'],
             'email' => $user['email'],
+            'avatar_path' => $user['avatar_path'] ?? null,
             'role' => $user['role_key'],
         ];
 
@@ -84,6 +89,7 @@ final class Auth
         if ($tenant && isset($_SESSION['user'])) {
             $_SESSION['user']['tenant_id'] = $tenant['id'];
             $_SESSION['user']['tenant_name'] = $tenant['name'];
+            $_SESSION['user']['tenant_primary_color'] = $tenant['primary_color'] ?? '#0754d6';
         }
 
         return $tenant['id'] ?? null;
@@ -91,7 +97,8 @@ final class Auth
 
     private static function fallbackTenant(): ?array
     {
-        $stmt = Database::connection()->query('SELECT id, name FROM tenants ORDER BY created_at ASC LIMIT 1');
+        TenantRepository::ensureSettingsColumns();
+        $stmt = Database::connection()->query('SELECT id, name, primary_color FROM tenants ORDER BY created_at ASC LIMIT 1');
         $tenant = $stmt->fetch();
 
         return $tenant ?: null;

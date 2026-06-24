@@ -14,6 +14,7 @@ final class Actions
             'login' => self::login(),
             'logout' => self::logout(),
             'update_profile' => self::updateProfile(),
+            'update_company_settings' => self::updateCompanySettings(),
             'create_user' => self::createUser(),
             'update_user' => self::updateUser(),
             'create_lead' => self::createLead(),
@@ -69,12 +70,17 @@ final class Actions
 
     private static function updateProfile(): never
     {
+        UserRepository::ensureAvatarColumn();
         $tenantId = Auth::tenantId();
         $user = Auth::requireUser();
         $userId = $user['id'];
         $name = post_value('name', '');
         $email = strtolower(post_value('email', ''));
         $password = post_value('password', '');
+        $uploadedAvatar = self::uploadedImagePath('avatar', 'users', 'No se pudo subir la imagen de perfil.');
+        $removeAvatar = post_value('remove_avatar') === '1';
+        $currentAvatar = (string) (($user['avatar_path'] ?? '') ?: '');
+        $avatarPath = $uploadedAvatar ?: ($removeAvatar ? null : ($currentAvatar ?: null));
 
         if ($name === '' || $email === '') {
             flash('Indica nombre y email para actualizar tu perfil.', 'error');
@@ -99,6 +105,7 @@ final class Actions
         $params = [
             'name' => $name,
             'email' => $email,
+            'avatar_path' => $avatarPath,
             'id' => $userId,
             'tenant_id' => $tenantId,
         ];
@@ -113,15 +120,47 @@ final class Actions
             'UPDATE users
              SET name = :name,
                  email = :email' . $passwordSql . ',
+                 avatar_path = :avatar_path,
                  updated_at = NOW()
              WHERE id = :id AND tenant_id = :tenant_id'
         );
         $stmt->execute($params);
 
+        if (($uploadedAvatar || $removeAvatar) && $currentAvatar !== '') {
+            self::deleteLocalUpload($currentAvatar);
+        }
+
         $_SESSION['user']['name'] = $name;
         $_SESSION['user']['email'] = $email;
+        $_SESSION['user']['avatar_path'] = $avatarPath;
 
         flash('Perfil actualizado correctamente.');
+        redirect($_GET['return'] ?? 'dashboard');
+    }
+
+    private static function updateCompanySettings(): never
+    {
+        $user = Auth::requireUser();
+        $role = strtoupper((string) ($user['role'] ?? ''));
+        if (!in_array($role, ['SUPER_ADMIN', 'SUPERADMIN', 'GYM_ADMIN', 'ADMIN'], true)) {
+            flash('Solo un administrador puede cambiar los datos de empresa.', 'error');
+            redirect($_GET['return'] ?? 'dashboard');
+        }
+
+        $tenantId = Auth::tenantId();
+        $name = post_value('tenant_name', '');
+        $primaryColor = hex_color_or_default(post_value('tenant_primary_color', '#0754d6'));
+
+        if ($name === '') {
+            flash('Indica el nombre de la empresa.', 'error');
+            redirect($_GET['return'] ?? 'dashboard');
+        }
+
+        TenantRepository::updateSettings($tenantId, $name, $primaryColor);
+        $_SESSION['user']['tenant_name'] = $name;
+        $_SESSION['user']['tenant_primary_color'] = $primaryColor;
+
+        flash('Configuracion de empresa actualizada correctamente.');
         redirect($_GET['return'] ?? 'dashboard');
     }
 
@@ -708,19 +747,24 @@ final class Actions
 
     private static function uploadedMemberPhotoPath(): ?string
     {
-        $file = $_FILES['photo'] ?? null;
+        return self::uploadedImagePath('photo', 'members', 'No se pudo subir la foto del socio.', 'members');
+    }
+
+    private static function uploadedImagePath(string $inputName, string $folder, string $errorMessage, string $redirectRoute = ''): ?string
+    {
+        $file = $_FILES[$inputName] ?? null;
         if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return null;
         }
 
         if ((int) $file['error'] !== UPLOAD_ERR_OK) {
-            flash('No se pudo subir la foto del socio.', 'error');
-            redirect('members');
+            flash($errorMessage, 'error');
+            redirect($redirectRoute ?: ($_GET['return'] ?? 'dashboard'));
         }
 
         if ((int) ($file['size'] ?? 0) > 2 * 1024 * 1024) {
-            flash('La foto no puede superar 2 MB.', 'error');
-            redirect('members');
+            flash('La imagen no puede superar 2 MB.', 'error');
+            redirect($redirectRoute ?: ($_GET['return'] ?? 'dashboard'));
         }
 
         $tmpPath = (string) ($file['tmp_name'] ?? '');
@@ -732,34 +776,39 @@ final class Actions
         ];
         $mimeType = is_array($imageInfo) ? (string) ($imageInfo['mime'] ?? '') : '';
         if (!isset($allowedMimeTypes[$mimeType])) {
-            flash('La foto debe ser JPG, PNG o WEBP.', 'error');
-            redirect('members');
+            flash('La imagen debe ser JPG, PNG o WEBP.', 'error');
+            redirect($redirectRoute ?: ($_GET['return'] ?? 'dashboard'));
         }
 
-        $uploadDir = self::memberUploadDirectory();
+        $uploadDir = self::uploadDirectory($folder);
         if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
-            flash('No se pudo preparar la carpeta de fotos.', 'error');
-            redirect('members');
+            flash('No se pudo preparar la carpeta de imagenes.', 'error');
+            redirect($redirectRoute ?: ($_GET['return'] ?? 'dashboard'));
         }
 
         $filename = cuid() . '.' . $allowedMimeTypes[$mimeType];
         $target = $uploadDir . DIRECTORY_SEPARATOR . $filename;
         if (!move_uploaded_file($tmpPath, $target)) {
-            flash('No se pudo guardar la foto del socio.', 'error');
-            redirect('members');
+            flash('No se pudo guardar la imagen.', 'error');
+            redirect($redirectRoute ?: ($_GET['return'] ?? 'dashboard'));
         }
 
-        return 'uploads/members/' . $filename;
+        return 'uploads/' . $folder . '/' . $filename;
     }
 
     private static function memberUploadDirectory(): string
     {
-        return dirname(__DIR__) . '/public/uploads/members';
+        return self::uploadDirectory('members');
+    }
+
+    private static function uploadDirectory(string $folder): string
+    {
+        return dirname(__DIR__) . '/public/uploads/' . $folder;
     }
 
     private static function deleteLocalUpload(string $path): void
     {
-        if (!str_starts_with($path, 'uploads/members/')) {
+        if (!str_starts_with($path, 'uploads/members/') && !str_starts_with($path, 'uploads/users/')) {
             return;
         }
 

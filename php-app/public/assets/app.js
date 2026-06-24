@@ -1,7 +1,8 @@
 const crmSettingsKey = 'membora-crm-settings';
+const tenantAccent = document.body?.dataset.tenantAccent || '#0754d6';
 const defaultCrmSettings = {
   theme: 'system',
-  accent: '#0754d6',
+  accent: tenantAccent,
   compact: false,
 };
 
@@ -85,6 +86,29 @@ function clearModalUrlParam(modal) {
   window.history.replaceState({}, '', nextUrl);
 }
 
+function activateSettingsTab(tabName) {
+  if (!tabName) {
+    return;
+  }
+
+  const settingsModal = document.getElementById('settings-modal');
+  if (!settingsModal) {
+    return;
+  }
+
+  settingsModal.querySelectorAll('[data-settings-tab]').forEach((tab) => {
+    const isActive = tab.dataset.settingsTab === tabName;
+    tab.classList.toggle('active', isActive);
+    tab.setAttribute('aria-selected', String(isActive));
+  });
+
+  settingsModal.querySelectorAll('[data-settings-panel]').forEach((panel) => {
+    const isActive = panel.dataset.settingsPanel === tabName;
+    panel.classList.toggle('active', isActive);
+    panel.hidden = !isActive;
+  });
+}
+
 const modalToOpen = new URLSearchParams(window.location.search).get('modal');
 if (modalToOpen) {
   openModalById(modalToOpen);
@@ -117,6 +141,9 @@ document.querySelectorAll('[data-open-modal]').forEach((trigger) => {
       }
       closeUserMenus(null);
       openModalById(trigger.dataset.openModal);
+      if (trigger.dataset.settingsTabTarget) {
+        activateSettingsTab(trigger.dataset.settingsTabTarget);
+      }
     }
   });
 
@@ -177,6 +204,26 @@ document.querySelectorAll('[data-user-menu]').forEach((menu) => {
       trigger.setAttribute('aria-expanded', 'true');
       dropdown.querySelector('button')?.focus();
     }
+  });
+});
+
+document.querySelectorAll('[data-settings-tab]').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    activateSettingsTab(tab.dataset.settingsTab);
+  });
+
+  tab.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
+      return;
+    }
+
+    const tabs = Array.from(document.querySelectorAll('[data-settings-tab]'));
+    const currentIndex = tabs.indexOf(tab);
+    const direction = event.key === 'ArrowRight' ? 1 : -1;
+    const nextTab = tabs[(currentIndex + direction + tabs.length) % tabs.length];
+    event.preventDefault();
+    nextTab.focus();
+    activateSettingsTab(nextTab.dataset.settingsTab);
   });
 });
 

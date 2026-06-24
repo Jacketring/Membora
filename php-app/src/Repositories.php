@@ -50,8 +50,17 @@ final class StaffRepository
 
 final class UserRepository
 {
+    public static function ensureAvatarColumn(): void
+    {
+        $stmt = Database::connection()->query('SHOW COLUMNS FROM users LIKE "avatar_path"');
+        if (!$stmt->fetch()) {
+            Database::connection()->exec('ALTER TABLE users ADD COLUMN avatar_path VARCHAR(255) NULL AFTER email');
+        }
+    }
+
     public static function all(string $tenantId, string $query = '', string $roleId = '', string $status = ''): array
     {
+        self::ensureAvatarColumn();
         $params = ['tenant_id' => $tenantId];
         $where = ['users.tenant_id = :tenant_id'];
 
@@ -74,6 +83,7 @@ final class UserRepository
             'SELECT users.id,
                     users.name,
                     users.email,
+                    users.avatar_path,
                     users.status,
                     users.created_at,
                     users.updated_at,
@@ -159,6 +169,30 @@ final class UserRepository
         $stmt->execute(['tenant_id' => $tenantId]);
 
         return (int) $stmt->fetchColumn();
+    }
+}
+
+final class TenantRepository
+{
+    public static function ensureSettingsColumns(): void
+    {
+        $stmt = Database::connection()->query('SHOW COLUMNS FROM tenants LIKE "primary_color"');
+        if (!$stmt->fetch()) {
+            Database::connection()->exec('ALTER TABLE tenants ADD COLUMN primary_color VARCHAR(16) NULL AFTER name');
+        }
+    }
+
+    public static function updateSettings(string $tenantId, string $name, string $primaryColor): void
+    {
+        self::ensureSettingsColumns();
+        $stmt = Database::connection()->prepare(
+            'UPDATE tenants SET name = :name, primary_color = :primary_color WHERE id = :id'
+        );
+        $stmt->execute([
+            'name' => $name,
+            'primary_color' => $primaryColor,
+            'id' => $tenantId,
+        ]);
     }
 }
 

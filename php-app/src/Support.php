@@ -75,6 +75,12 @@ function money_amount(mixed $value): string
     return number_format((float) $value, 2, ',', '.') . ' EUR';
 }
 
+function hex_color_or_default(?string $value, string $default = '#0754d6'): string
+{
+    $value = trim((string) $value);
+    return preg_match('/^#[0-9a-fA-F]{6}$/', $value) ? $value : $default;
+}
+
 function country_dial_codes(): array
 {
     return [
