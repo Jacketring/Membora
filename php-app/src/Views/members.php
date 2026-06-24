@@ -228,10 +228,12 @@ $memberStatusOptions = [
           <small>JPG, PNG o WEBP. Maximo 2 MB.</small>
         </label>
         <?php if (!empty($member['photo_path'])): ?>
-          <label class="checkbox-field field--wide">
-            <input name="remove_photo" type="checkbox" value="1">
-            <span>Quitar foto actual</span>
-          </label>
+          <div class="field field--wide member-photo-actions">
+            <button class="photo-remove-button" name="remove_photo" type="submit" value="1">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 21a2 2 0 0 1-2-2V8h14v11a2 2 0 0 1-2 2H7ZM9 6V4h6v2h5v2H4V6h5Zm0 5v7h2v-7H9Zm4 0v7h2v-7h-2Z"/></svg>
+              Quitar foto actual
+            </button>
+          </div>
         <?php endif; ?>
       </div>
 
