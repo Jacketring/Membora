@@ -140,38 +140,59 @@ final class MemberRepository
     ): array
     {
         self::ensurePhotoColumn();
+        MembershipRepository::ensureTables();
 
         $params = ['tenant_id' => $tenantId];
-        $where = ['tenant_id = :tenant_id'];
+        $where = ['members.tenant_id = :tenant_id'];
 
         if ($query !== '') {
-            $where[] = '(first_name LIKE :query OR last_name LIKE :query OR email LIKE :query OR phone LIKE :query)';
+            $where[] = '(members.first_name LIKE :query OR members.last_name LIKE :query OR members.email LIKE :query OR members.phone LIKE :query OR membership_plans.name LIKE :query)';
             $params['query'] = '%' . $query . '%';
         }
 
         if ($status === 'ACTIVE') {
-            $where[] = 'status <> "INACTIVE"';
+            $where[] = 'members.status <> "INACTIVE"';
         } elseif ($status === 'INACTIVE') {
-            $where[] = 'status = "INACTIVE"';
+            $where[] = 'members.status = "INACTIVE"';
         }
 
         if ($dateFrom !== '') {
-            $where[] = 'DATE(joined_at) >= :date_from';
+            $where[] = 'DATE(members.joined_at) >= :date_from';
             $params['date_from'] = $dateFrom;
         }
 
         if ($dateTo !== '') {
-            $where[] = 'DATE(joined_at) <= :date_to';
+            $where[] = 'DATE(members.joined_at) <= :date_to';
             $params['date_to'] = $dateTo;
         }
 
         $stmt = Database::connection()->prepare(
-            'SELECT id, first_name, last_name, email, phone,
-                    CASE WHEN status = "INACTIVE" THEN "INACTIVE" ELSE "ACTIVE" END AS status,
-                    photo_path, joined_at, created_at, updated_at
+            'SELECT members.id, members.first_name, members.last_name, members.email, members.phone,
+                    CASE WHEN members.status = "INACTIVE" THEN "INACTIVE" ELSE "ACTIVE" END AS status,
+                    members.photo_path, members.joined_at, members.created_at, members.updated_at,
+                    subscriptions.id AS subscription_id,
+                    subscriptions.membership_plan_id,
+                    subscriptions.starts_at AS membership_starts_at,
+                    subscriptions.ends_at AS membership_ends_at,
+                    membership_plans.name AS membership_name,
+                    membership_plans.price AS membership_price,
+                    membership_plans.billing_period AS membership_period
              FROM members
+             LEFT JOIN subscriptions ON subscriptions.member_id = members.id
+                AND subscriptions.tenant_id = members.tenant_id
+                AND subscriptions.status = "ACTIVE"
+                AND subscriptions.id = (
+                    SELECT latest_subscription.id
+                    FROM subscriptions latest_subscription
+                    WHERE latest_subscription.member_id = members.id
+                    AND latest_subscription.tenant_id = members.tenant_id
+                    AND latest_subscription.status = "ACTIVE"
+                    ORDER BY latest_subscription.ends_at DESC, latest_subscription.created_at DESC
+                    LIMIT 1
+                )
+             LEFT JOIN membership_plans ON membership_plans.id = subscriptions.membership_plan_id
              WHERE ' . implode(' AND ', $where) . '
-             ORDER BY joined_at DESC, created_at DESC
+             ORDER BY members.joined_at DESC, members.created_at DESC
              LIMIT ' . max(1, min($limit, 300))
         );
         $stmt->execute($params);
@@ -210,6 +231,182 @@ final class MemberRepository
             Database::connection()->exec('ALTER TABLE members ADD COLUMN photo_path VARCHAR(255) NULL AFTER phone');
         } catch (Throwable) {
             // The app still works without photos if the DB user cannot alter the table.
+        }
+    }
+}
+
+final class MembershipRepository
+{
+    public static function ensureTables(): void
+    {
+        $pdo = Database::connection();
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS membership_plans (
+                id VARCHAR(191) NOT NULL PRIMARY KEY,
+                tenant_id VARCHAR(191) NOT NULL,
+                name VARCHAR(191) NOT NULL,
+                description TEXT NULL,
+                price DECIMAL(10,2) NOT NULL DEFAULT 0,
+                billing_period VARCHAR(32) NOT NULL DEFAULT "MONTHLY",
+                duration_days INT NOT NULL DEFAULT 30,
+                status VARCHAR(32) NOT NULL DEFAULT "ACTIVE",
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                INDEX membership_plans_tenant_id_idx (tenant_id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+        );
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS subscriptions (
+                id VARCHAR(191) NOT NULL PRIMARY KEY,
+                tenant_id VARCHAR(191) NOT NULL,
+                member_id VARCHAR(191) NOT NULL,
+                membership_plan_id VARCHAR(191) NOT NULL,
+                status VARCHAR(32) NOT NULL DEFAULT "ACTIVE",
+                starts_at DATE NOT NULL,
+                ends_at DATE NOT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                INDEX subscriptions_tenant_id_idx (tenant_id),
+                INDEX subscriptions_member_id_idx (member_id),
+                INDEX subscriptions_membership_plan_id_idx (membership_plan_id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+        );
+
+        self::ensureColumn('membership_plans', 'price', 'DECIMAL(10,2) NOT NULL DEFAULT 0');
+        self::ensureColumn('membership_plans', 'billing_period', 'VARCHAR(32) NOT NULL DEFAULT "MONTHLY"');
+        self::ensureColumn('membership_plans', 'duration_days', 'INT NOT NULL DEFAULT 30');
+        self::ensureColumn('membership_plans', 'status', 'VARCHAR(32) NOT NULL DEFAULT "ACTIVE"');
+        self::ensureColumn('subscriptions', 'membership_plan_id', 'VARCHAR(191) NULL');
+        self::ensureColumn('subscriptions', 'starts_at', 'DATE NULL');
+        self::ensureColumn('subscriptions', 'ends_at', 'DATE NULL');
+        self::ensureColumn('subscriptions', 'status', 'VARCHAR(32) NOT NULL DEFAULT "ACTIVE"');
+    }
+
+    public static function plans(string $tenantId, string $query = '', string $status = '', int $limit = 200): array
+    {
+        self::ensureTables();
+
+        $params = ['tenant_id' => $tenantId];
+        $where = ['tenant_id = :tenant_id'];
+
+        if ($query !== '') {
+            $where[] = '(name LIKE :query OR description LIKE :query)';
+            $params['query'] = '%' . $query . '%';
+        }
+
+        if ($status !== '') {
+            $where[] = 'status = :status';
+            $params['status'] = $status;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT *
+             FROM membership_plans
+             WHERE ' . implode(' AND ', $where) . '
+             ORDER BY status ASC, price ASC, name ASC
+             LIMIT ' . max(1, min($limit, 300))
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function metrics(string $tenantId): array
+    {
+        self::ensureTables();
+        $pdo = Database::connection();
+
+        return [
+            'plans' => self::count($pdo, 'membership_plans', $tenantId, 'status = "ACTIVE"'),
+            'assigned' => self::count($pdo, 'subscriptions', $tenantId, 'status = "ACTIVE"'),
+            'expiring' => self::count($pdo, 'subscriptions', $tenantId, 'status = "ACTIVE" AND ends_at BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)'),
+            'expired' => self::count($pdo, 'subscriptions', $tenantId, 'status = "ACTIVE" AND ends_at < CURDATE()'),
+        ];
+    }
+
+    public static function subscriptions(string $tenantId, string $query = '', int $limit = 200): array
+    {
+        self::ensureTables();
+
+        $params = ['tenant_id' => $tenantId];
+        $where = ['subscriptions.tenant_id = :tenant_id', 'subscriptions.status = "ACTIVE"'];
+
+        if ($query !== '') {
+            $where[] = '(members.first_name LIKE :query OR members.last_name LIKE :query OR membership_plans.name LIKE :query)';
+            $params['query'] = '%' . $query . '%';
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT subscriptions.*, members.first_name, members.last_name, membership_plans.name AS plan_name,
+                    membership_plans.price, membership_plans.billing_period
+             FROM subscriptions
+             INNER JOIN members ON members.id = subscriptions.member_id
+             INNER JOIN membership_plans ON membership_plans.id = subscriptions.membership_plan_id
+             WHERE ' . implode(' AND ', $where) . '
+             ORDER BY subscriptions.ends_at ASC
+             LIMIT ' . max(1, min($limit, 300))
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function assignToMember(string $tenantId, string $memberId, ?string $planId, ?string $startsAt = null, ?string $endsAt = null): void
+    {
+        self::ensureTables();
+        $pdo = Database::connection();
+
+        $cancel = $pdo->prepare('UPDATE subscriptions SET status = "CANCELLED", updated_at = NOW() WHERE tenant_id = :tenant_id AND member_id = :member_id AND status = "ACTIVE"');
+        $cancel->execute(['tenant_id' => $tenantId, 'member_id' => $memberId]);
+
+        if (!$planId) {
+            return;
+        }
+
+        $planStmt = $pdo->prepare('SELECT billing_period FROM membership_plans WHERE id = :id AND tenant_id = :tenant_id AND status = "ACTIVE" LIMIT 1');
+        $planStmt->execute(['id' => $planId, 'tenant_id' => $tenantId]);
+        $period = $planStmt->fetchColumn();
+
+        if (!$period) {
+            return;
+        }
+
+        $startsAt = $startsAt ?: date('Y-m-d');
+        $endsAt = $endsAt ?: membership_end_date($startsAt, (string) $period);
+
+        $stmt = $pdo->prepare(
+            'INSERT INTO subscriptions (id, tenant_id, member_id, membership_plan_id, status, starts_at, ends_at, created_at, updated_at)
+             VALUES (:id, :tenant_id, :member_id, :membership_plan_id, "ACTIVE", :starts_at, :ends_at, NOW(), NOW())'
+        );
+        $stmt->execute([
+            'id' => cuid(),
+            'tenant_id' => $tenantId,
+            'member_id' => $memberId,
+            'membership_plan_id' => $planId,
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+        ]);
+    }
+
+    private static function count(PDO $pdo, string $table, string $tenantId, string $where): int
+    {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM {$table} WHERE tenant_id = :tenant_id AND {$where}");
+        $stmt->execute(['tenant_id' => $tenantId]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    private static function ensureColumn(string $table, string $column, string $definition): void
+    {
+        try {
+            $stmt = Database::connection()->query('SHOW COLUMNS FROM ' . $table . ' LIKE "' . $column . '"');
+            if ($stmt && $stmt->fetchColumn()) {
+                return;
+            }
+
+            Database::connection()->exec('ALTER TABLE ' . $table . ' ADD COLUMN ' . $column . ' ' . $definition);
+        } catch (Throwable) {
         }
     }
 }

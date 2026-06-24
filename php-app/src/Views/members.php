@@ -83,6 +83,8 @@ $memberStatusOptions = [
           <th scope="col">Telefono</th>
           <th scope="col">Email</th>
           <th scope="col">Estado</th>
+          <th scope="col">Membresia</th>
+          <th scope="col">Caduca</th>
           <th scope="col">Alta</th>
           <th scope="col">Actualizacion</th>
           <th scope="col">Acciones</th>
@@ -109,6 +111,23 @@ $memberStatusOptions = [
                 <?= e(status_label($member['status'])) ?>
               </span>
             </td>
+            <td>
+              <?php if (!empty($member['membership_name'])): ?>
+                <strong><?= e($member['membership_name']) ?></strong>
+                <small class="table-subtext"><?= e(money_amount($member['membership_price'])) ?> · <?= e(membership_period_label($member['membership_period'])) ?></small>
+              <?php else: ?>
+                <span class="muted-cell">Sin membresia</span>
+              <?php endif; ?>
+            </td>
+            <td>
+              <?php if (!empty($member['membership_ends_at'])): ?>
+                <span class="membership-expiry <?= strtotime($member['membership_ends_at']) < strtotime(date('Y-m-d')) ? 'membership-expiry--expired' : '' ?>">
+                  <?= e(format_date_short($member['membership_ends_at'])) ?>
+                </span>
+              <?php else: ?>
+                <span class="muted-cell">Sin fecha</span>
+              <?php endif; ?>
+            </td>
             <td><?= e(format_date($member['joined_at'])) ?></td>
             <td><?= e(format_date($member['updated_at'])) ?></td>
             <td>
@@ -130,11 +149,11 @@ $memberStatusOptions = [
 
         <?php if (!$members): ?>
           <tr data-live-search-empty>
-            <td class="leads-empty-cell" colspan="7">No hay socios que coincidan con los filtros actuales.</td>
+            <td class="leads-empty-cell" colspan="9">No hay socios que coincidan con los filtros actuales.</td>
           </tr>
         <?php else: ?>
           <tr data-live-search-empty hidden>
-            <td class="leads-empty-cell" colspan="7">No hay socios que coincidan con la busqueda actual.</td>
+            <td class="leads-empty-cell" colspan="9">No hay socios que coincidan con la busqueda actual.</td>
           </tr>
         <?php endif; ?>
       </tbody>
@@ -222,6 +241,31 @@ $memberStatusOptions = [
           <span>Fecha de alta</span>
           <input name="joined_at" type="date" value="<?= $member['joined_at'] ? e(date('Y-m-d', strtotime($member['joined_at']))) : '' ?>">
         </label>
+        <div class="field">
+          <span>Membresia</span>
+          <div class="custom-select custom-select--field" data-custom-select>
+            <input type="hidden" name="membership_plan_id" value="<?= e($member['membership_plan_id'] ?? '') ?>" data-custom-select-value>
+            <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+              <span data-custom-select-label><?= e($member['membership_name'] ?? 'Sin membresia') ?></span>
+            </button>
+            <div class="custom-select-menu" data-custom-select-menu hidden>
+              <button class="custom-select-option <?= empty($member['membership_plan_id']) ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="">Sin membresia</button>
+              <?php foreach ($membershipPlans as $planOption): ?>
+                <button class="custom-select-option <?= ($member['membership_plan_id'] ?? '') === $planOption['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($planOption['id']) ?>">
+                  <?= e($planOption['name']) ?> · <?= e(money_amount($planOption['price'])) ?> · <?= e(membership_period_label($planOption['billing_period'])) ?>
+                </button>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </div>
+        <label class="field">
+          <span>Inicio membresia</span>
+          <input name="membership_starts_at" type="date" value="<?= !empty($member['membership_starts_at']) ? e(date('Y-m-d', strtotime($member['membership_starts_at']))) : e(date('Y-m-d')) ?>">
+        </label>
+        <label class="field">
+          <span>Caducidad</span>
+          <input name="membership_ends_at" type="date" value="<?= !empty($member['membership_ends_at']) ? e(date('Y-m-d', strtotime($member['membership_ends_at']))) : '' ?>">
+        </label>
         <label class="field field--wide member-photo-field">
           <span>Foto del socio</span>
           <input name="photo" type="file" accept="image/jpeg,image/png,image/webp">
@@ -304,6 +348,31 @@ $memberStatusOptions = [
       <label class="field">
         <span>Fecha de alta</span>
         <input name="joined_at" type="date" value="<?= e(date('Y-m-d')) ?>">
+      </label>
+      <div class="field">
+        <span>Membresia</span>
+        <div class="custom-select custom-select--field" data-custom-select>
+          <input type="hidden" name="membership_plan_id" value="" data-custom-select-value>
+          <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+            <span data-custom-select-label>Sin membresia</span>
+          </button>
+          <div class="custom-select-menu" data-custom-select-menu hidden>
+            <button class="custom-select-option selected" type="button" data-custom-select-option data-value="">Sin membresia</button>
+            <?php foreach ($membershipPlans as $planOption): ?>
+              <button class="custom-select-option" type="button" data-custom-select-option data-value="<?= e($planOption['id']) ?>">
+                <?= e($planOption['name']) ?> · <?= e(money_amount($planOption['price'])) ?> · <?= e(membership_period_label($planOption['billing_period'])) ?>
+              </button>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
+      <label class="field">
+        <span>Inicio membresia</span>
+        <input name="membership_starts_at" type="date" value="<?= e(date('Y-m-d')) ?>">
+      </label>
+      <label class="field">
+        <span>Caducidad</span>
+        <input name="membership_ends_at" type="date">
       </label>
       <label class="field field--wide member-photo-field">
         <span>Foto del socio</span>

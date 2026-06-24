@@ -105,6 +105,20 @@ switch ($route) {
             'filters' => $filters,
             'metrics' => MemberRepository::metrics($tenantId),
             'members' => $members,
+            'membershipPlans' => MembershipRepository::plans($tenantId, '', 'ACTIVE'),
+        ]);
+        break;
+
+    case 'memberships':
+        $filters = [
+            'q' => trim((string) ($_GET['q'] ?? '')),
+            'status' => trim((string) ($_GET['status'] ?? '')),
+        ];
+        render_layout('Membresias', 'memberships', [
+            'filters' => $filters,
+            'metrics' => MembershipRepository::metrics($tenantId),
+            'plans' => MembershipRepository::plans($tenantId, $filters['q'], $filters['status']),
+            'subscriptions' => MembershipRepository::subscriptions($tenantId, $filters['q']),
         ]);
         break;
 

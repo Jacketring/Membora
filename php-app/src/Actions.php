@@ -25,6 +25,9 @@ final class Actions
             'create_member' => self::createMember(),
             'update_member' => self::updateMember(),
             'delete_member' => self::deleteMember(),
+            'create_membership_plan' => self::createMembershipPlan(),
+            'update_membership_plan' => self::updateMembershipPlan(),
+            'delete_membership_plan' => self::deleteMembershipPlan(),
             'create_task' => self::createTask(),
             'update_task' => self::updateTask(),
             'update_task_status' => self::updateTaskStatus(),
@@ -347,9 +350,12 @@ final class Actions
             'INSERT INTO members (id, tenant_id, lead_id, first_name, last_name, email, phone, photo_path, status, joined_at, created_at, updated_at)
              VALUES (:id, :tenant_id, NULL, :first_name, :last_name, :email, :phone, :photo_path, :status, :joined_at, NOW(), NOW())'
         );
+        $tenantId = Auth::tenantId();
+        $memberId = cuid();
+
         $stmt->execute([
-            'id' => cuid(),
-            'tenant_id' => Auth::tenantId(),
+            'id' => $memberId,
+            'tenant_id' => $tenantId,
             'first_name' => $firstName,
             'last_name' => post_value('last_name') ?: null,
             'email' => post_value('email') ?: null,
@@ -358,6 +364,14 @@ final class Actions
             'status' => $status,
             'joined_at' => post_value('joined_at') ?: date('Y-m-d'),
         ]);
+
+        MembershipRepository::assignToMember(
+            $tenantId,
+            $memberId,
+            post_value('membership_plan_id') ?: null,
+            post_value('membership_starts_at') ?: null,
+            post_value('membership_ends_at') ?: null
+        );
 
         flash('Socio creado correctamente.');
         redirect('members');
@@ -415,6 +429,14 @@ final class Actions
             'tenant_id' => $tenantId,
         ]);
 
+        MembershipRepository::assignToMember(
+            $tenantId,
+            $memberId,
+            post_value('membership_plan_id') ?: null,
+            post_value('membership_starts_at') ?: null,
+            post_value('membership_ends_at') ?: null
+        );
+
         flash('Socio actualizado correctamente.');
         redirect('members');
     }
@@ -426,6 +448,7 @@ final class Actions
         $tenantId = Auth::tenantId();
 
         MemberRepository::ensurePhotoColumn();
+        MembershipRepository::ensureTables();
         TaskRepository::ensureMemberLinksTable();
         $pdo->beginTransaction();
         try {
@@ -440,6 +463,9 @@ final class Actions
 
             $unlinkTasks = $pdo->prepare('UPDATE tasks SET member_id = NULL, updated_at = NOW() WHERE member_id = :id AND tenant_id = :tenant_id');
             $unlinkTasks->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
+
+            $cancelSubscriptions = $pdo->prepare('UPDATE subscriptions SET status = "CANCELLED", updated_at = NOW() WHERE member_id = :id AND tenant_id = :tenant_id');
+            $cancelSubscriptions->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
 
             $deleteMember = $pdo->prepare('DELETE FROM members WHERE id = :id AND tenant_id = :tenant_id');
             $deleteMember->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
@@ -539,6 +565,107 @@ final class Actions
         if (is_file($fullPath)) {
             @unlink($fullPath);
         }
+    }
+
+    private static function createMembershipPlan(): never
+    {
+        MembershipRepository::ensureTables();
+        $name = post_value('name', '');
+
+        if ($name === '') {
+            flash('Indica el nombre de la membresia.', 'error');
+            redirect('memberships');
+        }
+
+        $period = self::membershipPeriodFromPost();
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO membership_plans (id, tenant_id, name, description, price, billing_period, duration_days, status, created_at, updated_at)
+             VALUES (:id, :tenant_id, :name, :description, :price, :billing_period, :duration_days, :status, NOW(), NOW())'
+        );
+        $stmt->execute([
+            'id' => cuid(),
+            'tenant_id' => Auth::tenantId(),
+            'name' => $name,
+            'description' => post_value('description') ?: null,
+            'price' => self::priceFromPost(),
+            'billing_period' => $period,
+            'duration_days' => membership_duration_days($period),
+            'status' => post_value('status') === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
+        ]);
+
+        flash('Membresia creada correctamente.');
+        redirect('memberships');
+    }
+
+    private static function updateMembershipPlan(): never
+    {
+        MembershipRepository::ensureTables();
+        $name = post_value('name', '');
+
+        if ($name === '') {
+            flash('Indica el nombre de la membresia.', 'error');
+            redirect('memberships');
+        }
+
+        $period = self::membershipPeriodFromPost();
+        $stmt = Database::connection()->prepare(
+            'UPDATE membership_plans
+             SET name = :name,
+                 description = :description,
+                 price = :price,
+                 billing_period = :billing_period,
+                 duration_days = :duration_days,
+                 status = :status,
+                 updated_at = NOW()
+             WHERE id = :id AND tenant_id = :tenant_id'
+        );
+        $stmt->execute([
+            'name' => $name,
+            'description' => post_value('description') ?: null,
+            'price' => self::priceFromPost(),
+            'billing_period' => $period,
+            'duration_days' => membership_duration_days($period),
+            'status' => post_value('status') === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
+            'id' => post_value('id'),
+            'tenant_id' => Auth::tenantId(),
+        ]);
+
+        flash('Membresia actualizada correctamente.');
+        redirect('memberships');
+    }
+
+    private static function deleteMembershipPlan(): never
+    {
+        MembershipRepository::ensureTables();
+        $tenantId = Auth::tenantId();
+        $planId = post_value('id');
+        $pdo = Database::connection();
+
+        $activeStmt = $pdo->prepare('SELECT COUNT(*) FROM subscriptions WHERE tenant_id = :tenant_id AND membership_plan_id = :id AND status = "ACTIVE"');
+        $activeStmt->execute(['tenant_id' => $tenantId, 'id' => $planId]);
+
+        if ((int) $activeStmt->fetchColumn() > 0) {
+            flash('No se puede eliminar una membresia asignada a socios. Desactivala si ya no se vende.', 'error');
+            redirect('memberships');
+        }
+
+        $stmt = $pdo->prepare('DELETE FROM membership_plans WHERE id = :id AND tenant_id = :tenant_id');
+        $stmt->execute(['id' => $planId, 'tenant_id' => $tenantId]);
+
+        flash('Membresia eliminada correctamente.');
+        redirect('memberships');
+    }
+
+    private static function membershipPeriodFromPost(): string
+    {
+        $period = post_value('billing_period', 'MONTHLY');
+        return in_array($period, ['WEEKLY', 'MONTHLY', 'YEARLY'], true) ? $period : 'MONTHLY';
+    }
+
+    private static function priceFromPost(): string
+    {
+        $price = str_replace(',', '.', post_value('price', '0') ?? '0');
+        return number_format(max(0, (float) $price), 2, '.', '');
     }
 
     private static function createTask(): never

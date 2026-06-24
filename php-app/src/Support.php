@@ -60,6 +60,21 @@ function format_date(?string $value): string
     return $timestamp ? date('d/m/Y H:i', $timestamp) : 'Sin fecha';
 }
 
+function format_date_short(?string $value): string
+{
+    if (!$value) {
+        return 'Sin fecha';
+    }
+
+    $timestamp = strtotime($value);
+    return $timestamp ? date('d/m/Y', $timestamp) : 'Sin fecha';
+}
+
+function money_amount(mixed $value): string
+{
+    return number_format((float) $value, 2, ',', '.') . ' EUR';
+}
+
 function country_dial_codes(): array
 {
     return [
@@ -264,4 +279,34 @@ function task_type_label(?string $type): string
         'OPERATIONAL' => 'Operativa',
         'OTHER' => 'Otra',
     ]);
+}
+
+function membership_period_label(?string $period): string
+{
+    return enum_label((string) $period, [
+        'WEEKLY' => 'Semanal',
+        'MONTHLY' => 'Mensual',
+        'YEARLY' => 'Anual',
+    ]);
+}
+
+function membership_duration_days(?string $period): int
+{
+    return match ($period) {
+        'WEEKLY' => 7,
+        'YEARLY' => 365,
+        default => 30,
+    };
+}
+
+function membership_end_date(?string $startDate, ?string $period): string
+{
+    $startDate = $startDate ?: date('Y-m-d');
+    $date = new DateTimeImmutable($startDate);
+
+    return match ($period) {
+        'WEEKLY' => $date->modify('+7 days')->format('Y-m-d'),
+        'YEARLY' => $date->modify('+1 year')->format('Y-m-d'),
+        default => $date->modify('+1 month')->format('Y-m-d'),
+    };
 }
