@@ -202,6 +202,10 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
       options.forEach((item) => item.classList.toggle('selected', item === option));
       menu.hidden = true;
       trigger.setAttribute('aria-expanded', 'false');
+      valueInput.dispatchEvent(new CustomEvent('custom-select-change', {
+        bubbles: true,
+        detail: { option },
+      }));
       trigger.focus();
       submitAutoFilterForm(select.closest('[data-auto-filter-form]'), 0);
     });
@@ -236,6 +240,52 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     closeCustomSelects(null);
   }
+});
+
+function formatDateInputValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function updateMembershipEndDate(container, durationDays) {
+  const startInput = container.querySelector('[data-membership-start-date]');
+  const endInput = container.querySelector('[data-membership-end-date]');
+
+  if (!startInput || !endInput || !durationDays || !startInput.value) {
+    return;
+  }
+
+  const startDate = new Date(`${startInput.value}T00:00:00`);
+  if (Number.isNaN(startDate.getTime())) {
+    return;
+  }
+
+  startDate.setDate(startDate.getDate() + Number(durationDays));
+  endInput.value = formatDateInputValue(startDate);
+}
+
+function selectedMembershipDuration(container) {
+  const selectedOption = container.querySelector('input[name="membership_plan_id"]')
+    ?.closest('[data-custom-select]')
+    ?.querySelector('[data-custom-select-option].selected');
+
+  return Number(selectedOption?.dataset.durationDays || 0);
+}
+
+document.querySelectorAll('input[name="membership_plan_id"]').forEach((input) => {
+  const form = input.closest('form');
+  if (!form) return;
+
+  input.addEventListener('custom-select-change', (event) => {
+    const durationDays = Number(event.detail?.option?.dataset.durationDays || 0);
+    updateMembershipEndDate(form, durationDays);
+  });
+
+  form.querySelector('[data-membership-start-date]')?.addEventListener('change', () => {
+    updateMembershipEndDate(form, selectedMembershipDuration(form));
+  });
 });
 
 document.querySelectorAll('[data-auto-filter-form]').forEach((form) => {
