@@ -211,6 +211,16 @@ foreach ($classTypes as $type) {
     $calendarDate = DateTimeImmutable::createFromFormat('Y-m-d', $calendar['month'] . '-01') ?: new DateTimeImmutable('first day of this month');
     $previousMonth = $calendarDate->modify('-1 month')->format('Y-m');
     $nextMonth = $calendarDate->modify('+1 month')->format('Y-m');
+    $calendarQueryBase = [
+      'route' => 'classes',
+      'q' => $filters['q'],
+      'type' => $filters['type'],
+      'date_from' => $filters['date_from'],
+      'date_to' => $filters['date_to'],
+      'modal' => 'classes-calendar-modal',
+    ];
+    $previousMonthUrl = 'index.php?' . http_build_query($calendarQueryBase + ['month' => $previousMonth]);
+    $nextMonthUrl = 'index.php?' . http_build_query($calendarQueryBase + ['month' => $nextMonth]);
   ?>
   <header>
     <div>
@@ -218,8 +228,8 @@ foreach ($classTypes as $type) {
       <p><?= e($calendar['title']) ?></p>
     </div>
     <div class="calendar-header-actions">
-      <a class="secondary-action" href="index.php?route=classes&month=<?= e($previousMonth) ?>&date_from=<?= e($previousMonth) ?>-01&date_to=<?= e(date('Y-m-t', strtotime($previousMonth . '-01'))) ?>&modal=classes-calendar-modal">Mes anterior</a>
-      <a class="secondary-action" href="index.php?route=classes&month=<?= e($nextMonth) ?>&date_from=<?= e($nextMonth) ?>-01&date_to=<?= e(date('Y-m-t', strtotime($nextMonth . '-01'))) ?>&modal=classes-calendar-modal">Mes siguiente</a>
+      <a class="secondary-action" href="<?= e($previousMonthUrl) ?>">Mes anterior</a>
+      <a class="secondary-action" href="<?= e($nextMonthUrl) ?>">Mes siguiente</a>
       <button data-close-modal type="button">Cerrar</button>
     </div>
   </header>
