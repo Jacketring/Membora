@@ -87,6 +87,20 @@ switch ($route) {
         ]);
         break;
 
+    case 'users':
+        $filters = [
+            'q' => trim((string) ($_GET['q'] ?? '')),
+            'role_id' => trim((string) ($_GET['role_id'] ?? '')),
+            'status' => trim((string) ($_GET['status'] ?? '')),
+        ];
+        render_layout('Usuarios', 'users', [
+            'filters' => $filters,
+            'roles' => UserRepository::roles(),
+            'metrics' => UserRepository::metrics($tenantId),
+            'users' => UserRepository::all($tenantId, $filters['q'], $filters['role_id'], $filters['status']),
+        ]);
+        break;
+
     case 'members':
         $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),

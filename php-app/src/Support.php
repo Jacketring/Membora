@@ -228,6 +228,19 @@ function status_label(?string $status): string
     ]);
 }
 
+function role_label(?string $role): string
+{
+    return enum_label((string) $role, [
+        'SUPER_ADMIN' => 'Superadmin',
+        'GYM_ADMIN' => 'Administrador',
+        'ADMIN' => 'Administrador',
+        'RECEPTION' => 'Recepcion',
+        'SALES' => 'Comercial',
+        'TRAINER' => 'Entrenador',
+        'STAFF' => 'Equipo',
+    ]);
+}
+
 function format_time(?string $value): string
 {
     if (!$value) {

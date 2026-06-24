@@ -13,6 +13,8 @@ final class Actions
         match ($action) {
             'login' => self::login(),
             'logout' => self::logout(),
+            'create_user' => self::createUser(),
+            'update_user' => self::updateUser(),
             'create_lead' => self::createLead(),
             'update_lead' => self::updateLead(),
             'add_lead_note' => self::addLeadNote(),
@@ -62,6 +64,143 @@ final class Actions
     {
         Auth::logout();
         redirect('login');
+    }
+
+    private static function createUser(): never
+    {
+        $tenantId = Auth::tenantId();
+        $name = post_value('name', '');
+        $email = strtolower(post_value('email', ''));
+        $password = post_value('password', '');
+        $roleId = post_value('role_id', '');
+
+        if ($name === '' || $email === '' || $password === '' || $roleId === '') {
+            flash('Indica nombre, email, contrasena y rol.', 'error');
+            redirect('users');
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('El email del usuario no es valido.', 'error');
+            redirect('users');
+        }
+
+        if (strlen($password) < 8) {
+            flash('La contrasena debe tener al menos 8 caracteres.', 'error');
+            redirect('users');
+        }
+
+        if (!UserRepository::roleExists($roleId)) {
+            flash('Selecciona un rol valido.', 'error');
+            redirect('users');
+        }
+
+        if (UserRepository::emailExists($tenantId, $email)) {
+            flash('Ya existe un usuario interno con ese email.', 'error');
+            redirect('users');
+        }
+
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO users (id, tenant_id, role_id, name, email, password_hash, status, created_at, updated_at)
+             VALUES (:id, :tenant_id, :role_id, :name, :email, :password_hash, :status, NOW(), NOW())'
+        );
+        $stmt->execute([
+            'id' => cuid(),
+            'tenant_id' => $tenantId,
+            'role_id' => $roleId,
+            'name' => $name,
+            'email' => $email,
+            'password_hash' => password_hash($password, PASSWORD_BCRYPT),
+            'status' => self::userStatusFromPost(),
+        ]);
+
+        flash('Usuario interno creado correctamente.');
+        redirect('users');
+    }
+
+    private static function updateUser(): never
+    {
+        $tenantId = Auth::tenantId();
+        $userId = post_value('id', '');
+        $name = post_value('name', '');
+        $email = strtolower(post_value('email', ''));
+        $roleId = post_value('role_id', '');
+        $status = self::userStatusFromPost();
+        $password = post_value('password', '');
+
+        if ($name === '' || $email === '' || $roleId === '' || $userId === '') {
+            flash('Indica nombre, email y rol.', 'error');
+            redirect('users');
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('El email del usuario no es valido.', 'error');
+            redirect('users');
+        }
+
+        if ($password !== '' && strlen($password) < 8) {
+            flash('La nueva contrasena debe tener al menos 8 caracteres.', 'error');
+            redirect('users');
+        }
+
+        if (!UserRepository::roleExists($roleId)) {
+            flash('Selecciona un rol valido.', 'error');
+            redirect('users');
+        }
+
+        if (($userId === (Auth::user()['id'] ?? null)) && $status !== 'ACTIVE') {
+            flash('No puedes desactivar tu propio usuario mientras estas dentro.', 'error');
+            redirect('users');
+        }
+
+        if (UserRepository::emailExists($tenantId, $email, $userId)) {
+            flash('Ya existe otro usuario interno con ese email.', 'error');
+            redirect('users');
+        }
+
+        $params = [
+            'name' => $name,
+            'email' => $email,
+            'role_id' => $roleId,
+            'status' => $status,
+            'id' => $userId,
+            'tenant_id' => $tenantId,
+        ];
+        $passwordSql = '';
+
+        if ($password !== '') {
+            $passwordSql = ', password_hash = :password_hash';
+            $params['password_hash'] = password_hash($password, PASSWORD_BCRYPT);
+        }
+
+        $stmt = Database::connection()->prepare(
+            'UPDATE users
+             SET name = :name,
+                 email = :email,
+                 role_id = :role_id,
+                 status = :status' . $passwordSql . ',
+                 updated_at = NOW()
+             WHERE id = :id AND tenant_id = :tenant_id'
+        );
+        $stmt->execute($params);
+
+        if ($userId === (Auth::user()['id'] ?? null)) {
+            $_SESSION['user']['name'] = $name;
+            $_SESSION['user']['email'] = $email;
+            foreach (UserRepository::roles() as $role) {
+                if ($role['id'] === $roleId) {
+                    $_SESSION['user']['role'] = $role['role_key'];
+                    break;
+                }
+            }
+        }
+
+        flash('Usuario interno actualizado correctamente.');
+        redirect('users');
+    }
+
+    private static function userStatusFromPost(): string
+    {
+        return post_value('status') === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE';
     }
 
     private static function createLead(): never

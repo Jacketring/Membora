@@ -1066,6 +1066,7 @@ a.global-search-result:hover {
 .leads-table-card header span { color: var(--muted); font-size: 14px; }
 .leads-table-wrap { overflow: auto; }
 .leads-table { border-collapse: separate; border-spacing: 0; min-width: 1120px; width: 100%; }
+.users-table { min-width: 980px; }
 .leads-table th {
   background: #f8faff;
   border-bottom: 1px solid #edf0f7;

@@ -29,6 +29,7 @@ $jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
       <nav class="sidebar-nav">
         <a class="<?= $route === 'dashboard' ? 'active' : '' ?>" href="index.php?route=dashboard">Panel</a>
         <a class="<?= $route === 'leads' ? 'active' : '' ?>" href="index.php?route=leads">Leads</a>
+        <a class="<?= $route === 'users' ? 'active' : '' ?>" href="index.php?route=users">Usuarios</a>
         <a class="<?= $route === 'members' ? 'active' : '' ?>" href="index.php?route=members">Socios</a>
         <a class="<?= $route === 'memberships' ? 'active' : '' ?>" href="index.php?route=memberships">Membresias</a>
         <a class="<?= $route === 'classes' ? 'active' : '' ?>" href="index.php?route=classes">Clases</a>
@@ -52,7 +53,7 @@ $jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
           <span><?= e(substr($user['name'], 0, 1)) ?></span>
           <div>
             <strong><?= e($user['name']) ?></strong>
-            <small><?= e($user['role']) ?></small>
+            <small><?= e(role_label($user['role'])) ?></small>
           </div>
         </div>
       </header>
