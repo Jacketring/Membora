@@ -87,6 +87,19 @@ final class PipelineRepository
         return $stmt->fetchColumn() ?: null;
     }
 
+    public static function contactedId(string $tenantId): ?string
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT id FROM pipeline_stages
+             WHERE tenant_id = :tenant_id
+             AND (`key` LIKE "%CONTACT%" OR LOWER(name) LIKE "%contact%")
+             ORDER BY `order` ASC
+             LIMIT 1'
+        );
+        $stmt->execute(['tenant_id' => $tenantId]);
+        return $stmt->fetchColumn() ?: self::firstId($tenantId);
+    }
+
     public static function find(string $tenantId, string $stageId): ?array
     {
         $stmt = Database::connection()->prepare(

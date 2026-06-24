@@ -406,6 +406,11 @@ final class Actions
         TaskRepository::ensureMemberLinksTable();
         $pdo->beginTransaction();
         try {
+            $memberStmt = $pdo->prepare('SELECT lead_id FROM members WHERE id = :id AND tenant_id = :tenant_id LIMIT 1');
+            $memberStmt->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
+            $member = $memberStmt->fetch();
+            $leadId = $member['lead_id'] ?? null;
+
             $deleteLinks = $pdo->prepare('DELETE FROM task_members WHERE member_id = :id AND tenant_id = :tenant_id');
             $deleteLinks->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
 
@@ -414,6 +419,23 @@ final class Actions
 
             $deleteMember = $pdo->prepare('DELETE FROM members WHERE id = :id AND tenant_id = :tenant_id');
             $deleteMember->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
+
+            if ($leadId) {
+                $reactivationStageId = PipelineRepository::contactedId($tenantId);
+                $reactivateLead = $pdo->prepare(
+                    'UPDATE leads
+                     SET status = "OPEN",
+                         pipeline_stage_id = COALESCE(:stage_id, pipeline_stage_id),
+                         updated_at = NOW()
+                     WHERE id = :id AND tenant_id = :tenant_id'
+                );
+                $reactivateLead->execute([
+                    'stage_id' => $reactivationStageId,
+                    'id' => $leadId,
+                    'tenant_id' => $tenantId,
+                ]);
+            }
+
             $pdo->commit();
         } catch (Throwable) {
             if ($pdo->inTransaction()) {
@@ -424,7 +446,7 @@ final class Actions
             redirect('members');
         }
 
-        flash('Socio eliminado correctamente.');
+        flash('Socio eliminado correctamente. Si venia de un lead, se ha reactivado en Leads.');
         redirect('members');
     }
 
