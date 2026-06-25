@@ -196,6 +196,252 @@ final class TenantRepository
     }
 }
 
+final class EmpresaRepository
+{
+    public const PLATFORM_ADMIN_EMAIL = 'admin@membora.crm';
+    public const PLATFORM_ADMIN_PASSWORD = 'MemboraAdmin2026!';
+
+    public static function ensureTables(): void
+    {
+        $pdo = Database::connection();
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS empresas (
+                id VARCHAR(191) NOT NULL PRIMARY KEY,
+                tenant_id VARCHAR(191) NULL,
+                name VARCHAR(191) NOT NULL,
+                contact_email VARCHAR(191) NULL,
+                plan VARCHAR(64) NOT NULL DEFAULT "BASIC",
+                status VARCHAR(32) NOT NULL DEFAULT "ACTIVE",
+                payment_status VARCHAR(32) NOT NULL DEFAULT "PAID",
+                monthly_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+                next_payment_at DATE NULL,
+                notes TEXT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY empresas_tenant_unique (tenant_id),
+                INDEX empresas_status_idx (status),
+                INDEX empresas_payment_status_idx (payment_status)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+        );
+
+        self::syncFromTenants();
+    }
+
+    public static function ensurePlatformAdmin(): void
+    {
+        $pdo = Database::connection();
+        $roleId = self::ensureSuperAdminRole();
+
+        UserRepository::ensureAvatarColumn();
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = :email');
+        $stmt->execute(['email' => self::PLATFORM_ADMIN_EMAIL]);
+        if ((int) $stmt->fetchColumn() > 0) {
+            return;
+        }
+
+        $columns = self::tableColumns('users');
+        $values = [
+            'id' => cuid(),
+            'tenant_id' => self::usersTenantAllowsNull() ? null : self::firstTenantId(),
+            'role_id' => $roleId,
+            'name' => 'Administrador Membora',
+            'email' => self::PLATFORM_ADMIN_EMAIL,
+            'password_hash' => password_hash(self::PLATFORM_ADMIN_PASSWORD, PASSWORD_BCRYPT),
+            'status' => 'ACTIVE',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $insertColumns = array_values(array_intersect(array_keys($values), $columns));
+        $placeholders = array_map(static fn (string $column): string => ':' . $column, $insertColumns);
+        $params = array_intersect_key($values, array_flip($insertColumns));
+
+        $insert = $pdo->prepare(
+            'INSERT INTO users (' . implode(', ', $insertColumns) . ')
+             VALUES (' . implode(', ', $placeholders) . ')'
+        );
+        $insert->execute($params);
+    }
+
+    public static function metrics(): array
+    {
+        self::ensureTables();
+        $pdo = Database::connection();
+
+        return [
+            'active' => self::count($pdo, 'status = "ACTIVE"'),
+            'trial' => self::count($pdo, 'status = "TRIAL"'),
+            'payments_pending' => self::count($pdo, 'payment_status IN ("PENDING", "OVERDUE")'),
+            'mrr' => (float) $pdo->query('SELECT COALESCE(SUM(monthly_price), 0) FROM empresas WHERE status IN ("ACTIVE", "TRIAL")')->fetchColumn(),
+        ];
+    }
+
+    public static function all(string $query = '', string $status = '', string $paymentStatus = ''): array
+    {
+        self::ensureTables();
+        $params = [];
+        $where = ['1 = 1'];
+
+        if ($query !== '') {
+            $where[] = '(name LIKE :query OR contact_email LIKE :query OR plan LIKE :query OR notes LIKE :query)';
+            $params['query'] = '%' . $query . '%';
+        }
+
+        if ($status !== '') {
+            $where[] = 'status = :status';
+            $params['status'] = $status;
+        }
+
+        if ($paymentStatus !== '') {
+            $where[] = 'payment_status = :payment_status';
+            $params['payment_status'] = $paymentStatus;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT *
+             FROM empresas
+             WHERE ' . implode(' AND ', $where) . '
+             ORDER BY FIELD(status, "ACTIVE", "TRIAL", "SUSPENDED", "CANCELLED"), next_payment_at IS NULL, next_payment_at ASC, name ASC'
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function create(array $data): void
+    {
+        self::ensureTables();
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO empresas (id, tenant_id, name, contact_email, plan, status, payment_status, monthly_price, next_payment_at, notes, created_at, updated_at)
+             VALUES (:id, NULL, :name, :contact_email, :plan, :status, :payment_status, :monthly_price, :next_payment_at, :notes, NOW(), NOW())'
+        );
+        $stmt->execute(self::empresaParams($data) + ['id' => cuid()]);
+    }
+
+    public static function update(string $id, array $data): void
+    {
+        self::ensureTables();
+        $stmt = Database::connection()->prepare(
+            'UPDATE empresas
+             SET name = :name,
+                 contact_email = :contact_email,
+                 plan = :plan,
+                 status = :status,
+                 payment_status = :payment_status,
+                 monthly_price = :monthly_price,
+                 next_payment_at = :next_payment_at,
+                 notes = :notes,
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute(self::empresaParams($data) + ['id' => $id]);
+    }
+
+    private static function syncFromTenants(): void
+    {
+        $pdo = Database::connection();
+        $tenants = $pdo->query('SELECT id, name, created_at FROM tenants ORDER BY created_at ASC')->fetchAll();
+        $exists = $pdo->prepare('SELECT COUNT(*) FROM empresas WHERE tenant_id = :tenant_id');
+        $insert = $pdo->prepare(
+            'INSERT INTO empresas (id, tenant_id, name, status, payment_status, monthly_price, created_at, updated_at)
+             VALUES (:id, :tenant_id, :name, "ACTIVE", "PAID", 0, :created_at, NOW())'
+        );
+
+        foreach ($tenants as $tenant) {
+            $exists->execute(['tenant_id' => $tenant['id']]);
+            if ((int) $exists->fetchColumn() > 0) {
+                continue;
+            }
+
+            $insert->execute([
+                'id' => cuid(),
+                'tenant_id' => $tenant['id'],
+                'name' => $tenant['name'],
+                'created_at' => $tenant['created_at'] ?: date('Y-m-d H:i:s'),
+            ]);
+        }
+    }
+
+    private static function ensureSuperAdminRole(): string
+    {
+        $pdo = Database::connection();
+        $stmt = $pdo->query('SELECT id FROM roles WHERE `key` IN ("SUPERADMIN", "SUPER_ADMIN") ORDER BY `key` = "SUPERADMIN" DESC LIMIT 1');
+        $roleId = $stmt->fetchColumn();
+        if ($roleId) {
+            return (string) $roleId;
+        }
+
+        $roleId = cuid();
+        $columns = self::tableColumns('roles');
+        $values = [
+            'id' => $roleId,
+            'key' => 'SUPERADMIN',
+            'name' => 'Superadmin',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $insertColumns = array_values(array_intersect(array_keys($values), $columns));
+        $placeholders = array_map(static fn (string $column): string => ':' . $column, $insertColumns);
+        $params = array_intersect_key($values, array_flip($insertColumns));
+        $insert = $pdo->prepare(
+            'INSERT INTO roles (' . implode(', ', array_map(static fn (string $column): string => $column === 'key' ? '`key`' : $column, $insertColumns)) . ')
+             VALUES (' . implode(', ', $placeholders) . ')'
+        );
+        $insert->execute($params);
+
+        return $roleId;
+    }
+
+    private static function empresaParams(array $data): array
+    {
+        $status = in_array($data['status'] ?? '', ['ACTIVE', 'TRIAL', 'SUSPENDED', 'CANCELLED'], true) ? $data['status'] : 'ACTIVE';
+        $paymentStatus = in_array($data['payment_status'] ?? '', ['PAID', 'PENDING', 'OVERDUE', 'TRIAL'], true) ? $data['payment_status'] : 'PAID';
+        $price = str_replace(',', '.', (string) ($data['monthly_price'] ?? '0'));
+
+        return [
+            'name' => trim((string) ($data['name'] ?? '')),
+            'contact_email' => trim((string) ($data['contact_email'] ?? '')) ?: null,
+            'plan' => strtoupper(trim((string) ($data['plan'] ?? 'BASIC'))) ?: 'BASIC',
+            'status' => $status,
+            'payment_status' => $paymentStatus,
+            'monthly_price' => number_format(max(0, (float) $price), 2, '.', ''),
+            'next_payment_at' => trim((string) ($data['next_payment_at'] ?? '')) ?: null,
+            'notes' => trim((string) ($data['notes'] ?? '')) ?: null,
+        ];
+    }
+
+    private static function tableColumns(string $table): array
+    {
+        $stmt = Database::connection()->query('SHOW COLUMNS FROM ' . $table);
+        return array_map(static fn (array $column): string => $column['Field'], $stmt->fetchAll());
+    }
+
+    private static function usersTenantAllowsNull(): bool
+    {
+        $stmt = Database::connection()->query('SHOW COLUMNS FROM users LIKE "tenant_id"');
+        $column = $stmt->fetch();
+
+        return !$column || strtoupper((string) ($column['Null'] ?? 'YES')) === 'YES';
+    }
+
+    private static function firstTenantId(): ?string
+    {
+        try {
+            $stmt = Database::connection()->query('SELECT id FROM tenants ORDER BY created_at ASC LIMIT 1');
+            return $stmt->fetchColumn() ?: null;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private static function count(PDO $pdo, string $where): int
+    {
+        $stmt = $pdo->query("SELECT COUNT(*) FROM empresas WHERE {$where}");
+        return (int) $stmt->fetchColumn();
+    }
+}
+
 final class PipelineRepository
 {
     public static function all(string $tenantId): array

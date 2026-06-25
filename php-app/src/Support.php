@@ -251,6 +251,32 @@ function role_label(?string $role): string
     ]);
 }
 
+function is_platform_admin(?array $user = null): bool
+{
+    $role = strtoupper((string) (($user ?? Auth::user())['role'] ?? ''));
+    return in_array($role, ['SUPER_ADMIN', 'SUPERADMIN'], true);
+}
+
+function empresa_status_label(?string $status): string
+{
+    return enum_label((string) $status, [
+        'ACTIVE' => 'Activo',
+        'TRIAL' => 'Prueba',
+        'SUSPENDED' => 'Suspendido',
+        'CANCELLED' => 'Cancelado',
+    ]);
+}
+
+function empresa_payment_status_label(?string $status): string
+{
+    return enum_label((string) $status, [
+        'PAID' => 'Al dia',
+        'PENDING' => 'Pendiente',
+        'OVERDUE' => 'Vencido',
+        'TRIAL' => 'Prueba',
+    ]);
+}
+
 function format_time(?string $value): string
 {
     if (!$value) {

@@ -14,7 +14,10 @@ $jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="assets/app.css?v=<?= e($cssVersion) ?>">
 </head>
-<?php $tenantPrimaryColor = hex_color_or_default($user['tenant_primary_color'] ?? '#0754d6'); ?>
+<?php
+$tenantPrimaryColor = hex_color_or_default($user['tenant_primary_color'] ?? '#0754d6');
+$isPlatformAdmin = is_platform_admin($user);
+?>
 <body data-tenant-accent="<?= e($tenantPrimaryColor) ?>">
   <main class="app-shell">
     <aside class="sidebar">
@@ -28,13 +31,17 @@ $jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
 
       <?php $route = $_GET['route'] ?? 'dashboard'; ?>
       <nav class="sidebar-nav">
-        <a class="<?= $route === 'dashboard' ? 'active' : '' ?>" href="index.php?route=dashboard">Panel</a>
-        <a class="<?= $route === 'leads' ? 'active' : '' ?>" href="index.php?route=leads">Leads</a>
-        <a class="<?= $route === 'users' ? 'active' : '' ?>" href="index.php?route=users">Usuarios</a>
-        <a class="<?= $route === 'members' ? 'active' : '' ?>" href="index.php?route=members">Socios</a>
-        <a class="<?= $route === 'memberships' ? 'active' : '' ?>" href="index.php?route=memberships">Membresias</a>
-        <a class="<?= $route === 'classes' ? 'active' : '' ?>" href="index.php?route=classes">Clases</a>
-        <a class="<?= $route === 'tasks' ? 'active' : '' ?>" href="index.php?route=tasks">Tareas</a>
+        <?php if ($isPlatformAdmin): ?>
+          <a class="<?= $route === 'platform-dashboard' ? 'active' : '' ?>" href="index.php?route=platform-dashboard">Admin CRM</a>
+        <?php else: ?>
+          <a class="<?= $route === 'dashboard' ? 'active' : '' ?>" href="index.php?route=dashboard">Panel</a>
+          <a class="<?= $route === 'leads' ? 'active' : '' ?>" href="index.php?route=leads">Leads</a>
+          <a class="<?= $route === 'users' ? 'active' : '' ?>" href="index.php?route=users">Usuarios</a>
+          <a class="<?= $route === 'members' ? 'active' : '' ?>" href="index.php?route=members">Socios</a>
+          <a class="<?= $route === 'memberships' ? 'active' : '' ?>" href="index.php?route=memberships">Membresias</a>
+          <a class="<?= $route === 'classes' ? 'active' : '' ?>" href="index.php?route=classes">Clases</a>
+          <a class="<?= $route === 'tasks' ? 'active' : '' ?>" href="index.php?route=tasks">Tareas</a>
+        <?php endif; ?>
       </nav>
 
       <form method="post">
@@ -46,7 +53,7 @@ $jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
     <section class="workspace">
       <header class="topbar">
         <form class="search-box global-search-box" method="get" action="index.php" data-global-search-form>
-          <input name="q" value="" placeholder="Buscar tareas, socios, leads, clases o membresias..." autocomplete="off" data-global-search-input>
+          <input name="q" value="" placeholder="<?= $isPlatformAdmin ? 'Buscar empresas, pagos o planes...' : 'Buscar tareas, socios, leads, clases o membresias...' ?>" autocomplete="off" data-global-search-input>
           <button class="global-search-submit" type="submit" aria-label="Buscar">Buscar</button>
           <div class="global-search-dropdown" data-global-search-results hidden></div>
         </form>
@@ -71,10 +78,12 @@ $jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
               <strong>Configuracion</strong>
               <small>Apariencia y comodidad</small>
             </a>
-            <a href="index.php?route=company-settings" role="menuitem">
-              <strong>Empresa</strong>
-              <small>Nombre y color comercial</small>
-            </a>
+            <?php if ($isPlatformAdmin): ?>
+              <a href="index.php?route=platform-dashboard" role="menuitem">
+                <strong>Admin CRM</strong>
+                <small>Empresas, planes y pagos</small>
+              </a>
+            <?php endif; ?>
             <form method="post" role="none">
               <input type="hidden" name="action" value="logout">
               <button class="danger-menu-action" type="submit" role="menuitem">

@@ -9,34 +9,71 @@ $route = $_GET['route'] ?? 'dashboard';
 
 if ($route === 'login') {
     if (Auth::user()) {
-        redirect('dashboard');
+        redirect(is_platform_admin(Auth::user()) ? 'platform-dashboard' : 'dashboard');
     }
 
     render('login');
     exit;
 }
 
-Auth::requireUser();
-$tenantId = Auth::tenantId();
+$currentUser = Auth::requireUser();
 
 if ($route === 'global-search') {
     $query = trim((string) ($_GET['q'] ?? ''));
+    $items = [];
+    if (is_platform_admin($currentUser)) {
+        foreach (array_slice(EmpresaRepository::all($query), 0, 10) as $empresa) {
+            $items[] = [
+                'type' => 'Empresa',
+                'kind' => 'empresa',
+                'title' => $empresa['name'],
+                'description' => empresa_status_label($empresa['status']) . ' - ' . empresa_payment_status_label($empresa['payment_status']),
+                'href' => 'index.php?route=platform-dashboard&q=' . urlencode($query),
+            ];
+        }
+    } else {
+        $items = GlobalSearchRepository::autocomplete(Auth::tenantId(), $query);
+    }
+
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'query' => $query,
-        'items' => GlobalSearchRepository::autocomplete($tenantId, $query),
+        'items' => $items,
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 switch ($route) {
+    case 'platform-dashboard':
+        if (!is_platform_admin($currentUser)) {
+            redirect('dashboard');
+        }
+
+        $filters = [
+            'q' => trim((string) ($_GET['q'] ?? '')),
+            'status' => trim((string) ($_GET['status'] ?? '')),
+            'payment_status' => trim((string) ($_GET['payment_status'] ?? '')),
+        ];
+        render_layout('Admin CRM', 'platform-dashboard', [
+            'filters' => $filters,
+            'metrics' => EmpresaRepository::metrics(),
+            'empresas' => EmpresaRepository::all($filters['q'], $filters['status'], $filters['payment_status']),
+        ]);
+        break;
+
     case 'dashboard':
+        if (is_platform_admin($currentUser)) {
+            redirect('platform-dashboard');
+        }
+
+        $tenantId = Auth::tenantId();
         render_layout('Panel', 'dashboard', [
             'summary' => DashboardRepository::summary($tenantId),
         ]);
         break;
 
     case 'leads':
+        $tenantId = Auth::tenantId();
         $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),
             'stage' => trim((string) ($_GET['stage'] ?? '')),
@@ -62,6 +99,7 @@ switch ($route) {
         break;
 
     case 'tasks':
+        $tenantId = Auth::tenantId();
         $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),
             'status' => trim((string) ($_GET['status'] ?? '')),
@@ -88,6 +126,7 @@ switch ($route) {
         break;
 
     case 'users':
+        $tenantId = Auth::tenantId();
         $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),
             'role_id' => trim((string) ($_GET['role_id'] ?? '')),
@@ -109,11 +148,8 @@ switch ($route) {
         render_layout('Configuracion', 'settings', []);
         break;
 
-    case 'company-settings':
-        render_layout('Empresa', 'company-settings', []);
-        break;
-
     case 'members':
+        $tenantId = Auth::tenantId();
         $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),
             'status' => trim((string) ($_GET['status'] ?? '')),
@@ -136,6 +172,7 @@ switch ($route) {
         break;
 
     case 'memberships':
+        $tenantId = Auth::tenantId();
         $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),
             'status' => trim((string) ($_GET['status'] ?? '')),
@@ -149,6 +186,7 @@ switch ($route) {
         break;
 
     case 'classes':
+        $tenantId = Auth::tenantId();
         $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),
             'type' => trim((string) ($_GET['type'] ?? '')),

@@ -1177,6 +1177,9 @@ a.global-search-result:hover {
 .status-badge--converted, .status-badge--completed, .status-badge--active { background: #dcfce7; color: #047857; }
 .status-badge--lost, .status-badge--cancelled, .status-badge--inactive { background: #fee2e2; color: var(--danger); }
 .status-badge--pending, .status-badge--open, .status-badge--scheduled { background: #eef4ff; color: var(--primary); }
+.status-badge--trial { background: #e0f2fe; color: #0369a1; }
+.status-badge--suspended, .status-badge--overdue { background: #fee2e2; color: var(--danger); }
+.status-badge--paid { background: #dcfce7; color: #047857; }
 .stage-badge-button {
   align-items: center;
   background: #eef4ff;

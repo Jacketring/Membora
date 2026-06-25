@@ -38,6 +38,8 @@ final class Auth
         $pdo = Database::connection();
         UserRepository::ensureAvatarColumn();
         TenantRepository::ensureSettingsColumns();
+        EmpresaRepository::ensureTables();
+        EmpresaRepository::ensurePlatformAdmin();
         $stmt = $pdo->prepare(
             'SELECT users.*, tenants.name AS tenant_name, tenants.primary_color AS tenant_primary_color, roles.key AS role_key
              FROM users
@@ -53,11 +55,16 @@ final class Auth
             return false;
         }
 
-        if (!$user['tenant_id']) {
+        $isPlatformAdmin = in_array(strtoupper((string) $user['role_key']), ['SUPER_ADMIN', 'SUPERADMIN'], true);
+
+        if (!$user['tenant_id'] && !$isPlatformAdmin) {
             $tenant = self::fallbackTenant();
             $user['tenant_id'] = $tenant['id'] ?? null;
             $user['tenant_name'] = $tenant['name'] ?? 'Membora CRM';
             $user['tenant_primary_color'] = $tenant['primary_color'] ?? '#0754d6';
+        } elseif (!$user['tenant_id'] && $isPlatformAdmin) {
+            $user['tenant_name'] = 'Membora CRM';
+            $user['tenant_primary_color'] = '#0754d6';
         }
 
         $_SESSION['user'] = [

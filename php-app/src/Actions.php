@@ -14,7 +14,8 @@ final class Actions
             'login' => self::login(),
             'logout' => self::logout(),
             'update_profile' => self::updateProfile(),
-            'update_company_settings' => self::updateCompanySettings(),
+            'create_empresa' => self::createEmpresa(),
+            'update_empresa' => self::updateEmpresa(),
             'create_user' => self::createUser(),
             'update_user' => self::updateUser(),
             'create_lead' => self::createLead(),
@@ -51,7 +52,7 @@ final class Actions
 
         try {
             if (Auth::attempt($email, $password)) {
-                redirect('dashboard');
+                redirect(is_platform_admin(Auth::user()) ? 'platform-dashboard' : 'dashboard');
             }
         } catch (Throwable $exception) {
             flash('No se pudo conectar con la base de datos. Revisa php-app/.env.', 'error');
@@ -138,30 +139,41 @@ final class Actions
         redirect($_GET['return'] ?? 'dashboard');
     }
 
-    private static function updateCompanySettings(): never
+    private static function createEmpresa(): never
     {
-        $user = Auth::requireUser();
-        $role = strtoupper((string) ($user['role'] ?? ''));
-        if (!in_array($role, ['SUPER_ADMIN', 'SUPERADMIN', 'GYM_ADMIN', 'ADMIN'], true)) {
-            flash('Solo un administrador puede cambiar los datos de empresa.', 'error');
-            redirect($_GET['return'] ?? 'dashboard');
-        }
+        self::requirePlatformAdmin();
 
-        $tenantId = Auth::tenantId();
-        $name = post_value('tenant_name', '');
-        $primaryColor = hex_color_or_default(post_value('tenant_primary_color', '#0754d6'));
-
-        if ($name === '') {
+        if (post_value('name', '') === '') {
             flash('Indica el nombre de la empresa.', 'error');
-            redirect($_GET['return'] ?? 'dashboard');
+            redirect('platform-dashboard');
         }
 
-        TenantRepository::updateSettings($tenantId, $name, $primaryColor);
-        $_SESSION['user']['tenant_name'] = $name;
-        $_SESSION['user']['tenant_primary_color'] = $primaryColor;
+        EmpresaRepository::create($_POST);
+        flash('Empresa creada correctamente.');
+        redirect('platform-dashboard');
+    }
 
-        flash('Configuracion de empresa actualizada correctamente.');
-        redirect($_GET['return'] ?? 'dashboard');
+    private static function updateEmpresa(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+
+        if ($id === '' || post_value('name', '') === '') {
+            flash('Indica la empresa que quieres actualizar.', 'error');
+            redirect('platform-dashboard');
+        }
+
+        EmpresaRepository::update($id, $_POST);
+        flash('Empresa actualizada correctamente.');
+        redirect('platform-dashboard');
+    }
+
+    private static function requirePlatformAdmin(): void
+    {
+        if (!is_platform_admin(Auth::requireUser())) {
+            flash('Solo un superadmin de Membora puede acceder a esta seccion.', 'error');
+            redirect('dashboard');
+        }
     }
 
     private static function createUser(): never
