@@ -57,6 +57,7 @@ switch ($route) {
         render_layout('Admin CRM', 'platform-dashboard', [
             'filters' => $filters,
             'metrics' => EmpresaRepository::metrics(),
+            'allEmpresas' => EmpresaRepository::all(),
             'empresas' => EmpresaRepository::all($filters['q'], $filters['status'], $filters['payment_status']),
         ]);
         break;

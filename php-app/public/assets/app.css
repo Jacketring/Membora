@@ -1312,6 +1312,135 @@ a.global-search-result:hover {
 .platform-table {
   min-width: 1180px;
 }
+.platform-ops-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+.platform-insight-card {
+  background: var(--surface);
+  border: 1px solid #edf0f7;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+.platform-insight-card span,
+.platform-panel header p,
+.platform-list-item small {
+  color: var(--muted);
+}
+.platform-insight-card span {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.platform-insight-card strong {
+  display: block;
+  font-size: 26px;
+  line-height: 1;
+  margin: 12px 0 8px;
+}
+.platform-insight-card small {
+  color: var(--muted);
+  font-weight: 700;
+}
+.platform-insight-card--revenue { border-top: 4px solid var(--primary); }
+.platform-insight-card--risk { border-top: 4px solid var(--danger); }
+.platform-insight-card--warning { border-top: 4px solid var(--warning); }
+.platform-admin-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+.platform-panel {
+  background: var(--surface);
+  border: 1px solid #edf0f7;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+  padding: 18px;
+}
+.platform-panel header {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.platform-panel header h3 {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+.platform-panel header p {
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0;
+}
+.platform-panel header > span {
+  background: var(--surface-soft);
+  border-radius: 999px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 900;
+  padding: 6px 9px;
+}
+.platform-list {
+  display: grid;
+  gap: 10px;
+}
+.platform-list-item {
+  align-items: center;
+  background: var(--surface-soft);
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 11px 12px;
+}
+.platform-list-item strong,
+.platform-list-item small {
+  display: block;
+}
+.platform-list-item small {
+  font-size: 12px;
+  margin-top: 3px;
+}
+.platform-list-item b {
+  color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.platform-empty {
+  color: var(--muted);
+  font-weight: 700;
+  margin: 0;
+  padding: 12px 0;
+}
+.platform-plan-list {
+  display: grid;
+  gap: 12px;
+}
+.platform-plan-list div {
+  display: grid;
+  gap: 7px;
+  grid-template-columns: 1fr auto;
+}
+.platform-plan-list span,
+.platform-plan-list strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+.platform-plan-list i {
+  background: linear-gradient(90deg, var(--primary) var(--plan-width), var(--surface-soft) var(--plan-width));
+  border-radius: 999px;
+  display: block;
+  grid-column: 1 / -1;
+  height: 8px;
+}
 .platform-row-actions {
   align-items: center;
   display: flex;
@@ -2130,6 +2259,8 @@ body[data-theme="dark"] .settings-page-card,
 body[data-theme="dark"] .lead-metric,
 body[data-theme="dark"] .dashboard-metric,
 body[data-theme="dark"] .dashboard-card,
+body[data-theme="dark"] .platform-insight-card,
+body[data-theme="dark"] .platform-panel,
 body[data-theme="dark"] .activity-item,
 body[data-theme="dark"] .modal-card,
 body[data-theme="dark"] .confirm-dialog,
@@ -2218,6 +2349,14 @@ body[data-theme="dark"] .support-context-banner strong {
 body[data-theme="dark"] .support-context-banner span {
   color: #d4e0f0;
 }
+body[data-theme="dark"] .platform-panel header > span,
+body[data-theme="dark"] .platform-list-item {
+  background: var(--surface-soft);
+  border-color: var(--outline);
+}
+body[data-theme="dark"] .platform-plan-list i {
+  background: linear-gradient(90deg, var(--primary) var(--plan-width), rgba(255, 255, 255, 0.08) var(--plan-width));
+}
 body[data-theme="dark"] .status-badge--active,
 body[data-theme="dark"] .status-badge--paid {
   background: rgba(16, 185, 129, 0.18);
@@ -2248,7 +2387,7 @@ body[data-density="compact"] .leads-table td { padding: 10px 12px; }
   .sidebar { min-height: auto; position: static; width: 100%; }
   .workspace { margin-left: 0; width: 100%; }
   .content { padding: 24px; }
-  .lead-metrics, .dashboard-grid, .dashboard-metrics, .dashboard-layout { grid-template-columns: 1fr; }
+  .lead-metrics, .dashboard-grid, .dashboard-metrics, .dashboard-layout, .platform-ops-grid, .platform-admin-grid { grid-template-columns: 1fr; }
   .dashboard-hero { align-items: flex-start; flex-direction: column; gap: 18px; }
   .dashboard-hero-actions { flex-wrap: wrap; }
   .funnel-row { grid-template-columns: 1fr; }
