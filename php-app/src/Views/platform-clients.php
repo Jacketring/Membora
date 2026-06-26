@@ -111,6 +111,7 @@ $statusOptions = [
   </div>
 </section>
 
+<?php unset($client); ?>
 <dialog class="modal-card empresa-modal" id="client-create-modal">
   <header>
     <div>
@@ -127,7 +128,7 @@ $statusOptions = [
     <header>
       <div>
         <h2><?= e($client['company_name']) ?></h2>
-        <p><?= e($client['email'] ?: 'Sin email') ?> · <?= e(platform_client_status_label($client['status'])) ?></p>
+        <p><?= e($client['email'] ?: 'Sin email') ?> - <?= e(platform_client_status_label($client['status'])) ?></p>
       </div>
       <button class="modal-close-action" type="button" data-close-modal aria-label="Cerrar">Cerrar</button>
     </header>

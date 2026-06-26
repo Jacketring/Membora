@@ -143,6 +143,7 @@ $planOptions = $planOptions ?? PlatformPlanRepository::options();
   </div>
 </section>
 
+<?php unset($empresa); ?>
 <dialog class="modal-card empresa-modal" id="empresa-create-modal">
   <header>
     <div>

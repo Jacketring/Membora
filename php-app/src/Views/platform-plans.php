@@ -86,6 +86,7 @@ $statusOptions = [
   <?php endif; ?>
 </section>
 
+<?php unset($plan); ?>
 <dialog class="modal-card empresa-modal" id="plan-create-modal">
   <header>
     <div>
@@ -102,7 +103,7 @@ $statusOptions = [
     <header>
       <div>
         <h2><?= e($plan['name']) ?></h2>
-        <p><?= e($plan['code']) ?> · <?= e(platform_plan_status_label($plan['status'])) ?></p>
+        <p><?= e($plan['code']) ?> - <?= e(platform_plan_status_label($plan['status'])) ?></p>
       </div>
       <button class="modal-close-action" type="button" data-close-modal aria-label="Cerrar">Cerrar</button>
     </header>

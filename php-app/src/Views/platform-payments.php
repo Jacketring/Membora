@@ -111,6 +111,7 @@ $statusOptions = [
   </div>
 </section>
 
+<?php unset($payment); ?>
 <dialog class="modal-card empresa-modal" id="payment-create-modal">
   <header>
     <div>
@@ -127,7 +128,7 @@ $statusOptions = [
     <header>
       <div>
         <h2><?= e($payment['concept']) ?></h2>
-        <p><?= e($payment['empresa_name']) ?> · <?= e(platform_payment_status_label($payment['status'])) ?></p>
+        <p><?= e($payment['empresa_name']) ?> - <?= e(platform_payment_status_label($payment['status'])) ?></p>
       </div>
       <button class="modal-close-action" type="button" data-close-modal aria-label="Cerrar">Cerrar</button>
     </header>
