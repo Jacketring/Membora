@@ -106,7 +106,16 @@ summary:focus-visible {
 }
 .login-card header h2 { font-size: 24px; margin: 0 0 8px; }
 .login-card header p { color: var(--muted); line-height: 1.5; margin: 0 0 24px; }
-.demo-note { background: #eef4ff; border-radius: 10px; color: #40506d; font-size: 13px; padding: 12px; }
+.demo-note {
+  background: #eef4ff;
+  border-radius: 10px;
+  color: #40506d;
+  display: grid;
+  font-size: 13px;
+  gap: 4px;
+  padding: 12px;
+}
+.demo-note strong { color: #0b1c30; }
 
 .field { display: grid; gap: 8px; margin-bottom: 18px; }
 .field span { color: var(--muted); font-size: 14px; font-weight: 700; }

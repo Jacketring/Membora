@@ -1,4 +1,8 @@
-<?php $flash = flash(); ?>
+<?php
+$flash = flash();
+$platformAdminEmail = EmpresaRepository::PLATFORM_ADMIN_EMAIL;
+$platformAdminPassword = EmpresaRepository::PLATFORM_ADMIN_PASSWORD;
+?>
 <!doctype html>
 <html lang="es">
 <head>
@@ -29,14 +33,18 @@
         <?php endif; ?>
         <label class="field">
           <span>Email</span>
-          <div class="input-shell"><input name="email" type="email" required value="admin@nexofit.demo"></div>
+          <div class="input-shell"><input name="email" type="email" required value="<?= e($platformAdminEmail) ?>"></div>
         </label>
         <label class="field">
           <span>Contrasena</span>
-          <div class="input-shell"><input name="password" type="password" required value="MemboraDemo2026!"></div>
+          <div class="input-shell"><input name="password" type="password" required value="<?= e($platformAdminPassword) ?>"></div>
         </label>
         <button class="primary-action" type="submit">Iniciar sesion</button>
-        <p class="demo-note">Demo: admin@nexofit.demo / MemboraDemo2026!</p>
+        <div class="demo-note">
+          <strong>Administrador de empresas</strong>
+          <span>Email: <?= e($platformAdminEmail) ?></span>
+          <span>Contrasena: <?= e($platformAdminPassword) ?></span>
+        </div>
       </form>
     </section>
   </main>
