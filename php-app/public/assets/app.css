@@ -116,6 +116,29 @@ summary:focus-visible {
   padding: 12px;
 }
 .demo-note strong { color: #0b1c30; }
+.demo-note--platform {
+  border: 1px solid #cfe0ff;
+  gap: 12px;
+  margin-top: 16px;
+}
+.demo-note--platform div {
+  display: grid;
+  gap: 4px;
+}
+.demo-fill-action {
+  background: #fff;
+  border: 1px solid #bfd3f8;
+  border-radius: 10px;
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 900;
+  min-height: 38px;
+  padding: 0 12px;
+}
+.demo-fill-action:hover {
+  background: #f8fbff;
+  border-color: #8db1ee;
+}
 
 .field { display: grid; gap: 8px; margin-bottom: 18px; }
 .field span { color: var(--muted); font-size: 14px; font-weight: 700; }

@@ -33,20 +33,41 @@ $platformAdminPassword = EmpresaRepository::PLATFORM_ADMIN_PASSWORD;
         <?php endif; ?>
         <label class="field">
           <span>Email</span>
-          <div class="input-shell"><input name="email" type="email" required value="<?= e($platformAdminEmail) ?>"></div>
+          <div class="input-shell"><input name="email" type="email" required value="<?= e($platformAdminEmail) ?>" data-login-email></div>
         </label>
         <label class="field">
           <span>Contrasena</span>
-          <div class="input-shell"><input name="password" type="password" required value="<?= e($platformAdminPassword) ?>"></div>
+          <div class="input-shell"><input name="password" type="password" required value="<?= e($platformAdminPassword) ?>" data-login-password></div>
         </label>
         <button class="primary-action" type="submit">Iniciar sesion</button>
-        <div class="demo-note">
-          <strong>Administrador de empresas</strong>
-          <span>Email: <?= e($platformAdminEmail) ?></span>
-          <span>Contrasena: <?= e($platformAdminPassword) ?></span>
+        <div class="demo-note demo-note--platform">
+          <div>
+            <strong>Administrador de empresas</strong>
+            <span>Email: <?= e($platformAdminEmail) ?></span>
+            <span>Contrasena: <?= e($platformAdminPassword) ?></span>
+          </div>
+          <button
+            class="demo-fill-action"
+            type="button"
+            data-fill-login
+            data-email="<?= e($platformAdminEmail) ?>"
+            data-password="<?= e($platformAdminPassword) ?>"
+          >
+            Usar estas credenciales
+          </button>
         </div>
       </form>
     </section>
   </main>
+  <script>
+    document.querySelector('[data-fill-login]')?.addEventListener('click', (event) => {
+      const trigger = event.currentTarget;
+      const emailInput = document.querySelector('[data-login-email]');
+      const passwordInput = document.querySelector('[data-login-password]');
+      if (emailInput) emailInput.value = trigger.dataset.email || '';
+      if (passwordInput) passwordInput.value = trigger.dataset.password || '';
+      emailInput?.focus();
+    });
+  </script>
 </body>
 </html>
