@@ -295,8 +295,8 @@ switch ($route) {
         $filters = [
             'q' => trim((string) ($_GET['q'] ?? '')),
             'type' => trim((string) ($_GET['type'] ?? '')),
-            'date_from' => trim((string) ($_GET['date_from'] ?? date('Y-m-d'))),
-            'date_to' => trim((string) ($_GET['date_to'] ?? date('Y-m-d', strtotime('+14 days')))),
+            'date_from' => trim((string) ($_GET['date_from'] ?? '')),
+            'date_to' => trim((string) ($_GET['date_to'] ?? '')),
             'month' => trim((string) ($_GET['month'] ?? date('Y-m'))),
         ];
         $sessions = ClassRepository::sessions(
