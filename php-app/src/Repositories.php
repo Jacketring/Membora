@@ -989,6 +989,21 @@ final class PlatformPlanRepository
         return $options ?: ['BASIC' => 'Basico', 'PRO' => 'Pro', 'BUSINESS' => 'Business', 'ENTERPRISE' => 'Enterprise'];
     }
 
+    public static function priceMap(): array
+    {
+        $prices = [];
+        foreach (self::all('', 'ACTIVE') as $plan) {
+            $prices[$plan['code']] = number_format((float) $plan['monthly_price'], 2, '.', '');
+        }
+
+        return $prices ?: [
+            'BASIC' => '49.00',
+            'PRO' => '89.00',
+            'BUSINESS' => '149.00',
+            'ENTERPRISE' => '299.00',
+        ];
+    }
+
     public static function create(array $data): void
     {
         self::ensureTable();

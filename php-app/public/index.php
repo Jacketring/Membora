@@ -124,6 +124,7 @@ switch ($route) {
             'filters' => $filters,
             'metrics' => EmpresaRepository::metrics(),
             'planOptions' => PlatformPlanRepository::options(),
+            'planPrices' => PlatformPlanRepository::priceMap(),
             'clients' => PlatformClientRepository::all(),
             'selectedClient' => $selectedClientId !== '' ? PlatformClientRepository::find($selectedClientId) : null,
             'allEmpresas' => EmpresaRepository::all(),

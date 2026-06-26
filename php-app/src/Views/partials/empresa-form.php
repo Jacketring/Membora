@@ -1,6 +1,7 @@
 <?php
 $isEditingEmpresa = isset($empresa) && is_array($empresa);
 $selectedClient = $selectedClient ?? null;
+$planPrices = $planPrices ?? PlatformPlanRepository::priceMap();
 $empresaValues = $isEditingEmpresa ? $empresa : [
     'id' => '',
     'client_id' => $selectedClient['id'] ?? '',
@@ -15,7 +16,7 @@ $empresaValues = $isEditingEmpresa ? $empresa : [
 ];
 ?>
 
-<form class="empresa-form" method="post">
+<form class="empresa-form" method="post" data-empresa-form data-plan-prices='<?= e(json_encode($planPrices, JSON_UNESCAPED_UNICODE)) ?>'>
   <input type="hidden" name="action" value="<?= $isEditingEmpresa ? 'update_empresa' : 'create_empresa' ?>">
   <?php if ($isEditingEmpresa): ?>
     <input type="hidden" name="id" value="<?= e($empresaValues['id']) ?>">
@@ -45,9 +46,9 @@ $empresaValues = $isEditingEmpresa ? $empresa : [
   </label>
   <label class="field">
     <span>Plan</span>
-    <select name="plan">
+    <select name="plan" data-plan-price-select>
       <?php foreach ($planOptions as $value => $label): ?>
-        <option value="<?= e($value) ?>" <?= $empresaValues['plan'] === $value ? 'selected' : '' ?>><?= e($label) ?></option>
+        <option value="<?= e($value) ?>" data-monthly-price="<?= e($planPrices[$value] ?? '') ?>" <?= $empresaValues['plan'] === $value ? 'selected' : '' ?>><?= e($label) ?></option>
       <?php endforeach; ?>
     </select>
   </label>
@@ -69,7 +70,7 @@ $empresaValues = $isEditingEmpresa ? $empresa : [
   </label>
   <label class="field">
     <span>Precio mensual</span>
-    <input name="monthly_price" inputmode="decimal" value="<?= e((string) $empresaValues['monthly_price']) ?>" placeholder="49.00">
+    <input name="monthly_price" inputmode="decimal" value="<?= e((string) $empresaValues['monthly_price']) ?>" placeholder="49.00" data-plan-price-input>
   </label>
   <label class="field">
     <span>Proximo pago</span>

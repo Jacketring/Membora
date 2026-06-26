@@ -387,6 +387,40 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
   });
 });
 
+document.querySelectorAll('[data-empresa-form]').forEach((form) => {
+  const planSelect = form.querySelector('[data-plan-price-select]');
+  const priceInput = form.querySelector('[data-plan-price-input]');
+
+  if (!planSelect || !priceInput) {
+    return;
+  }
+
+  let prices = {};
+  try {
+    prices = JSON.parse(form.dataset.planPrices || '{}');
+  } catch {
+    prices = {};
+  }
+
+  const priceForSelectedPlan = () => {
+    const selectedOption = planSelect.options[planSelect.selectedIndex];
+    return selectedOption?.dataset.monthlyPrice || prices[planSelect.value] || '';
+  };
+
+  const applyPlanPrice = () => {
+    const planPrice = priceForSelectedPlan();
+    if (planPrice !== '') {
+      priceInput.value = Number.parseFloat(planPrice).toFixed(2);
+    }
+  };
+
+  if (priceInput.value.trim() === '' || Number.parseFloat(priceInput.value.replace(',', '.')) === 0) {
+    applyPlanPrice();
+  }
+
+  planSelect.addEventListener('change', applyPlanPrice);
+});
+
 document.addEventListener('click', (event) => {
   if (!event.target.closest('[data-custom-select]')) {
     closeCustomSelects(null);
