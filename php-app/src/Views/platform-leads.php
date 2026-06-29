@@ -108,6 +108,13 @@ $statusOptions = [
                   <svg viewBox="0 0 24 24"><path d="M4 17.3V20h2.7L17.9 8.8l-2.7-2.7L4 17.3Zm15.8-10.6a1 1 0 0 0 0-1.4l-1.1-1.1a1 1 0 0 0-1.4 0l-.9.9 2.7 2.7.7-.8Z"/></svg>
                   <span>Editar</span>
                 </button>
+                <form method="post" data-confirm-message="Eliminar este lead comercial? Esta accion no se puede deshacer.">
+                  <input type="hidden" name="action" value="delete_platform_lead">
+                  <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
+                  <button class="note-delete-button" type="submit" aria-label="Eliminar lead <?= e($lead['contact_name']) ?>">
+                    <svg viewBox="0 0 24 24"><path d="M9 4h6l1 2h4v2H4V6h4l1-2Zm1 6h2v8h-2v-8Zm4 0h2v8h-2v-8ZM7 10h2l1 10h4l1-10h2l-1.2 12H8.2L7 10Z"/></svg>
+                  </button>
+                </form>
               </div>
             </td>
           </tr>

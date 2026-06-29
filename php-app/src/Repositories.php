@@ -513,6 +513,13 @@ final class PlatformLeadRepository
         return $clientId;
     }
 
+    public static function delete(string $id): void
+    {
+        self::ensureTable();
+        $stmt = Database::connection()->prepare('DELETE FROM platform_leads WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+    }
+
     private static function normalizePayload(array $payload): array
     {
         $name = trim((string) ($payload['nombre'] ?? $payload['first_name'] ?? ''));

@@ -16,6 +16,7 @@ final class Actions
             'update_profile' => self::updateProfile(),
             'update_platform_lead' => self::updatePlatformLead(),
             'convert_platform_lead' => self::convertPlatformLead(),
+            'delete_platform_lead' => self::deletePlatformLead(),
             'create_platform_client' => self::createPlatformClient(),
             'update_platform_client' => self::updatePlatformClient(),
             'create_empresa' => self::createEmpresa(),
@@ -220,6 +221,21 @@ final class Actions
 
         flash('Lead convertido en cliente correctamente.');
         redirect('platform-clients');
+    }
+
+    private static function deletePlatformLead(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+
+        if ($id === '') {
+            flash('No se encontro el lead seleccionado.', 'error');
+            redirect('platform-leads');
+        }
+
+        PlatformLeadRepository::delete($id);
+        flash('Lead eliminado correctamente.');
+        redirect('platform-leads');
     }
 
     private static function createPlatformClient(): never

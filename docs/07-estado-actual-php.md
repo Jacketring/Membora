@@ -105,6 +105,7 @@ No se usa Node.js en produccion.
 - Tabla `platform_leads` para solicitudes recibidas desde la web publica.
 - Gestion de leads web con estados nuevo, contactado, cualificado, convertido o perdido.
 - Conversion de lead web a cliente comercial.
+- Eliminacion controlada de leads web desde el panel de administracion.
 - Tabla `platform_clients` para contactos comerciales del SaaS antes de crear su CRM.
 - Alta y edicion de clientes comerciales con estado lead, cualificado, cliente o perdido.
 - Tabla `empresas`.

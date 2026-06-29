@@ -85,7 +85,7 @@ La app crea y usa tablas de administracion SaaS para controlar clientes, empresa
 - Creacion de tenant y usuario administrador al pasar de cliente a empresa.
 - Pagos SaaS por empresa: concepto, importe, vencimiento, fecha de pago y estado.
 - Planes SaaS: codigo, precio mensual, coste de alta, limites y prestaciones.
-- Leads web: solicitudes comerciales recibidas desde la web publica.
+- Leads web: solicitudes comerciales recibidas desde la web publica, con edicion, conversion a cliente y eliminacion controlada.
 - Web comercial: estado tecnico del formulario publico y logs de envios recibidos.
 
 Usuario de administracion de plataforma:

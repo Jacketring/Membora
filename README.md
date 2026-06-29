@@ -222,7 +222,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 
 - Panel `Admin CRM`.
 - Resumen SaaS con MRR, ARR, ARPA, riesgo, cobros y prioridades.
-- Seccion `Leads` para solicitudes de la web publica, con estados comerciales y conversion a cliente.
+- Seccion `Leads` para solicitudes de la web publica, con estados comerciales, conversion a cliente y eliminacion controlada.
 - Email automatico de confirmacion para solicitudes recibidas desde la web publica.
 - Seccion `Clientes` para contactos comerciales antes de crear su CRM.
 - Tabla `empresas`.
