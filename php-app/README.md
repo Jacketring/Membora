@@ -23,6 +23,7 @@ APP_NAME="Membora CRM"
 APP_ENV="production"
 APP_URL="https://app.crm.josehurtado.dev"
 WEB_APP_URL="https://app.web.josehurtado.dev"
+APP_STRICT_POST_ORIGIN="false"
 DB_HOST="localhost"
 DB_PORT="3306"
 DB_DATABASE="membora_crm"
@@ -137,3 +138,15 @@ No es necesario copiar tokens en la web. El CRM valida el origen configurado en 
 Cuando la solicitud incluye un email valido, el CRM intenta enviar una confirmacion HTML al contacto. Para produccion se recomienda SMTP con `MAIL_MAILER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USERNAME` y `SMTP_PASSWORD`. Si el envio falla, el lead se crea igualmente y el fallo de correo queda registrado en `Admin CRM > Web`.
 
 Para depurar el correo, entra en `Admin CRM > Web` y usa `Prueba de correo`. La pantalla muestra la configuracion detectada de correo y registra el resultado en `Ultimos envios tecnicos`.
+
+## Seguridad
+
+Las medidas de seguridad y la estrategia de captacion web quedan documentadas en:
+
+```text
+docs/09-seguridad-y-captacion-web.md
+```
+
+La app aplica sesiones endurecidas, cabeceras de seguridad, validacion de origen en POST internos, consultas preparadas, aislamiento por `tenant_id`, validacion de uploads, honeypot y rate limit en captacion web.
+
+El flujo activo usa webhook HTTP. Tambien queda documentada una alternativa futura para insertar solicitudes directamente en base de datos desde la web PHP si se quiere simplificar el despliegue.

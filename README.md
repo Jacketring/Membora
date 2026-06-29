@@ -111,6 +111,7 @@ APP_NAME="Membora CRM"
 APP_ENV="production"
 APP_URL="https://app.crm.josehurtado.dev"
 WEB_APP_URL="https://app.web.josehurtado.dev"
+APP_STRICT_POST_ORIGIN="false"
 DB_HOST="localhost"
 DB_PORT="3306"
 DB_DATABASE="nombre_base_datos"
@@ -255,6 +256,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - `docs/05-pruebas.md`: plan de pruebas.
 - `docs/07-estado-actual-php.md`: estado actual de la version PHP.
 - `docs/08-auditoria-testing-2026-06-29.md`: auditoria tecnica y checklist manual de testing.
+- `docs/09-seguridad-y-captacion-web.md`: medidas de seguridad y estrategia webhook/base de datos.
 
 ## Notas
 

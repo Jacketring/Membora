@@ -5,6 +5,49 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+function send_security_headers(bool $isSecureRequest = false): void
+{
+    if (headers_sent()) {
+        return;
+    }
+
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: DENY');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
+
+    if ($isSecureRequest) {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    }
+}
+
+function request_origin_allowed(): bool
+{
+    $origin = rtrim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''), '/');
+    $referer = rtrim((string) ($_SERVER['HTTP_REFERER'] ?? ''), '/');
+    $current = rtrim(app_base_url(), '/');
+
+    if ($origin !== '') {
+        return hash_equals($current, $origin);
+    }
+
+    if ($referer !== '') {
+        return str_starts_with($referer, $current . '/') || hash_equals($current, $referer);
+    }
+
+    return strtolower((string) (getenv('APP_STRICT_POST_ORIGIN') ?: 'false')) !== 'true';
+}
+
+function enforce_internal_post_security(): void
+{
+    if (request_origin_allowed()) {
+        return;
+    }
+
+    flash('Solicitud bloqueada por seguridad. Recarga la pagina e intentalo de nuevo.', 'error');
+    redirect('dashboard');
+}
+
 function redirect(string $route): never
 {
     header('Location: index.php?route=' . urlencode($route));

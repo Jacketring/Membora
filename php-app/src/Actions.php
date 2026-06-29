@@ -8,6 +8,8 @@ final class Actions
             return;
         }
 
+        enforce_internal_post_security();
+
         $action = post_value('action', '');
 
         match ($action) {
