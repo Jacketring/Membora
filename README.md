@@ -254,6 +254,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - `docs/04-modelo-datos.md`: modelo de datos.
 - `docs/05-pruebas.md`: plan de pruebas.
 - `docs/07-estado-actual-php.md`: estado actual de la version PHP.
+- `docs/08-auditoria-testing-2026-06-29.md`: auditoria tecnica y checklist manual de testing.
 
 ## Notas
 
