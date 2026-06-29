@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1728">
+  <meta name="description" content="Demo de solo lectura de Membora CRM para ver panel, leads, socios, membresias, clases y tareas.">
+  <title>Demo Membora CRM - Solo lectura</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="demo-body">
+  <div class="demo-shell">
+    <aside class="demo-sidebar">
+      <a class="brand demo-brand" href="index.html" aria-label="Volver a Membora CRM">
+        <span class="brand-mark">M</span>
+        <span>
+          <strong>Membora CRM</strong>
+          <small>Demo solo lectura</small>
+        </span>
+      </a>
+      <nav class="demo-nav" aria-label="Navegacion demo">
+        <button class="active" type="button" data-demo-tab="panel">Panel</button>
+        <button type="button" data-demo-tab="leads">Leads</button>
+        <button type="button" data-demo-tab="socios">Socios</button>
+        <button type="button" data-demo-tab="membresias">Membresias</button>
+        <button type="button" data-demo-tab="clases">Clases</button>
+        <button type="button" data-demo-tab="tareas">Tareas</button>
+      </nav>
+      <a class="demo-back" href="index.html#contacto">Pedir informacion</a>
+    </aside>
+
+    <main class="demo-workspace">
+      <header class="demo-topbar">
+        <div class="demo-search">
+          <span></span>
+          <input readonly value="" placeholder="Buscar tareas, socios, leads, clases o membresias...">
+        </div>
+        <div class="demo-user">
+          <span>LM</span>
+          <div><strong>Laura Martin</strong><small>Administrador</small></div>
+        </div>
+      </header>
+
+      <div class="demo-readonly-banner">
+        <strong>Demo de solo lectura</strong>
+        <span>Puedes abrir fichas y modales para revisar el flujo, pero no se crea ni modifica ningun dato.</span>
+      </div>
+
+      <section class="demo-view active" data-demo-view="panel">
+        <div class="demo-heading">
+          <span>Panel operativo</span>
+          <h1>NexoFit Studio</h1>
+          <p>Vista rapida de ventas, tareas, clases y atencion requerida.</p>
+        </div>
+        <div class="demo-kpi-grid">
+          <article><span>Socios activos</span><strong>128</strong><small>+12 este mes</small></article>
+          <article><span>Conversion de leads</span><strong>71%</strong><small>24 convertidos de 34</small></article>
+          <article><span>Reservas hoy</span><strong>18</strong><small>6 plazas libres</small></article>
+          <article><span>Pagos pendientes</span><strong>7</strong><small>1.034 EUR por cobrar</small></article>
+        </div>
+        <div class="demo-grid-two">
+          <article class="demo-panel-card">
+            <div class="demo-card-head"><h2>Embudo comercial</h2><button type="button" data-open-demo-modal="lead">Ver lead</button></div>
+            <div class="demo-funnel-row"><b>Abiertos</b><i><span style="--w:62%"></span></i><em>62%</em></div>
+            <div class="demo-funnel-row"><b>Pruebas</b><i><span style="--w:38%"></span></i><em>38%</em></div>
+            <div class="demo-funnel-row"><b>Convertidos</b><i><span style="--w:71%"></span></i><em>71%</em></div>
+          </article>
+          <article class="demo-panel-card">
+            <div class="demo-card-head"><h2>Trabajo del dia</h2><button type="button" data-demo-tab="tareas">Ver tareas</button></div>
+            <div class="demo-task-stack">
+              <span><b>8</b> pendientes</span>
+              <span><b>3</b> para hoy</span>
+              <span><b>2</b> vencidas</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="demo-view" data-demo-view="leads">
+        <div class="demo-heading">
+          <span>Leads</span>
+          <h1>Pipeline comercial</h1>
+          <p>Gestion de interesados desde el primer contacto hasta el alta.</p>
+        </div>
+        <div class="demo-toolbar">
+          <input readonly placeholder="Buscar por nombre, telefono o interes">
+          <button type="button" data-open-demo-modal="lead">Abrir ficha de lead</button>
+        </div>
+        <div class="demo-table-card">
+          <table>
+            <thead><tr><th>Nombre</th><th>Origen</th><th>Interes</th><th>Etapa</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr><td>Lucia Romero</td><td>Web</td><td>Prueba gratuita</td><td><span class="pill blue">Contactado</span></td><td><span class="pill green">Abierto</span></td><td><button type="button" data-open-demo-modal="lead">Ver</button></td></tr>
+              <tr><td>Miguel Torres</td><td>Telefono</td><td>Bono mensual</td><td><span class="pill amber">Prueba</span></td><td><span class="pill green">Abierto</span></td><td><button type="button" data-open-demo-modal="lead">Ver</button></td></tr>
+              <tr><td>Ana Lopez</td><td>Recomendacion</td><td>Plan premium</td><td><span class="pill green">Convertido</span></td><td><span class="pill green">Socio</span></td><td><button type="button" data-open-demo-modal="lead">Ver</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="demo-view" data-demo-view="socios">
+        <div class="demo-heading">
+          <span>Socios</span>
+          <h1>Fichas de clientes</h1>
+          <p>Datos, foto, membresia, reservas y tareas vinculadas.</p>
+        </div>
+        <div class="demo-member-grid">
+          <article data-open-demo-modal="socio"><div class="avatar-demo"></div><h2>Ana Lopez</h2><p>Mensual activa</p><span class="pill green">Al dia</span></article>
+          <article data-open-demo-modal="socio"><div class="avatar-demo avatar-demo--alt"></div><h2>Miguel Torres</h2><p>Basica mensual</p><span class="pill amber">Renueva pronto</span></article>
+          <article data-open-demo-modal="socio"><div class="avatar-demo avatar-demo--third"></div><h2>Lucia Romero</h2><p>Premium anual</p><span class="pill green">Al dia</span></article>
+        </div>
+      </section>
+
+      <section class="demo-view" data-demo-view="membresias">
+        <div class="demo-heading">
+          <span>Membresias</span>
+          <h1>Planes y vencimientos</h1>
+          <p>Control de precios, duracion y caducidad automatica.</p>
+        </div>
+        <div class="demo-pricing-cards">
+          <article><h2>Basica mensual</h2><strong>39 EUR</strong><p>Acceso sala fitness. Caduca el 29/07/2026.</p></article>
+          <article><h2>Profesional</h2><strong>69 EUR</strong><p>Sala, clases y reservas. Caduca el 29/07/2026.</p></article>
+          <article><h2>Premium anual</h2><strong>590 EUR</strong><p>Plan completo anual. Caduca el 29/06/2027.</p></article>
+        </div>
+      </section>
+
+      <section class="demo-view" data-demo-view="clases">
+        <div class="demo-heading">
+          <span>Clases</span>
+          <h1>Calendario y reservas</h1>
+          <p>Sesiones por fecha, horarios, aforo y socios reservados.</p>
+        </div>
+        <div class="demo-calendar">
+          <button type="button" data-open-demo-modal="clase">Yoga<br><small>09:00</small></button>
+          <button type="button">HIIT<br><small>12:00</small></button>
+          <button type="button" data-open-demo-modal="clase">Pilates<br><small>17:30</small></button>
+          <button type="button">Boxing<br><small>19:00</small></button>
+          <button type="button">Funcional<br><small>20:00</small></button>
+          <button type="button">Spinning<br><small>21:00</small></button>
+        </div>
+      </section>
+
+      <section class="demo-view" data-demo-view="tareas">
+        <div class="demo-heading">
+          <span>Tareas</span>
+          <h1>Seguimiento operativo</h1>
+          <p>Tareas vinculadas a leads, socios y responsables internos.</p>
+        </div>
+        <div class="demo-table-card">
+          <table>
+            <thead><tr><th>Tarea</th><th>Tipo</th><th>Vinculado a</th><th>Responsable</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr><td>Llamar para prueba</td><td>Ventas</td><td>Lucia Romero</td><td>Carlos Medina</td><td><span class="pill amber">Pendiente</span></td><td><button type="button" data-open-demo-modal="tarea">Ver</button></td></tr>
+              <tr><td>Renovar membresia</td><td>Retencion</td><td>Miguel Torres</td><td>Laura Martin</td><td><span class="pill blue">Hoy</span></td><td><button type="button" data-open-demo-modal="tarea">Ver</button></td></tr>
+              <tr><td>Confirmar asistencia</td><td>Clases</td><td>Ana Lopez</td><td>Entrenador</td><td><span class="pill green">Completada</span></td><td><button type="button" data-open-demo-modal="tarea">Ver</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="demo-modal" data-demo-modal hidden>
+    <div class="demo-modal-panel" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
+      <button class="demo-modal-close" type="button" data-close-demo-modal aria-label="Cerrar">Cerrar</button>
+      <p class="eyebrow">Solo lectura</p>
+      <h2 id="demo-modal-title" data-demo-modal-title>Ficha demo</h2>
+      <div data-demo-modal-content></div>
+      <div class="demo-modal-actions">
+        <button type="button" data-close-demo-modal>Entendido</button>
+        <a href="index.html#contacto">Pedir informacion</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/demo.js"></script>
+</body>
+</html>
