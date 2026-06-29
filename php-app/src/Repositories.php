@@ -2037,7 +2037,7 @@ final class WebhookIntegrationRepository
                 $platformLeadId = PlatformLeadRepository::createFromPayload($payload);
                 self::log(null, null, 'success', 'Solicitud web registrada como lead comercial: ' . $platformLeadId, $payload, $ip, $userAgent);
                 if (!Mailer::sendWebLeadConfirmation($payload, $platformLeadId)) {
-                    self::log(null, null, 'email_error', 'Lead creado, pero no se pudo enviar el correo de confirmacion.', $payload, $ip, $userAgent);
+                    self::log(null, null, 'email_error', 'Lead creado, pero no se pudo enviar el correo de confirmacion. ' . Mailer::lastError(), $payload, $ip, $userAgent);
                 }
 
                 return [

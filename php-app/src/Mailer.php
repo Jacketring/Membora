@@ -2,14 +2,19 @@
 
 final class Mailer
 {
+    private static string $lastError = '';
+
     public static function sendWebLeadConfirmation(array $payload, string $leadId): bool
     {
+        self::$lastError = '';
+
         if (strtolower((string) (getenv('MAIL_ENABLED') ?: 'true')) === 'false') {
             return true;
         }
 
         $email = strtolower(trim((string) ($payload['email'] ?? '')));
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            self::$lastError = 'El lead no tiene un email valido.';
             return false;
         }
 
@@ -21,10 +26,24 @@ final class Mailer
         $company = trim((string) ($payload['empresa'] ?? $payload['company'] ?? $payload['company_name'] ?? ''));
         $subject = 'Hemos recibido tu solicitud en Membora CRM';
         $html = self::webLeadTemplate($name, $company, $leadId);
+
+        if (self::usesSmtp()) {
+            return self::sendSmtp($email, $subject, $html);
+        }
+
+        return self::sendNativeMail($email, $subject, $html);
+    }
+
+    public static function lastError(): string
+    {
+        return self::$lastError;
+    }
+
+    private static function sendNativeMail(string $to, string $subject, string $html): bool
+    {
         $fromEmail = self::fromEmail();
         $fromName = self::headerText((string) (getenv('MAIL_FROM_NAME') ?: 'Membora CRM'));
         $replyTo = trim((string) (getenv('MAIL_REPLY_TO') ?: $fromEmail));
-
         $headers = [
             'MIME-Version: 1.0',
             'Content-Type: text/html; charset=UTF-8',
@@ -33,7 +52,130 @@ final class Mailer
             'X-Mailer: Membora CRM',
         ];
 
-        return @mail($email, self::encodedSubject($subject), $html, implode("\r\n", $headers), '-f' . $fromEmail);
+        $sent = @mail($to, self::encodedSubject($subject), $html, implode("\r\n", $headers), '-f' . $fromEmail);
+        if (!$sent) {
+            self::$lastError = 'PHP mail() ha devuelto false. Revisa si Plesk permite correo saliente o configura SMTP.';
+        }
+
+        return $sent;
+    }
+
+    private static function sendSmtp(string $to, string $subject, string $html): bool
+    {
+        $host = trim((string) (getenv('SMTP_HOST') ?: ''));
+        $port = (int) (getenv('SMTP_PORT') ?: 587);
+        $encryption = strtolower(trim((string) (getenv('SMTP_ENCRYPTION') ?: 'tls')));
+        $username = trim((string) (getenv('SMTP_USERNAME') ?: ''));
+        $password = (string) (getenv('SMTP_PASSWORD') ?: '');
+        $fromEmail = self::fromEmail();
+
+        if ($host === '') {
+            self::$lastError = 'SMTP_HOST no esta configurado.';
+            return false;
+        }
+
+        $target = ($encryption === 'ssl' ? 'ssl://' : '') . $host . ':' . $port;
+        $errno = 0;
+        $errstr = '';
+        $socket = @stream_socket_client($target, $errno, $errstr, 20, STREAM_CLIENT_CONNECT);
+        if (!$socket) {
+            self::$lastError = 'No se pudo conectar con SMTP: ' . ($errstr ?: ('error ' . $errno));
+            return false;
+        }
+
+        stream_set_timeout($socket, 20);
+
+        try {
+            self::smtpExpect($socket, [220]);
+            self::smtpCommand($socket, 'EHLO ' . self::smtpDomain(), [250]);
+
+            if ($encryption === 'tls') {
+                self::smtpCommand($socket, 'STARTTLS', [220]);
+                if (!@stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                    throw new RuntimeException('No se pudo activar TLS en SMTP.');
+                }
+                self::smtpCommand($socket, 'EHLO ' . self::smtpDomain(), [250]);
+            }
+
+            if ($username !== '') {
+                self::smtpCommand($socket, 'AUTH LOGIN', [334]);
+                self::smtpCommand($socket, base64_encode($username), [334]);
+                self::smtpCommand($socket, base64_encode($password), [235]);
+            }
+
+            self::smtpCommand($socket, 'MAIL FROM:<' . $fromEmail . '>', [250]);
+            self::smtpCommand($socket, 'RCPT TO:<' . $to . '>', [250, 251]);
+            self::smtpCommand($socket, 'DATA', [354]);
+            fwrite($socket, self::smtpMessage($to, $subject, $html) . "\r\n.\r\n");
+            self::smtpExpect($socket, [250]);
+            self::smtpCommand($socket, 'QUIT', [221]);
+            fclose($socket);
+
+            return true;
+        } catch (Throwable $exception) {
+            if (is_resource($socket)) {
+                @fwrite($socket, "QUIT\r\n");
+                @fclose($socket);
+            }
+            self::$lastError = $exception->getMessage();
+            return false;
+        }
+    }
+
+    private static function smtpMessage(string $to, string $subject, string $html): string
+    {
+        $fromEmail = self::fromEmail();
+        $fromName = self::headerText((string) (getenv('MAIL_FROM_NAME') ?: 'Membora CRM'));
+        $replyTo = trim((string) (getenv('MAIL_REPLY_TO') ?: $fromEmail));
+        $messageIdHost = parse_url(app_base_url(), PHP_URL_HOST) ?: 'membora.local';
+        $headers = [
+            'Date: ' . date(DATE_RFC2822),
+            'To: <' . $to . '>',
+            'From: ' . $fromName . ' <' . $fromEmail . '>',
+            'Reply-To: ' . $replyTo,
+            'Subject: ' . self::encodedSubject($subject),
+            'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $messageIdHost . '>',
+            'MIME-Version: 1.0',
+            'Content-Type: text/html; charset=UTF-8',
+            'Content-Transfer-Encoding: 8bit',
+            'X-Mailer: Membora CRM',
+        ];
+
+        $body = str_replace(["\r\n", "\r"], "\n", $html);
+        $body = preg_replace('/^\./m', '..', $body);
+
+        return implode("\r\n", $headers) . "\r\n\r\n" . str_replace("\n", "\r\n", $body);
+    }
+
+    private static function smtpCommand(mixed $socket, string $command, array $expectedCodes): string
+    {
+        fwrite($socket, $command . "\r\n");
+        return self::smtpExpect($socket, $expectedCodes);
+    }
+
+    private static function smtpExpect(mixed $socket, array $expectedCodes): string
+    {
+        $response = '';
+        do {
+            $line = fgets($socket, 515);
+            if ($line === false) {
+                throw new RuntimeException('SMTP no respondio.');
+            }
+            $response .= $line;
+            $done = strlen($line) >= 4 && $line[3] === ' ';
+        } while (!$done);
+
+        $code = (int) substr($response, 0, 3);
+        if (!in_array($code, $expectedCodes, true)) {
+            throw new RuntimeException('Respuesta SMTP inesperada: ' . trim($response));
+        }
+
+        return $response;
+    }
+
+    private static function usesSmtp(): bool
+    {
+        return strtolower((string) (getenv('MAIL_MAILER') ?: '')) === 'smtp' || trim((string) (getenv('SMTP_HOST') ?: '')) !== '';
     }
 
     private static function webLeadTemplate(string $name, string $company, string $leadId): string
@@ -59,14 +201,8 @@ final class Mailer
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #dce6f5;box-shadow:0 20px 50px rgba(15,23,42,.10);">
             <tr>
               <td style="background:#0754d6;padding:28px 32px;color:#ffffff;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                  <tr>
-                    <td>
-                      <img src="{$logoUrl}" width="48" height="48" alt="Membora CRM" style="display:inline-block;width:48px;height:48px;border-radius:14px;background:#ffffff;vertical-align:middle;margin-right:12px;">
-                      <span style="font-size:23px;font-weight:900;vertical-align:middle;">Membora CRM</span>
-                    </td>
-                  </tr>
-                </table>
+                <img src="{$logoUrl}" width="48" height="48" alt="Membora CRM" style="display:inline-block;width:48px;height:48px;border-radius:14px;background:#ffffff;vertical-align:middle;margin-right:12px;">
+                <span style="font-size:23px;font-weight:900;vertical-align:middle;">Membora CRM</span>
               </td>
             </tr>
             <tr>
@@ -84,9 +220,7 @@ final class Mailer
                     <li>Resolveremos dudas sobre leads, socios, clases y membresias.</li>
                   </ul>
                 </div>
-                <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">
-                  Referencia interna de solicitud: <strong style="color:#0b172a;">{$safeLeadId}</strong>
-                </p>
+                <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Referencia interna de solicitud: <strong style="color:#0b172a;">{$safeLeadId}</strong></p>
               </td>
             </tr>
             <tr>
@@ -95,9 +229,7 @@ final class Mailer
               </td>
             </tr>
             <tr>
-              <td style="padding:22px 32px;background:#f8fafc;color:#64748b;font-size:13px;line-height:1.5;">
-                Este correo confirma que el formulario se ha enviado correctamente. Si no has solicitado informacion sobre Membora CRM, puedes ignorarlo.
-              </td>
+              <td style="padding:22px 32px;background:#f8fafc;color:#64748b;font-size:13px;line-height:1.5;">Este correo confirma que el formulario se ha enviado correctamente. Si no has solicitado informacion sobre Membora CRM, puedes ignorarlo.</td>
             </tr>
           </table>
         </td>
@@ -127,5 +259,10 @@ HTML;
     private static function headerText(string $text): string
     {
         return str_replace(["\r", "\n"], '', $text);
+    }
+
+    private static function smtpDomain(): string
+    {
+        return parse_url(app_base_url(), PHP_URL_HOST) ?: 'localhost';
     }
 }
