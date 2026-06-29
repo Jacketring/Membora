@@ -18,7 +18,6 @@ Pantallas disponibles:
 - Login.
 - Panel de control del gimnasio.
 - Leads con filtros, conversion a socio, notas y acciones.
-- Captacion Web con webhook para recibir leads externos.
 - Socios con foto, edicion y eliminacion controlada.
 - Membresias con planes, precios, duracion y caducidad automatica.
 - Clases con listado, calendario mensual y reservas de socios.
@@ -26,7 +25,7 @@ Pantallas disponibles:
 - Usuarios internos del gimnasio.
 - Perfil de usuario.
 - Configuracion visual personal.
-- Panel de administracion de Membora CRM separado en resumen, clientes, empresas, pagos y planes.
+- Panel de administracion de Membora CRM separado en resumen, clientes, empresas, pagos, planes y web comercial.
 
 Pendiente o futuro:
 
@@ -160,7 +159,7 @@ Configurar `app.web.josehurtado.dev` como sitio web separado y apuntar la raiz d
 web-app/public
 ```
 
-Antes de publicarla, editar `web-app/public/assets/site.js` y pegar el token real de `Captacion Web` para que el formulario cree leads en el CRM.
+No hay que editar tokens en la web. El formulario envia al webhook del CRM y el panel `Admin CRM > Web` decide que empresa recibe los leads.
 
 En el `.env` del CRM debe existir `WEB_APP_URL="https://app.web.josehurtado.dev"` para permitir el envio del formulario entre subdominios.
 
@@ -204,7 +203,6 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - Dashboard con KPIs principales.
 - Buscador global superior.
 - Gestion de leads.
-- Captacion Web por webhook con token por tenant, ejemplos copiables y logs.
 - Pipeline comercial.
 - Conversion de lead a socio.
 - Notas en leads.
@@ -229,6 +227,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - MRR estimado.
 - Seccion `Pagos` para registrar cobros SaaS, vencimientos, pagados, pendientes y cancelados.
 - Seccion `Planes` para definir catalogo comercial, precio mensual, setup, limites y prestaciones.
+- Seccion `Web` para elegir que empresa recibe los formularios de la web publica y revisar envios recientes.
 - Acceso de soporte al CRM de una empresa conectada.
 - Banner de modo soporte y retorno al panel de administracion.
 

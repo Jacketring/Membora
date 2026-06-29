@@ -13,7 +13,7 @@ if ($isWebhookLeadRequest) {
     ]);
     if ($origin !== '' && in_array(rtrim($origin, '/'), $allowedOrigins, true)) {
         header('Access-Control-Allow-Origin: ' . $origin);
-        header('Access-Control-Allow-Headers: Content-Type, X-Membora-Token');
+        header('Access-Control-Allow-Headers: Content-Type');
         header('Access-Control-Allow-Methods: POST, OPTIONS');
         header('Vary: Origin');
     }
@@ -205,6 +205,21 @@ switch ($route) {
         ]);
         break;
 
+    case 'platform-web':
+        if (!is_platform_admin($currentUser)) {
+            redirect('dashboard');
+        }
+
+        render_layout('Web comercial', 'platform-web', [
+            'settings' => PlatformWebRepository::settings(),
+            'targetEmpresa' => PlatformWebRepository::targetEmpresa(),
+            'empresas' => EmpresaRepository::all(),
+            'logs' => WebhookIntegrationRepository::recentPlatformLogs(),
+            'webhookUrl' => app_base_url() . '/webhook/lead',
+            'webUrl' => getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev',
+        ]);
+        break;
+
     case 'dashboard':
         if (is_platform_admin($currentUser)) {
             redirect('platform-dashboard');
@@ -241,27 +256,6 @@ switch ($route) {
             'metrics' => LeadRepository::metrics($tenantId),
             'leads' => $leads,
             'leadNotes' => LeadRepository::notesByLeadIds($tenantId, array_column($leads, 'id')),
-        ]);
-        break;
-
-    case 'web-integration':
-        if (is_platform_admin($currentUser)) {
-            redirect('platform-dashboard');
-        }
-
-        $tenantId = Auth::tenantId();
-        $settings = WebhookIntegrationRepository::settings($tenantId);
-        $newToken = $_SESSION['webhook_new_token'] ?? null;
-        unset($_SESSION['webhook_new_token']);
-        $token = (string) ($newToken ?: ($settings['token'] ?? ''));
-        $webhookUrl = app_base_url() . '/webhook/lead';
-        render_layout('Captacion web', 'web-integration', [
-            'settings' => $settings,
-            'token' => $token,
-            'webhookUrl' => $webhookUrl,
-            'htmlExample' => WebhookIntegrationRepository::sampleHtml($webhookUrl, $token ?: 'TOKEN_DEL_GIMNASIO'),
-            'jsExample' => WebhookIntegrationRepository::sampleJavascript($webhookUrl, $token ?: 'TOKEN_DEL_GIMNASIO'),
-            'logs' => WebhookIntegrationRepository::recentLogs($tenantId),
         ]);
         break;
 

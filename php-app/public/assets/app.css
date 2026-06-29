@@ -1455,6 +1455,10 @@ a.global-search-result:hover {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-bottom: 18px;
 }
+.platform-admin-grid--web {
+  align-items: start;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+}
 .platform-dashboard-grid {
   display: grid;
   gap: 18px;
@@ -1533,6 +1537,39 @@ a.global-search-result:hover {
   font-weight: 700;
   margin: 0;
   padding: 12px 0;
+}
+.web-target-card,
+.web-info-list div {
+  background: var(--surface-soft);
+  border: 1px solid var(--outline);
+  border-radius: 14px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 16px;
+}
+.web-target-card strong,
+.web-target-card small,
+.web-info-list span,
+.web-info-list strong {
+  display: block;
+}
+.web-target-card small,
+.web-info-list span {
+  color: var(--muted);
+  margin-top: 4px;
+}
+.web-info-list {
+  display: grid;
+  gap: 12px;
+}
+.web-info-list div {
+  display: grid;
+  margin: 0;
+}
+.platform-web-form {
+  margin-top: 18px;
 }
 .platform-plan-list {
   display: grid;

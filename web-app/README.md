@@ -34,16 +34,10 @@ El formulario envia leads al webhook del CRM:
 https://app.crm.josehurtado.dev/webhook/lead
 ```
 
-Antes de publicarla, edita:
+No hay que configurar tokens en esta web. El CRM acepta envios desde el dominio definido en `WEB_APP_URL` y el panel `Admin CRM > Web` decide que empresa recibe los leads.
 
-```text
-web-app/public/assets/site.js
+En produccion revisa que el `.env` del CRM tenga:
+
+```env
+WEB_APP_URL="https://app.web.josehurtado.dev"
 ```
-
-y cambia:
-
-```js
-const MEMBORA_LEAD_TOKEN = 'PEGA_AQUI_EL_TOKEN_DE_CAPTACION_WEB';
-```
-
-por el token real de la seccion `Captacion Web` del CRM de la empresa que debe recibir los leads.

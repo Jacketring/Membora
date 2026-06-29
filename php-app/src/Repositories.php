@@ -1583,6 +1583,87 @@ final class LeadRepository
     }
 }
 
+final class PlatformWebRepository
+{
+    private const TARGET_EMPRESA_KEY = 'public_web_target_empresa_id';
+
+    public static function ensureTable(): void
+    {
+        Database::connection()->exec(
+            'CREATE TABLE IF NOT EXISTS platform_settings (
+                setting_key VARCHAR(191) NOT NULL PRIMARY KEY,
+                setting_value TEXT NULL,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+        );
+    }
+
+    public static function settings(): array
+    {
+        self::ensureTable();
+
+        return [
+            'target_empresa_id' => self::get(self::TARGET_EMPRESA_KEY),
+        ];
+    }
+
+    public static function targetEmpresa(): ?array
+    {
+        $empresaId = self::settings()['target_empresa_id'] ?? null;
+        if ($empresaId) {
+            $empresa = EmpresaRepository::find((string) $empresaId);
+            if ($empresa && !empty($empresa['tenant_id'])) {
+                return $empresa;
+            }
+        }
+
+        foreach (EmpresaRepository::all() as $empresa) {
+            if (!empty($empresa['tenant_id']) && in_array($empresa['status'], ['ACTIVE', 'TRIAL'], true)) {
+                return $empresa;
+            }
+        }
+
+        return null;
+    }
+
+    public static function targetTenantId(): ?string
+    {
+        $empresa = self::targetEmpresa();
+        return $empresa && !empty($empresa['tenant_id']) ? (string) $empresa['tenant_id'] : null;
+    }
+
+    public static function setTargetEmpresa(string $empresaId): void
+    {
+        $empresa = EmpresaRepository::find($empresaId);
+        if (!$empresa || empty($empresa['tenant_id'])) {
+            throw new RuntimeException('La empresa seleccionada no tiene CRM conectado.');
+        }
+
+        self::set(self::TARGET_EMPRESA_KEY, $empresaId);
+    }
+
+    private static function get(string $key): ?string
+    {
+        self::ensureTable();
+        $stmt = Database::connection()->prepare('SELECT setting_value FROM platform_settings WHERE setting_key = :key LIMIT 1');
+        $stmt->execute(['key' => $key]);
+        $value = $stmt->fetchColumn();
+
+        return $value === false ? null : (string) $value;
+    }
+
+    private static function set(string $key, string $value): void
+    {
+        self::ensureTable();
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO platform_settings (setting_key, setting_value, updated_at)
+             VALUES (:setting_key, :setting_value, NOW())
+             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()'
+        );
+        $stmt->execute(['setting_key' => $key, 'setting_value' => $value]);
+    }
+}
+
 final class WebhookIntegrationRepository
 {
     public static function ensureTables(): void
@@ -1716,21 +1797,35 @@ final class WebhookIntegrationRepository
         $token = trim((string) ($headerToken ?: ($payload['token'] ?? '')));
         $ip = substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64);
         $userAgent = substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 500);
+        $tenantId = null;
 
-        if ($token === '') {
-            self::log(null, null, 'error', 'Token obligatorio.', $payload, $ip, $userAgent);
-            return self::jsonResult(false, 'Token invalido o lead incompleto');
+        if ($token !== '') {
+            $settings = self::settingsByToken($token);
+            if (!$settings) {
+                self::log(null, null, 'error', 'Token invalido.', $payload, $ip, $userAgent);
+                return self::jsonResult(false, 'No se pudo enviar la solicitud.');
+            }
+
+            $tenantId = (string) $settings['tenant_id'];
+            if ((int) $settings['is_active'] !== 1) {
+                self::log($tenantId, null, 'error', 'Integracion inactiva.', $payload, $ip, $userAgent);
+                return self::jsonResult(false, 'Integracion inactiva');
+            }
+        } else {
+            if (!self::isAllowedWebsiteOrigin()) {
+                self::log(null, null, 'error', 'Origen web no permitido.', $payload, $ip, $userAgent);
+                return self::jsonResult(false, 'No se pudo enviar la solicitud.');
+            }
+
+            $tenantId = PlatformWebRepository::targetTenantId();
+            if (!$tenantId) {
+                self::log(null, null, 'error', 'No hay empresa destino configurada para la web.', $payload, $ip, $userAgent);
+                return self::jsonResult(false, 'La web aun no tiene una empresa receptora configurada.');
+            }
         }
 
-        $settings = self::settingsByToken($token);
-        if (!$settings) {
-            self::log(null, null, 'error', 'Token invalido.', $payload, $ip, $userAgent);
-            return self::jsonResult(false, 'Token invalido o lead incompleto');
-        }
-
-        $tenantId = (string) $settings['tenant_id'];
-        if ((int) $settings['is_active'] !== 1 || !self::tenantAcceptsWebhooks($tenantId)) {
-            self::log($tenantId, null, 'error', 'Integracion inactiva o empresa suspendida.', $payload, $ip, $userAgent);
+        if (!self::tenantAcceptsWebhooks($tenantId)) {
+            self::log($tenantId, null, 'error', 'Empresa suspendida o cancelada.', $payload, $ip, $userAgent);
             return self::jsonResult(false, 'Integracion inactiva');
         }
 
@@ -1756,48 +1851,23 @@ final class WebhookIntegrationRepository
             ];
         } catch (Throwable $exception) {
             self::log($tenantId, null, 'error', $exception->getMessage(), $payload, $ip, $userAgent);
-            return self::jsonResult(false, 'Token invalido o lead incompleto');
+            return self::jsonResult(false, 'No se pudo enviar la solicitud. Revisa email o telefono.');
         }
     }
 
-    public static function sampleHtml(string $url, string $token): string
+    public static function recentPlatformLogs(int $limit = 30): array
     {
-        return '<form method="POST" action="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">' . "\n"
-            . '  <input type="hidden" name="token" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">' . "\n\n"
-            . "  <label>Nombre</label>\n"
-            . "  <input type=\"text\" name=\"nombre\" required>\n\n"
-            . "  <label>Email</label>\n"
-            . "  <input type=\"email\" name=\"email\">\n\n"
-            . "  <label>Telefono</label>\n"
-            . "  <input type=\"tel\" name=\"telefono\">\n\n"
-            . "  <label>Mensaje</label>\n"
-            . "  <textarea name=\"mensaje\"></textarea>\n\n"
-            . "  <input type=\"hidden\" name=\"origen\" value=\"WEB\">\n"
-            . "  <input type=\"hidden\" name=\"acepta_rgpd\" value=\"1\">\n"
-            . "  <input type=\"text\" name=\"website\" style=\"display:none\" tabindex=\"-1\" autocomplete=\"off\">\n\n"
-            . "  <button type=\"submit\">Solicitar informacion</button>\n"
-            . '</form>';
-    }
-
-    public static function sampleJavascript(string $url, string $token): string
-    {
-        return 'fetch("' . $url . '", {' . "\n"
-            . '  method: "POST",' . "\n"
-            . '  headers: {' . "\n"
-            . '    "Content-Type": "application/json",' . "\n"
-            . '    "X-Membora-Token": "' . $token . '"' . "\n"
-            . '  },' . "\n"
-            . '  body: JSON.stringify({' . "\n"
-            . '    nombre: "Cliente de prueba",' . "\n"
-            . '    email: "cliente@email.com",' . "\n"
-            . '    telefono: "+34600000000",' . "\n"
-            . '    mensaje: "Quiero informacion sobre el gimnasio",' . "\n"
-            . '    origen: "WEB",' . "\n"
-            . '    acepta_rgpd: true' . "\n"
-            . '  })' . "\n"
-            . '})' . "\n"
-            . '.then(response => response.json())' . "\n"
-            . '.then(data => console.log(data));';
+        self::ensureTables();
+        $stmt = Database::connection()->prepare(
+            'SELECT webhook_logs.*, leads.first_name, leads.last_name, leads.email, leads.phone, empresas.name AS empresa_name
+             FROM webhook_logs
+             LEFT JOIN leads ON leads.id = webhook_logs.lead_id AND leads.tenant_id = webhook_logs.tenant_id
+             LEFT JOIN empresas ON empresas.tenant_id = webhook_logs.tenant_id
+             ORDER BY webhook_logs.created_at DESC
+             LIMIT ' . max(1, min($limit, 80))
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
     private static function settingsByToken(string $token): ?array
@@ -1810,6 +1880,24 @@ final class WebhookIntegrationRepository
         }
 
         return null;
+    }
+
+    private static function isAllowedWebsiteOrigin(): bool
+    {
+        $origin = rtrim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''), '/');
+        $referer = rtrim((string) ($_SERVER['HTTP_REFERER'] ?? ''), '/');
+        $allowed = array_filter([
+            rtrim((string) (getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev'), '/'),
+            rtrim((string) (getenv('APP_WEB_URL') ?: ''), '/'),
+        ]);
+
+        foreach ($allowed as $allowedOrigin) {
+            if ($origin === $allowedOrigin || str_starts_with($referer, $allowedOrigin . '/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function normalizePayload(array $payload): array

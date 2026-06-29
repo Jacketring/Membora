@@ -1,5 +1,4 @@
 const MEMBORA_WEBHOOK_URL = 'https://app.crm.josehurtado.dev/webhook/lead';
-const MEMBORA_LEAD_TOKEN = 'PEGA_AQUI_EL_TOKEN_DE_CAPTACION_WEB';
 
 const form = document.querySelector('[data-lead-form]');
 const alertBox = document.querySelector('[data-form-alert]');
@@ -17,7 +16,6 @@ function showMessage(message, type) {
 function payloadFromForm(formElement) {
   const data = new FormData(formElement);
   return {
-    token: MEMBORA_LEAD_TOKEN,
     nombre: String(data.get('nombre') || '').trim(),
     apellidos: String(data.get('apellidos') || '').trim(),
     email: String(data.get('email') || '').trim(),
@@ -39,11 +37,6 @@ function payloadFromForm(formElement) {
 form?.addEventListener('submit', async (event) => {
   event.preventDefault();
 
-  if (MEMBORA_LEAD_TOKEN === 'PEGA_AQUI_EL_TOKEN_DE_CAPTACION_WEB') {
-    showMessage('Falta configurar el token de captacion web en assets/site.js.', 'error');
-    return;
-  }
-
   const submitButton = form.querySelector('button[type="submit"]');
   const originalText = submitButton?.textContent || 'Enviar solicitud';
   if (submitButton) {
@@ -56,7 +49,6 @@ form?.addEventListener('submit', async (event) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Membora-Token': MEMBORA_LEAD_TOKEN,
       },
       body: JSON.stringify(payloadFromForm(form)),
     });
@@ -77,4 +69,3 @@ form?.addEventListener('submit', async (event) => {
     }
   }
 });
-

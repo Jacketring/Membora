@@ -102,6 +102,11 @@ $arpa = count($activeCustomers) > 0 ? (float) $metrics['mrr'] / count($activeCus
     <strong>Packaging</strong>
     <small>Precios, limites, configuracion comercial y planes activos.</small>
   </a>
+  <a class="platform-module-card" href="index.php?route=platform-web">
+    <span>Web</span>
+    <strong>Formulario publico</strong>
+    <small>Empresa receptora de leads y registros de formularios enviados.</small>
+  </a>
 </section>
 
 <section class="platform-ops-grid" aria-label="Resumen operativo de administracion">

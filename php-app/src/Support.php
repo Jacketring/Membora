@@ -332,6 +332,16 @@ function platform_plan_status_label(?string $status): string
     ]);
 }
 
+function webhook_status_label(?string $status): string
+{
+    return enum_label((string) $status, [
+        'success' => 'Recibido',
+        'duplicate' => 'Duplicado',
+        'blocked' => 'Bloqueado',
+        'error' => 'Error',
+    ]);
+}
+
 function format_time(?string $value): string
 {
     if (!$value) {
