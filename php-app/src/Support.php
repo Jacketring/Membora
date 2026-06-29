@@ -349,6 +349,7 @@ function webhook_status_label(?string $status): string
         'success' => 'Recibido',
         'duplicate' => 'Duplicado',
         'blocked' => 'Bloqueado',
+        'email_error' => 'Email no enviado',
         'error' => 'Error',
     ]);
 }

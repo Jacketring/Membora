@@ -80,9 +80,10 @@ $webUrl = $webUrl ?? 'https://app.web.josehurtado.dev';
       <tbody>
         <?php foreach ($logs as $log): ?>
           <?php $status = (string) ($log['status'] ?? ''); ?>
+          <?php $statusClass = $status === 'success' || $status === 'duplicate' ? 'active' : ($status === 'email_error' ? 'pending' : 'cancelled'); ?>
           <tr>
             <td><?= e(format_date($log['created_at'])) ?></td>
-            <td><span class="status-badge status-badge--<?= e($status === 'success' || $status === 'duplicate' ? 'active' : 'cancelled') ?>"><?= e(webhook_status_label($status)) ?></span></td>
+            <td><span class="status-badge status-badge--<?= e($statusClass) ?>"><?= e(webhook_status_label($status)) ?></span></td>
             <td><?= e($log['source_url'] ?: 'Web publica') ?></td>
             <td><?= e($log['error_message'] ?: 'Solicitud procesada') ?></td>
           </tr>

@@ -28,6 +28,10 @@ DB_PORT="3306"
 DB_DATABASE="membora_crm"
 DB_USERNAME="usuario"
 DB_PASSWORD="password"
+MAIL_ENABLED="true"
+MAIL_FROM_EMAIL="no-reply@josehurtado.dev"
+MAIL_FROM_NAME="Membora CRM"
+MAIL_REPLY_TO="contacto@josehurtado.dev"
 ```
 
 Tambien se admite:
@@ -123,3 +127,5 @@ El formulario de `web-app/public` envia al webhook:
 
 El webhook acepta `POST` con JSON, `application/x-www-form-urlencoded` o `multipart/form-data`.
 No es necesario copiar tokens en la web. El CRM valida el origen configurado en `WEB_APP_URL`, aplica honeypot y rate limit, y crea la solicitud en `Admin CRM > Leads`. Desde esa seccion el administrador puede mantenerla como lead, actualizar su estado o convertirla en cliente.
+
+Cuando la solicitud incluye un email valido, el CRM intenta enviar una confirmacion HTML al contacto. Este correo usa `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` y `MAIL_REPLY_TO`. Si Plesk no tiene correo saliente configurado, el lead se crea igualmente y el fallo de correo queda registrado en `Admin CRM > Web`.

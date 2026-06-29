@@ -116,6 +116,10 @@ DB_PORT="3306"
 DB_DATABASE="nombre_base_datos"
 DB_USERNAME="usuario_base_datos"
 DB_PASSWORD="password_base_datos"
+MAIL_ENABLED="true"
+MAIL_FROM_EMAIL="no-reply@josehurtado.dev"
+MAIL_FROM_NAME="Membora CRM"
+MAIL_REPLY_TO="contacto@josehurtado.dev"
 ```
 
 Tambien se admite `DATABASE_URL`:
@@ -160,6 +164,7 @@ web-app/public
 ```
 
 No hay que editar tokens en la web. El formulario envia al webhook del CRM y las solicitudes aparecen en `Admin CRM > Leads`.
+Si `MAIL_ENABLED` esta activo y el servidor permite enviar correo, la persona que rellena el formulario recibe un email HTML de confirmacion indicando que el equipo revisara su solicitud y contactara en 24-48 horas.
 
 En el `.env` del CRM debe existir `WEB_APP_URL="https://app.web.josehurtado.dev"` para permitir el envio del formulario entre subdominios.
 
@@ -218,6 +223,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - Panel `Admin CRM`.
 - Resumen SaaS con MRR, ARR, ARPA, riesgo, cobros y prioridades.
 - Seccion `Leads` para solicitudes de la web publica, con estados comerciales y conversion a cliente.
+- Email automatico de confirmacion para solicitudes recibidas desde la web publica.
 - Seccion `Clientes` para contactos comerciales antes de crear su CRM.
 - Tabla `empresas`.
 - Alta y edicion de empresas cliente desde un cliente comercial.

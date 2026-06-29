@@ -35,6 +35,7 @@ https://app.crm.josehurtado.dev/webhook/lead
 ```
 
 No hay que configurar tokens en esta web. El CRM acepta envios desde el dominio definido en `WEB_APP_URL` y crea las solicitudes en `Admin CRM > Leads`, donde el administrador puede gestionarlas o convertirlas en clientes.
+El correo de confirmacion al visitante no se configura en esta web, sino en el `.env` del CRM mediante `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` y `MAIL_REPLY_TO`.
 
 En produccion revisa que el `.env` del CRM tenga:
 
