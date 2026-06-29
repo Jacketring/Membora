@@ -10,6 +10,7 @@ El proyecto se ha migrado a una app PHP monolitica para simplificar el despliegu
 Aplicacion PHP funcional en migracion avanzada.
 Despliegue previsto/actual: https://app.crm.josehurtado.dev
 Produccion sin Node.js, sin npm install y sin npm run build.
+Web comercial externa prevista: https://app.web.josehurtado.dev
 ```
 
 Pantallas disponibles:
@@ -48,6 +49,7 @@ https://github.com/Jacketring/Membora-CRM.git
 - PDO.
 - HTML, CSS y JavaScript de navegador.
 - Apache/Plesk con document root en `php-app/public`.
+- Web comercial estatica en `web-app/public`.
 - Sin Node.js en produccion.
 - Sin `npm install`.
 - Sin `npm run build`.
@@ -88,6 +90,12 @@ membora-crm/
 |   |   |-- bootstrap.php
 |   |-- .env.example
 |   |-- README.md
+|-- web-app/
+|   |-- public/
+|   |   |-- assets/
+|   |   |-- .htaccess
+|   |   |-- index.html
+|   |-- README.md
 |-- docs/
 |-- README.md
 |-- .gitignore
@@ -102,6 +110,8 @@ Opcion recomendada en Plesk, especialmente si la contrasena tiene caracteres esp
 ```env
 APP_NAME="Membora CRM"
 APP_ENV="production"
+APP_URL="https://app.crm.josehurtado.dev"
+WEB_APP_URL="https://app.web.josehurtado.dev"
 DB_HOST="localhost"
 DB_PORT="3306"
 DB_DATABASE="nombre_base_datos"
@@ -119,8 +129,10 @@ DATABASE_URL="mysql://usuario:password@localhost:3306/nombre_base_datos"
 
 ## Despliegue en Plesk
 
+### CRM
+
 1. Clonar el repositorio desde GitHub.
-2. Configurar el subdominio como hosting PHP.
+2. Configurar `app.crm.josehurtado.dev` como hosting PHP.
 3. Usar PHP 8.2 o superior.
 4. Activar `pdo_mysql`.
 5. Configurar la raiz del documento apuntando a:
@@ -139,6 +151,18 @@ Si Plesk ha clonado el repositorio dentro de otra carpeta, la ruta debe acabar i
 7. Abrir el subdominio.
 
 No hay que ejecutar comandos Node, compilar frontend ni reiniciar una app Node.
+
+### Web comercial
+
+Configurar `app.web.josehurtado.dev` como sitio web separado y apuntar la raiz del documento a:
+
+```text
+web-app/public
+```
+
+Antes de publicarla, editar `web-app/public/assets/site.js` y pegar el token real de `Captacion Web` para que el formulario cree leads en el CRM.
+
+En el `.env` del CRM debe existir `WEB_APP_URL="https://app.web.josehurtado.dev"` para permitir el envio del formulario entre subdominios.
 
 ## Credenciales de prueba
 

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0754d6">
+  <meta name="description" content="Membora CRM centraliza leads, socios, membresias, clases, reservas y tareas para gimnasios independientes.">
+  <title>Membora CRM - Gestion para gimnasios</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="Membora CRM">
+      <span class="brand-mark">M</span>
+      <span>
+        <strong>Membora CRM</strong>
+        <small>CRM para gimnasios</small>
+      </span>
+    </a>
+    <nav aria-label="Navegacion principal">
+      <a href="#producto">Producto</a>
+      <a href="#modulos">Modulos</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </header>
+
+  <main id="inicio">
+    <section class="hero">
+      <div class="hero-media" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="eyebrow">CRM vertical para centros fitness</p>
+        <h1>Membora CRM</h1>
+        <p class="hero-copy">Centraliza captacion, socios, membresias, clases, reservas y tareas en una plataforma sencilla para gimnasios pequenos y medianos.</p>
+        <div class="hero-actions">
+          <a class="primary-link" href="#contacto">Solicitar demo</a>
+          <a class="secondary-link" href="#producto">Ver producto</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="proof-strip" aria-label="Ventajas principales">
+      <article>
+        <strong>Leads</strong>
+        <span>Pipeline comercial desde formulario web hasta alta como socio.</span>
+      </article>
+      <article>
+        <strong>Socios</strong>
+        <span>Ficha, foto, membresia, tareas vinculadas y reservas.</span>
+      </article>
+      <article>
+        <strong>Gestion diaria</strong>
+        <span>Clases, calendario, aforo y trabajo operativo del equipo.</span>
+      </article>
+    </section>
+
+    <section class="section product-section" id="producto">
+      <div class="section-heading">
+        <span>Producto</span>
+        <h2>Un CRM pensado para recepcion, ventas y direccion del gimnasio</h2>
+        <p>Membora evita depender de hojas de calculo, mensajes sueltos y agendas manuales. Cada contacto queda registrado y cada accion tiene seguimiento.</p>
+      </div>
+      <div class="product-grid">
+        <article class="feature-card feature-card--wide">
+          <h3>Embudo comercial claro</h3>
+          <p>Gestiona nuevos leads, contactados, pruebas agendadas, altas propuestas, convertidos y perdidos.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Panel operativo</h3>
+          <p>KPIs de socios, conversion, tareas pendientes y atencion requerida.</p>
+        </article>
+        <article class="feature-card">
+          <h3>SaaS multiempresa</h3>
+          <p>Administracion de empresas cliente, planes, pagos y acceso de soporte.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section modules-section" id="modulos">
+      <div class="section-heading">
+        <span>Modulos</span>
+        <h2>Todo lo esencial para un MVP defendible y usable</h2>
+      </div>
+      <div class="module-list">
+        <article><b>01</b><strong>Leads</strong><span>Captacion web, notas, filtros y conversion a socio.</span></article>
+        <article><b>02</b><strong>Socios</strong><span>Datos, foto, historial y estado operativo.</span></article>
+        <article><b>03</b><strong>Membresias</strong><span>Planes semanales, mensuales o anuales con caducidad.</span></article>
+        <article><b>04</b><strong>Clases</strong><span>Calendario, sesiones, horarios, aforo y reservas.</span></article>
+        <article><b>05</b><strong>Tareas</strong><span>Responsables, varios socios vinculados y estados.</span></article>
+        <article><b>06</b><strong>Admin CRM</strong><span>Empresas, clientes, planes y pagos SaaS.</span></article>
+      </div>
+    </section>
+
+    <section class="section contact-section" id="contacto">
+      <div class="contact-copy">
+        <span class="eyebrow">Contacto comercial</span>
+        <h2>Quieres probar Membora CRM?</h2>
+        <p>Rellena el formulario y la solicitud entrara directamente como lead en el CRM de la empresa administradora.</p>
+        <div class="contact-note">
+          <strong>Conexion directa</strong>
+          <span>El formulario usa el webhook seguro de Membora CRM y evita duplicados por email o telefono.</span>
+        </div>
+      </div>
+
+      <form class="lead-form" data-lead-form>
+        <div class="form-alert" data-form-alert hidden></div>
+        <label>
+          <span>Nombre</span>
+          <input name="nombre" autocomplete="given-name" required placeholder="Tu nombre">
+        </label>
+        <label>
+          <span>Apellidos</span>
+          <input name="apellidos" autocomplete="family-name" placeholder="Tus apellidos">
+        </label>
+        <label>
+          <span>Email</span>
+          <input name="email" type="email" autocomplete="email" placeholder="tu@email.com">
+        </label>
+        <label>
+          <span>Telefono</span>
+          <input name="telefono" inputmode="tel" autocomplete="tel" placeholder="+34 600 000 000">
+        </label>
+        <label class="field-wide">
+          <span>Empresa / gimnasio</span>
+          <input name="empresa" placeholder="Nombre del centro">
+        </label>
+        <label class="field-wide">
+          <span>Mensaje</span>
+          <textarea name="mensaje" rows="4" placeholder="Cuentanos que necesitas gestionar en tu gimnasio."></textarea>
+        </label>
+        <label class="check field-wide">
+          <input name="acepta_rgpd" value="1" type="checkbox" required>
+          <span>Acepto que Membora CRM contacte conmigo para gestionar esta solicitud.</span>
+        </label>
+        <input class="honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="submit-button" type="submit">Enviar solicitud</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Membora CRM</span>
+    <span>Gestion comercial y operativa para gimnasios</span>
+  </footer>
+
+  <script src="assets/site.js"></script>
+</body>
+</html>
+

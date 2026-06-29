@@ -2,6 +2,8 @@
 
 Aplicacion PHP monolitica para ejecutar Membora CRM en un unico subdominio, sin Next.js, NestJS ni procesos Node en produccion.
 
+La web comercial publica no vive dentro de `php-app`; esta separada en `web-app/public` para desplegarla en otro subdominio.
+
 ## Requisitos
 
 - PHP 8.2 o superior.
@@ -20,6 +22,7 @@ Configuracion recomendada:
 APP_NAME="Membora CRM"
 APP_ENV="production"
 APP_URL="https://app.crm.josehurtado.dev"
+WEB_APP_URL="https://app.web.josehurtado.dev"
 DB_HOST="localhost"
 DB_PORT="3306"
 DB_DATABASE="membora_crm"
