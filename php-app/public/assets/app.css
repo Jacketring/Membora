@@ -904,6 +904,14 @@ a.global-search-result:hover {
   padding: 14px;
   text-align: center;
 }
+td.empty-state,
+.leads-table td.empty-state {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--muted);
+  padding: 28px;
+}
 
 .result-icon {
   align-items: center;
