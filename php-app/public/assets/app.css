@@ -1183,6 +1183,9 @@ td.empty-state,
   text-align: left;
   width: 100%;
 }
+.custom-select-option[hidden] {
+  display: none;
+}
 .custom-select-option::after {
   background: transparent;
   border-radius: 999px;
