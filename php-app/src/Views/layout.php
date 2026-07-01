@@ -46,6 +46,7 @@ $isPlatformAdmin = is_platform_admin($user);
           <a class="<?= $route === 'members' ? 'active' : '' ?>" href="index.php?route=members">Socios</a>
           <a class="<?= $route === 'memberships' ? 'active' : '' ?>" href="index.php?route=memberships">Membresias</a>
           <a class="<?= $route === 'payments' ? 'active' : '' ?>" href="index.php?route=payments">Pagos</a>
+          <a class="<?= $route === 'checkins' ? 'active' : '' ?>" href="index.php?route=checkins">Check-ins</a>
           <a class="<?= $route === 'classes' ? 'active' : '' ?>" href="index.php?route=classes">Clases</a>
           <a class="<?= $route === 'tasks' ? 'active' : '' ?>" href="index.php?route=tasks">Tareas</a>
         <?php endif; ?>

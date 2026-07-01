@@ -38,6 +38,7 @@ Estas tablas pertenecen a un gimnasio concreto y deben consultarse siempre con `
 - `task_members`: relacion N:M entre tareas y varios socios.
 - `risk_alerts`: alertas previstas o existentes en la base de datos original.
 - `payments`: pagos manuales de socios, vencimientos y cobros.
+- `checkins`: entradas/asistencias manuales de socios.
 
 Columnas auxiliares que PHP puede anadir:
 
@@ -70,10 +71,12 @@ Estas tablas son globales de Membora CRM y no representan datos internos de un g
 - `Lead` 0..1 -> 1 `Member` a nivel funcional mediante `members.lead_id`.
 - `Member` 1 -> N `Subscription`.
 - `Member` 1 -> N `Payment`.
+- `Member` 1 -> N `CheckIn`.
 - `MembershipPlan` 1 -> N `Subscription`.
 - `Subscription` 0..N -> N `Payment`.
 - `ClassType` 1 -> N `ClassSession`.
 - `ClassSession` 1 -> N `Reservation`.
+- `ClassSession` 0..N -> N `CheckIn`.
 - `Member` 1 -> N `Reservation`.
 - `Task` N <-> N `Member` mediante `task_members`.
 - `PlatformLead` 0..1 -> 1 `PlatformClient` al convertir una solicitud web.
@@ -122,6 +125,12 @@ Reservas:
 reserved, cancelled, attended, no_show
 ```
 
+Check-ins:
+
+```text
+MANUAL, QR
+```
+
 Tareas:
 
 ```text
@@ -166,6 +175,7 @@ Automatismos principales:
 
 - Crea `platform_leads`, `platform_clients`, `empresas`, `empresa_payments` y `saas_plans`.
 - Crea `lead_notes`, `task_members`, `membership_plans`, `subscriptions`, `class_types`, `class_sessions` y `reservations`.
+- Crea `checkins` para entradas manuales y asistencias asociadas a reservas.
 - Crea `webhook_settings` y `webhook_logs` para integraciones y diagnostico.
 - Anade columnas auxiliares de imagen, color, planes, clases y suscripciones si faltan.
 
@@ -177,7 +187,6 @@ Requisito operativo:
 
 No estan cerrados todavia como modulos completos de gimnasio:
 
-- Check-ins.
 - Auditoria exhaustiva de acciones.
 - Permisos granulares por accion.
 - Integraciones de facturacion externa.

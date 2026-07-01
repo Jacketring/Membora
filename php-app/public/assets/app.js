@@ -465,6 +465,38 @@ document.querySelectorAll('[data-payment-form]').forEach((form) => {
   syncSubscriptionOptions();
 });
 
+document.querySelectorAll('[data-checkin-form]').forEach((form) => {
+  const memberInput = form.querySelector('[name="member_id"]');
+  const reservationSelect = form.querySelector('[data-checkin-reservation-select]');
+  const reservationInput = reservationSelect?.querySelector('[name="reservation_id"]');
+  const reservationOptions = reservationSelect?.querySelectorAll('[data-custom-select-option]');
+
+  if (!memberInput || !reservationSelect || !reservationInput || !reservationOptions) {
+    return;
+  }
+
+  function syncReservationOptions() {
+    const memberId = memberInput.value;
+    let selectedStillAllowed = reservationInput.value === '';
+
+    reservationOptions.forEach((option) => {
+      const optionMemberId = option.dataset.memberId || '';
+      const allowed = optionMemberId === '' || memberId === '' || optionMemberId === memberId;
+      option.dataset.customAllowed = allowed ? 'true' : 'false';
+      if (allowed && option.dataset.value === reservationInput.value) {
+        selectedStillAllowed = true;
+      }
+    });
+
+    if (!selectedStillAllowed) {
+      setCustomSelectValue(reservationSelect, '', 'Entrada general sin reserva');
+    }
+  }
+
+  memberInput.addEventListener('custom-select-change', syncReservationOptions);
+  syncReservationOptions();
+});
+
 document.querySelectorAll('[data-empresa-form]').forEach((form) => {
   const planSelect = form.querySelector('[data-plan-price-select]');
   const priceInput = form.querySelector('[data-plan-price-input]');

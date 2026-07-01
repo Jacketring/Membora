@@ -388,6 +388,14 @@ function payment_method_label(?string $method): string
     ]);
 }
 
+function checkin_method_label(?string $method): string
+{
+    return enum_label((string) $method, [
+        'MANUAL' => 'Manual',
+        'QR' => 'QR',
+    ]);
+}
+
 function platform_plan_status_label(?string $status): string
 {
     return enum_label((string) $status, [

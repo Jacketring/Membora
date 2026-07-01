@@ -387,6 +387,22 @@ switch ($route) {
         ]);
         break;
 
+    case 'checkins':
+        $tenantId = Auth::tenantId();
+        $filters = [
+            'q' => trim((string) ($_GET['q'] ?? '')),
+            'date_from' => trim((string) ($_GET['date_from'] ?? '')),
+            'date_to' => trim((string) ($_GET['date_to'] ?? '')),
+        ];
+        render_layout('Check-ins', 'checkins', [
+            'filters' => $filters,
+            'metrics' => CheckinRepository::metrics($tenantId),
+            'checkins' => CheckinRepository::all($tenantId, $filters['q'], $filters['date_from'], $filters['date_to']),
+            'members' => CheckinRepository::memberOptions($tenantId),
+            'reservations' => CheckinRepository::reservationOptions($tenantId),
+        ]);
+        break;
+
     case 'classes':
         $tenantId = Auth::tenantId();
         $filters = [

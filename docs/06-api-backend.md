@@ -27,6 +27,7 @@ Rutas de gimnasio:
 - `?route=members`: socios.
 - `?route=memberships`: planes y suscripciones.
 - `?route=payments`: pagos manuales de socios.
+- `?route=checkins`: entradas y asistencias de socios.
 - `?route=classes`: tipos de clase, calendario, sesiones y reservas.
 - `?route=tasks`: tareas.
 - `?route=users`: usuarios internos.
@@ -91,6 +92,8 @@ Gimnasio:
 - `create_payment`
 - `update_payment`
 - `delete_payment`
+- `create_checkin`
+- `delete_checkin`
 - `create_class_type`
 - `create_class_session`
 - `update_class_session`
@@ -197,6 +200,7 @@ Pruebas manuales clave:
 - Creacion/edicion de socio con foto.
 - Asignacion de membresia.
 - Registro y edicion de pagos de socios.
+- Registro y eliminacion de check-ins.
 - Creacion de clase desde calendario.
 - Reserva, asistencia, no-show y cancelacion.
 - Creacion de tarea con varios socios.

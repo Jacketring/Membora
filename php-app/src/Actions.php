@@ -50,6 +50,8 @@ final class Actions
             'create_payment' => self::createPayment(),
             'update_payment' => self::updatePayment(),
             'delete_payment' => self::deletePayment(),
+            'create_checkin' => self::createCheckin(),
+            'delete_checkin' => self::deleteCheckin(),
             'create_class_type' => self::createClassType(),
             'create_class_session' => self::createClassSession(),
             'update_class_session' => self::updateClassSession(),
@@ -909,6 +911,7 @@ final class Actions
         TaskRepository::ensureMemberLinksTable();
         ReservationRepository::ensureTable();
         PaymentRepository::ensureTable();
+        CheckinRepository::ensureTable();
         $pdo->beginTransaction();
         try {
             $memberStmt = $pdo->prepare('SELECT lead_id, photo_path FROM members WHERE id = :id AND tenant_id = :tenant_id LIMIT 1');
@@ -928,6 +931,9 @@ final class Actions
 
             $deleteReservations = $pdo->prepare('DELETE FROM reservations WHERE member_id = :id AND tenant_id = :tenant_id');
             $deleteReservations->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
+
+            $deleteCheckins = $pdo->prepare('DELETE FROM checkins WHERE member_id = :id AND tenant_id = :tenant_id');
+            $deleteCheckins->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
 
             $deletePayments = $pdo->prepare('DELETE FROM payments WHERE member_id = :id AND tenant_id = :tenant_id');
             $deletePayments->execute(['id' => $memberId, 'tenant_id' => $tenantId]);
@@ -1188,6 +1194,32 @@ final class Actions
         redirect('payments');
     }
 
+    private static function createCheckin(): never
+    {
+        try {
+            CheckinRepository::create(Auth::tenantId(), $_POST);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo registrar el check-in.', 'error');
+            redirect('checkins');
+        }
+
+        flash('Check-in registrado correctamente.');
+        redirect('checkins');
+    }
+
+    private static function deleteCheckin(): never
+    {
+        $id = post_value('id', '');
+        if ($id === '') {
+            flash('No se encontro el check-in seleccionado.', 'error');
+            redirect('checkins');
+        }
+
+        CheckinRepository::delete(Auth::tenantId(), $id);
+        flash('Check-in eliminado correctamente.');
+        redirect('checkins');
+    }
+
     private static function createClassType(): never
     {
         ClassRepository::ensureTables();
@@ -1288,6 +1320,7 @@ final class Actions
     {
         ClassRepository::ensureTables();
         ReservationRepository::ensureTable();
+        CheckinRepository::ensureTable();
         $tenantId = Auth::tenantId();
         $sessionId = post_value('id');
         $pdo = Database::connection();
@@ -1296,6 +1329,9 @@ final class Actions
         try {
             $deleteReservations = $pdo->prepare('DELETE FROM reservations WHERE class_session_id = :id AND tenant_id = :tenant_id');
             $deleteReservations->execute(['id' => $sessionId, 'tenant_id' => $tenantId]);
+
+            $deleteCheckins = $pdo->prepare('DELETE FROM checkins WHERE class_session_id = :id AND tenant_id = :tenant_id');
+            $deleteCheckins->execute(['id' => $sessionId, 'tenant_id' => $tenantId]);
 
             $stmt = $pdo->prepare('DELETE FROM class_sessions WHERE id = :id AND tenant_id = :tenant_id');
             $stmt->execute(['id' => $sessionId, 'tenant_id' => $tenantId]);

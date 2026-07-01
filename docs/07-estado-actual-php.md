@@ -82,6 +82,15 @@ No se usa Node.js en produccion.
 - Filtros por texto, estado y fechas.
 - Indicadores de cobrado este mes, importe pendiente y vencidos.
 
+### Check-ins
+
+- Registro de entradas manuales por socio.
+- Asociacion opcional a reservas de clases.
+- Marcado automatico de la reserva como asistida al registrar check-in asociado.
+- Metodo manual o QR preparado a nivel de datos.
+- Filtros por texto y fechas.
+- Indicadores de hoy, ultimos 7 dias, manuales y con clase.
+
 ### Clases
 
 - Tipos de clase.
@@ -138,7 +147,6 @@ No se usa Node.js en produccion.
 
 ## 4. Modulos pendientes
 
-- Check-ins.
 - Alertas de riesgo.
 - Integraciones avanzadas de facturacion SaaS.
 - Auditoria de acciones.
@@ -190,6 +198,7 @@ La aplicacion PHP puede crear de forma incremental:
 - `membership_plans`.
 - `subscriptions`.
 - `payments`.
+- `checkins`.
 - `class_types`.
 - `class_sessions`.
 - `reservations`.

@@ -185,6 +185,23 @@ Resultado esperado:
 - No se permite duplicar una reserva activa para el mismo socio y sesion.
 - El historial de reservas aparece en la ficha del socio.
 
+### PF-05B Check-ins
+
+Pasos:
+
+1. Abrir Check-ins.
+2. Crear un check-in para un socio activo.
+3. Buscar el socio desde el selector.
+4. Asociarlo a una reserva si existe.
+5. Confirmar que la reserva queda marcada como asistida.
+6. Filtrar check-ins por texto y fechas.
+
+Resultado esperado:
+
+- El check-in aparece en el historial.
+- El selector de reservas se filtra por el socio elegido.
+- Las metricas de hoy, ultimos 7 dias, manuales y con clase se actualizan.
+
 ### PF-06 Tareas
 
 Pasos:
@@ -275,7 +292,7 @@ Resultado esperado:
 
 ## 7. Riesgos pendientes
 
-- Check-ins y alertas no estan terminados.
+- Alertas no estan terminadas.
 - Las reservas estan implementadas dentro del modulo de clases, pero conviene validarlas en produccion con datos reales.
 - La aplicacion crea tablas auxiliares automaticamente; conviene validar permisos de usuario MariaDB en Plesk.
 - Hay que validar el flujo completo en produccion justo antes de grabar el video final.

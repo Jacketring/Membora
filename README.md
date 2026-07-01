@@ -21,6 +21,7 @@ Pantallas disponibles:
 - Socios con foto, edicion y eliminacion controlada.
 - Membresias con planes, precios, duracion y caducidad automatica.
 - Pagos de socios con importe, metodo, estado, vencimiento e historial.
+- Check-ins manuales de socios, con asociacion opcional a reservas de clase.
 - Clases con listado, calendario mensual y reservas de socios.
 - Tareas con filtros, responsables y varios socios vinculados.
 - Usuarios internos del gimnasio.
@@ -30,7 +31,6 @@ Pantallas disponibles:
 
 Pendiente o futuro:
 
-- Check-ins.
 - Alertas de riesgo.
 - Auditoria de acciones.
 - Integraciones futuras de facturacion externa.
@@ -222,6 +222,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - Gestion de socios con foto.
 - Membresias y suscripciones.
 - Pagos de socios, vencimientos y cobros pendientes.
+- Check-ins manuales y asociados a reservas.
 - Clases, calendario mensual y reservas.
 - Tareas con varios socios vinculados.
 - Usuarios internos y roles.
