@@ -37,6 +37,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Reservas de socios con control de aforo, asistencia, no-show y cancelacion.
 - Tareas con responsable, estado, fecha y varios socios vinculados.
 - Usuarios internos del gimnasio.
+- Permisos por rol para rutas y acciones internas.
 - Perfil de usuario con imagen.
 - Configuracion visual basica.
 
@@ -66,7 +67,6 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 
 Quedan como mejora futura o no estan cerrados como modulo completo de gimnasio:
 
-- Permisos granulares por accion.
 - Portal para socios.
 - App movil nativa.
 - Pasarela de pagos real.

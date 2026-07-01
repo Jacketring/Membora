@@ -328,6 +328,107 @@ function is_platform_support_context(): bool
     return (Auth::user()['tenant_context'] ?? false) === true && isset($_SESSION['platform_admin_user']);
 }
 
+function user_role_key(?array $user = null): string
+{
+    $user = $user ?? Auth::user();
+    return strtoupper(trim((string) ($user['role'] ?? '')));
+}
+
+function is_gym_admin(?array $user = null): bool
+{
+    return in_array(user_role_key($user), ['GYM_ADMIN', 'ADMIN', 'SUPER_ADMIN', 'SUPERADMIN'], true);
+}
+
+function can_access_route(string $route, ?array $user = null): bool
+{
+    $user = $user ?? Auth::user();
+    $role = user_role_key($user);
+
+    if ($route === 'login') {
+        return true;
+    }
+
+    if (is_platform_admin($user)) {
+        return str_starts_with($route, 'platform-') || in_array($route, ['profile', 'settings', 'global-search'], true);
+    }
+
+    if (is_gym_admin($user)) {
+        return !str_starts_with($route, 'platform-');
+    }
+
+    $routesByRole = [
+        'SALES_RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
+        'RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
+        'SALES' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
+        'TRAINER' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'global-search'],
+        'STAFF' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'global-search'],
+    ];
+
+    return in_array($route, $routesByRole[$role] ?? ['dashboard', 'profile', 'settings'], true);
+}
+
+function can_perform_action(string $action, ?array $user = null): bool
+{
+    $user = $user ?? Auth::user();
+    $role = user_role_key($user);
+
+    if (in_array($action, ['login', 'logout', 'update_profile'], true)) {
+        return true;
+    }
+
+    if ($action === 'exit_empresa_crm' && is_platform_support_context()) {
+        return true;
+    }
+
+    if (is_platform_admin($user)) {
+        return str_contains($action, 'platform') || str_contains($action, 'empresa') || in_array($action, ['enter_empresa_crm', 'exit_empresa_crm'], true);
+    }
+
+    if (is_gym_admin($user)) {
+        return !str_contains($action, 'platform') && !str_contains($action, 'empresa');
+    }
+
+    $actionsByRole = [
+        'SALES_RECEPTION' => [
+            'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
+            'create_member', 'update_member',
+            'create_payment', 'update_payment',
+            'create_checkin',
+            'create_reservation', 'update_reservation_status',
+            'create_task', 'update_task', 'update_task_status',
+            'update_risk_alert_status',
+        ],
+        'RECEPTION' => [
+            'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
+            'create_member', 'update_member',
+            'create_payment', 'update_payment',
+            'create_checkin',
+            'create_reservation', 'update_reservation_status',
+            'create_task', 'update_task', 'update_task_status',
+            'update_risk_alert_status',
+        ],
+        'SALES' => [
+            'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
+            'create_member', 'update_member',
+            'create_payment', 'update_payment',
+            'create_task', 'update_task', 'update_task_status',
+            'update_risk_alert_status',
+        ],
+        'TRAINER' => [
+            'create_checkin',
+            'create_reservation', 'update_reservation_status',
+            'create_task', 'update_task', 'update_task_status',
+        ],
+        'STAFF' => [
+            'create_checkin',
+            'create_reservation', 'update_reservation_status',
+            'update_task_status',
+        ],
+    ];
+
+    return in_array($action, $actionsByRole[$role] ?? [], true);
+}
+
 function empresa_status_label(?string $status): string
 {
     return enum_label((string) $status, [

@@ -95,6 +95,7 @@ Estas tablas son globales de Membora CRM y no representan datos internos de un g
 - El superadmin puede entrar en modo soporte sobre una empresa conectada; durante ese modo la sesion fija el tenant objetivo.
 - Las consultas de listados, ediciones y eliminaciones de gimnasio incluyen `tenant_id`.
 - Las tablas globales de plataforma se protegen por rol de superadmin, no por `tenant_id`.
+- Las rutas y acciones POST internas se validan contra una matriz de permisos por rol antes de ejecutarse.
 
 ## 7. Estados relevantes
 
@@ -198,5 +199,4 @@ Requisito operativo:
 
 No estan cerrados todavia como modulos completos de gimnasio:
 
-- Permisos granulares por accion.
 - Integraciones de facturacion externa.

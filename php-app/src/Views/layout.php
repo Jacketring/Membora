@@ -40,17 +40,23 @@ $isPlatformAdmin = is_platform_admin($user);
           <a class="<?= $route === 'platform-plans' ? 'active' : '' ?>" href="index.php?route=platform-plans">Planes</a>
           <a class="<?= $route === 'platform-web' ? 'active' : '' ?>" href="index.php?route=platform-web">Web</a>
         <?php else: ?>
-          <a class="<?= $route === 'dashboard' ? 'active' : '' ?>" href="index.php?route=dashboard">Panel</a>
-          <a class="<?= $route === 'leads' ? 'active' : '' ?>" href="index.php?route=leads">Leads</a>
-          <a class="<?= $route === 'users' ? 'active' : '' ?>" href="index.php?route=users">Usuarios</a>
-          <a class="<?= $route === 'members' ? 'active' : '' ?>" href="index.php?route=members">Socios</a>
-          <a class="<?= $route === 'memberships' ? 'active' : '' ?>" href="index.php?route=memberships">Membresias</a>
-          <a class="<?= $route === 'payments' ? 'active' : '' ?>" href="index.php?route=payments">Pagos</a>
-          <a class="<?= $route === 'checkins' ? 'active' : '' ?>" href="index.php?route=checkins">Check-ins</a>
-          <a class="<?= $route === 'classes' ? 'active' : '' ?>" href="index.php?route=classes">Clases</a>
-          <a class="<?= $route === 'tasks' ? 'active' : '' ?>" href="index.php?route=tasks">Tareas</a>
-          <a class="<?= $route === 'alerts' ? 'active' : '' ?>" href="index.php?route=alerts">Alertas</a>
-          <a class="<?= $route === 'audit' ? 'active' : '' ?>" href="index.php?route=audit">Auditoria</a>
+          <?php foreach ([
+            'dashboard' => 'Panel',
+            'leads' => 'Leads',
+            'users' => 'Usuarios',
+            'members' => 'Socios',
+            'memberships' => 'Membresias',
+            'payments' => 'Pagos',
+            'checkins' => 'Check-ins',
+            'classes' => 'Clases',
+            'tasks' => 'Tareas',
+            'alerts' => 'Alertas',
+            'audit' => 'Auditoria',
+          ] as $navRoute => $navLabel): ?>
+            <?php if (can_access_route($navRoute, $user)): ?>
+              <a class="<?= $route === $navRoute ? 'active' : '' ?>" href="index.php?route=<?= e($navRoute) ?>"><?= e($navLabel) ?></a>
+            <?php endif; ?>
+          <?php endforeach; ?>
         <?php endif; ?>
       </nav>
 

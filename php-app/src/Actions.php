@@ -11,6 +11,11 @@ final class Actions
         enforce_internal_post_security();
 
         $action = post_value('action', '');
+        if (!can_perform_action($action)) {
+            flash('No tienes permisos para realizar esta accion.', 'error');
+            redirect($_GET['return'] ?? ($_GET['route'] ?? 'dashboard'));
+        }
+
         self::auditPostAction($action);
 
         match ($action) {

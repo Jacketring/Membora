@@ -58,6 +58,11 @@ if ($route === 'login') {
 
 $currentUser = Auth::requireUser();
 
+if (!can_access_route((string) $route, $currentUser)) {
+    flash('No tienes permisos para acceder a esta seccion.', 'error');
+    redirect(is_platform_admin($currentUser) ? 'platform-dashboard' : 'dashboard');
+}
+
 if ($route === 'global-search') {
     $query = trim((string) ($_GET['q'] ?? ''));
     $items = [];

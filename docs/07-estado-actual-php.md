@@ -111,6 +111,14 @@ No se usa Node.js en produccion.
 - Filtros por texto, accion, usuario y fechas.
 - Indicadores de actividad de hoy, ultimos 7 dias, cambios y eliminaciones.
 
+### Permisos
+
+- Control centralizado de acceso por rol.
+- Validacion de rutas antes de renderizar pantallas.
+- Validacion de acciones POST antes de modificar datos.
+- Menu lateral adaptado a los modulos permitidos para cada usuario.
+- Superadmin separado de usuarios de gimnasio y compatible con modo soporte.
+
 ### Clases
 
 - Tipos de clase.
@@ -168,7 +176,6 @@ No se usa Node.js en produccion.
 ## 4. Modulos pendientes
 
 - Integraciones avanzadas de facturacion SaaS.
-- Permisos finos por rol.
 
 ## 5. Credenciales principales
 
