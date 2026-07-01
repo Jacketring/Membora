@@ -38,6 +38,8 @@ Estas tablas pertenecen a un gimnasio concreto y deben consultarse siempre con `
 - `task_members`: relacion N:M entre tareas y varios socios.
 - `risk_alerts`: alertas generadas para priorizar riesgos operativos.
 - `payments`: pagos manuales de socios, vencimientos y cobros.
+- `billing_integrations`: configuracion de proveedor externo de facturacion por tenant.
+- `billing_sync_logs`: registros de exportacion y sincronizacion de pagos.
 - `checkins`: entradas/asistencias manuales de socios.
 - `audit_logs`: registro de acciones internas con datos sanitizados.
 
@@ -73,6 +75,7 @@ Estas tablas son globales de Membora CRM y no representan datos internos de un g
 - `Member` 1 -> N `Subscription`.
 - `Member` 1 -> N `Payment`.
 - `Member` 1 -> N `CheckIn`.
+- `BillingIntegration` 1 -> N `BillingSyncLog`.
 - `MembershipPlan` 1 -> N `Subscription`.
 - `Subscription` 0..N -> N `Payment`.
 - `ClassType` 1 -> N `ClassSession`.
@@ -177,6 +180,12 @@ Pagos de gimnasio:
 PAID, PENDING, OVERDUE, CANCELLED
 ```
 
+Facturacion externa:
+
+```text
+ACTIVE, INACTIVE, PENDING, EXPORTED, SYNCED, ERROR, SUCCESS
+```
+
 ## 8. Automatismos actuales
 
 La aplicacion PHP puede crear o adaptar tablas auxiliares al cargar repositorios concretos. Esto permite desplegar cambios en Plesk con un `git pull` y sin ejecutar migraciones Node.
@@ -188,6 +197,8 @@ Automatismos principales:
 - Crea `checkins` para entradas manuales y asistencias asociadas a reservas.
 - Crea `risk_alerts` para pagos vencidos, tareas vencidas, membresias caducadas, leads sin seguimiento, socios sin actividad y clases llenas.
 - Crea `audit_logs` para registrar acciones POST internas, usuario, ruta, IP, navegador y datos sin contrasenas ni tokens.
+- Crea `billing_integrations` y `billing_sync_logs` para configurar proveedor externo, exportar pagos y registrar sincronizaciones.
+- Anade columnas de sincronizacion externa a `payments`.
 - Crea `webhook_settings` y `webhook_logs` para integraciones y diagnostico.
 - Anade columnas auxiliares de imagen, color, planes, clases y suscripciones si faltan.
 
@@ -199,4 +210,4 @@ Requisito operativo:
 
 No estan cerrados todavia como modulos completos de gimnasio:
 
-- Integraciones de facturacion externa.
+- Pasarela de pagos real con cobro automatico.

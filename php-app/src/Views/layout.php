@@ -47,6 +47,7 @@ $isPlatformAdmin = is_platform_admin($user);
             'members' => 'Socios',
             'memberships' => 'Membresias',
             'payments' => 'Pagos',
+            'billing' => 'Facturacion',
             'checkins' => 'Check-ins',
             'classes' => 'Clases',
             'tasks' => 'Tareas',

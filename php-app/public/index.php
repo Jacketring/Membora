@@ -124,6 +124,15 @@ if ($route === 'global-search') {
     exit;
 }
 
+if ($route === 'billing-export') {
+    $tenantId = Auth::tenantId();
+    $csv = BillingIntegrationRepository::exportCsv($tenantId);
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="membora-pagos-' . date('Ymd-His') . '.csv"');
+    echo $csv;
+    exit;
+}
+
 switch ($route) {
     case 'platform-dashboard':
         if (!is_platform_admin($currentUser)) {
@@ -389,6 +398,16 @@ switch ($route) {
             'payments' => PaymentRepository::all($tenantId, $filters['q'], $filters['status'], $filters['date_from'], $filters['date_to']),
             'members' => PaymentRepository::memberOptions($tenantId),
             'subscriptions' => PaymentRepository::subscriptionOptions($tenantId),
+        ]);
+        break;
+
+    case 'billing':
+        $tenantId = Auth::tenantId();
+        render_layout('Facturacion', 'billing', [
+            'settings' => BillingIntegrationRepository::settings($tenantId),
+            'metrics' => BillingIntegrationRepository::metrics($tenantId),
+            'payments' => BillingIntegrationRepository::eligiblePayments($tenantId),
+            'logs' => BillingIntegrationRepository::logs($tenantId),
         ]);
         break;
 

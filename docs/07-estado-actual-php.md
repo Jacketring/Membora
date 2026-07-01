@@ -82,6 +82,15 @@ No se usa Node.js en produccion.
 - Filtros por texto, estado y fechas.
 - Indicadores de cobrado este mes, importe pendiente y vencidos.
 
+### Facturacion externa
+
+- Configuracion de proveedor externo generico por gimnasio.
+- Endpoint, clave API enmascarada, estado activo/inactivo, formato y notas.
+- Exportacion CSV de pagos pagados pendientes de envio.
+- Sincronizacion simulada para dejar trazabilidad sin depender de terceros.
+- Marcado de pagos como pendientes, exportados o sincronizados.
+- Logs de operacion con fecha, proveedor, numero de pagos, importe total, resultado y payload tecnico.
+
 ### Check-ins
 
 - Registro de entradas manuales por socio.
@@ -175,7 +184,7 @@ No se usa Node.js en produccion.
 
 ## 4. Modulos pendientes
 
-- Integraciones avanzadas de facturacion SaaS.
+- Pasarela de pagos real con cobro automatico.
 
 ## 5. Credenciales principales
 
@@ -223,6 +232,8 @@ La aplicacion PHP puede crear de forma incremental:
 - `membership_plans`.
 - `subscriptions`.
 - `payments`.
+- `billing_integrations`.
+- `billing_sync_logs`.
 - `checkins`.
 - `risk_alerts`.
 - `audit_logs`.

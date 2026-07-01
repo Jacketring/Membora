@@ -59,6 +59,8 @@ final class Actions
             'create_checkin' => self::createCheckin(),
             'delete_checkin' => self::deleteCheckin(),
             'update_risk_alert_status' => self::updateRiskAlertStatus(),
+            'save_billing_integration' => self::saveBillingIntegration(),
+            'sync_billing_integration' => self::syncBillingIntegration(),
             'create_class_type' => self::createClassType(),
             'create_class_session' => self::createClassSession(),
             'update_class_session' => self::updateClassSession(),
@@ -1257,6 +1259,25 @@ final class Actions
             default => 'Alerta reabierta correctamente.',
         });
         redirect('alerts');
+    }
+
+    private static function saveBillingIntegration(): never
+    {
+        BillingIntegrationRepository::saveSettings(Auth::tenantId(), $_POST);
+        flash('Integracion de facturacion guardada.');
+        redirect('billing');
+    }
+
+    private static function syncBillingIntegration(): never
+    {
+        try {
+            $result = BillingIntegrationRepository::sync(Auth::tenantId());
+            flash('Sincronizacion completada: ' . (int) $result['count'] . ' pagos enviados por ' . money_amount($result['total']) . '.');
+        } catch (Throwable $exception) {
+            flash($exception->getMessage(), 'error');
+        }
+
+        redirect('billing');
     }
 
     private static function createClassType(): never

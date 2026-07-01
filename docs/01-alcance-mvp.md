@@ -28,6 +28,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Planes de membresia con precio, periodicidad, duracion y estado.
 - Asignacion de membresia a socios con calculo de caducidad.
 - Pagos de socios con importe, metodo, estado, vencimiento, fecha de pago y notas.
+- Integracion de facturacion externa generica con configuracion, exportacion CSV, sincronizacion simulada y logs.
 - Check-ins manuales de socios, con asociacion opcional a reservas de clase.
 - Alertas de riesgo para pagos vencidos, tareas vencidas, membresias caducadas, leads sin seguimiento, socios sin actividad y clases llenas.
 - Auditoria de acciones internas con usuario, tenant, accion, entidad, ruta, IP, navegador y datos sanitizados.
@@ -70,7 +71,6 @@ Quedan como mejora futura o no estan cerrados como modulo completo de gimnasio:
 - Portal para socios.
 - App movil nativa.
 - Pasarela de pagos real.
-- Integraciones de facturacion externa.
 - Importacion/exportacion CSV avanzada.
 - Multi-sede avanzada.
 
@@ -131,6 +131,8 @@ Tablas operativas principales:
 - `membership_plans`
 - `subscriptions`
 - `payments`
+- `billing_integrations`
+- `billing_sync_logs`
 - `checkins`
 - `class_types`
 - `class_sessions`
@@ -156,15 +158,16 @@ Tablas SaaS principales:
 4. Revisar el socio convertido y asignar membresia.
 5. Crear una clase desde calendario.
 6. Registrar un pago pendiente o pagado para un socio.
-7. Registrar un check-in manual o asociado a reserva.
-8. Revisar y resolver alertas de riesgo.
-9. Reservar plaza para un socio y marcar asistencia/no-show.
-10. Crear una tarea vinculada a varios socios.
-11. Revisar auditoria para comprobar las acciones registradas.
-12. Revisar usuarios internos, perfil y configuracion.
-13. Entrar como administrador de plataforma.
-14. Revisar leads web, clientes, empresas, pagos, planes y web comercial.
-15. Entrar en modo soporte sobre una empresa y volver a Admin CRM.
+7. Configurar facturacion externa, exportar CSV y ejecutar sincronizacion simulada.
+8. Registrar un check-in manual o asociado a reserva.
+9. Revisar y resolver alertas de riesgo.
+10. Reservar plaza para un socio y marcar asistencia/no-show.
+11. Crear una tarea vinculada a varios socios.
+12. Revisar auditoria para comprobar las acciones registradas.
+13. Revisar usuarios internos, perfil y configuracion.
+14. Entrar como administrador de plataforma.
+15. Revisar leads web, clientes, empresas, pagos, planes y web comercial.
+16. Entrar en modo soporte sobre una empresa y volver a Admin CRM.
 
 ## 9. Criterios de aceptacion del MVP
 

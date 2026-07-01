@@ -357,9 +357,9 @@ function can_access_route(string $route, ?array $user = null): bool
     }
 
     $routesByRole = [
-        'SALES_RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
-        'RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
-        'SALES' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
+        'SALES_RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'billing', 'billing-export', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
+        'RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'billing', 'billing-export', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
+        'SALES' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'billing', 'billing-export', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
         'TRAINER' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'global-search'],
         'STAFF' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'global-search'],
     ];
@@ -393,6 +393,7 @@ function can_perform_action(string $action, ?array $user = null): bool
             'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
             'create_member', 'update_member',
             'create_payment', 'update_payment',
+            'save_billing_integration', 'sync_billing_integration',
             'create_checkin',
             'create_reservation', 'update_reservation_status',
             'create_task', 'update_task', 'update_task_status',
@@ -402,6 +403,7 @@ function can_perform_action(string $action, ?array $user = null): bool
             'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
             'create_member', 'update_member',
             'create_payment', 'update_payment',
+            'save_billing_integration', 'sync_billing_integration',
             'create_checkin',
             'create_reservation', 'update_reservation_status',
             'create_task', 'update_task', 'update_task_status',
@@ -411,6 +413,7 @@ function can_perform_action(string $action, ?array $user = null): bool
             'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
             'create_member', 'update_member',
             'create_payment', 'update_payment',
+            'save_billing_integration', 'sync_billing_integration',
             'create_task', 'update_task', 'update_task_status',
             'update_risk_alert_status',
         ],
@@ -491,6 +494,27 @@ function payment_method_label(?string $method): string
     ]);
 }
 
+function billing_sync_status_label(?string $status): string
+{
+    return enum_label((string) $status, [
+        'PENDING' => 'Pendiente',
+        'EXPORTED' => 'Exportado',
+        'SYNCED' => 'Sincronizado',
+        'ERROR' => 'Error',
+        'SUCCESS' => 'Correcto',
+        'ACTIVE' => 'Activa',
+        'INACTIVE' => 'Inactiva',
+    ]);
+}
+
+function billing_operation_label(?string $operation): string
+{
+    return enum_label((string) $operation, [
+        'EXPORT' => 'Exportacion',
+        'SYNC' => 'Sincronizacion',
+    ]);
+}
+
 function checkin_method_label(?string $method): string
 {
     return enum_label((string) $method, [
@@ -556,6 +580,8 @@ function audit_action_label(?string $action): string
         'create_checkin' => 'Creacion de check-in',
         'delete_checkin' => 'Eliminacion de check-in',
         'update_risk_alert_status' => 'Cambio de alerta',
+        'save_billing_integration' => 'Configuracion de facturacion',
+        'sync_billing_integration' => 'Sincronizacion de facturacion',
         'create_class_type' => 'Creacion de tipo de clase',
         'create_class_session' => 'Creacion de clase',
         'update_class_session' => 'Actualizacion de clase',
