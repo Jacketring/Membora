@@ -140,7 +140,7 @@ $paymentStatusOptions = [
 </section>
 
 <dialog id="payment-modal" class="modal-card" aria-labelledby="payment-modal-title">
-  <form method="post">
+  <form method="post" data-payment-form>
     <header>
       <h2 id="payment-modal-title">Nuevo pago</h2>
       <button data-close-modal type="button">Cerrar</button>
@@ -153,7 +153,7 @@ $paymentStatusOptions = [
 <?php foreach ($payments as $payment): ?>
   <?php $memberName = trim($payment['first_name'] . ' ' . ($payment['last_name'] ?? '')); ?>
   <dialog id="payment-detail-<?= e($payment['id']) ?>" class="modal-card" aria-labelledby="payment-title-<?= e($payment['id']) ?>">
-    <form method="post">
+    <form method="post" data-payment-form>
       <header>
         <div>
           <h2 id="payment-title-<?= e($payment['id']) ?>">Pago de <?= e($memberName) ?></h2>

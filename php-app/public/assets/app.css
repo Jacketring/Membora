@@ -1151,6 +1151,23 @@ td.empty-state,
 .custom-select-menu[hidden] {
   display: none;
 }
+.custom-select-search {
+  background: #f8faff;
+  border: 1px solid #dbe3f1;
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 750;
+  margin-bottom: 4px;
+  min-height: 38px;
+  padding: 8px 10px;
+  width: 100%;
+}
+.custom-select-search:focus {
+  border-color: #9bb7ec;
+  box-shadow: 0 0 0 3px rgba(7, 84, 214, 0.08);
+  outline: 0;
+}
 .custom-select-option {
   align-items: center;
   background: transparent;

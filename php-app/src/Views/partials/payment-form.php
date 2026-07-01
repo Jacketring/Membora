@@ -34,7 +34,7 @@ $paymentMethodOptions = [
 
   <div class="field">
     <span>Socio</span>
-    <div class="custom-select custom-select--field" data-custom-select>
+    <div class="custom-select custom-select--field" data-custom-select data-payment-member-select>
       <input type="hidden" name="member_id" value="<?= e($paymentValues['member_id']) ?>" data-custom-select-value>
       <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
         <?php
@@ -48,9 +48,10 @@ $paymentMethodOptions = [
         <span data-custom-select-label><?= e($selectedMemberLabel) ?></span>
       </button>
       <div class="custom-select-menu" data-custom-select-menu hidden>
+        <input class="custom-select-search" type="search" placeholder="Buscar socio..." data-custom-select-search>
         <?php foreach ($members as $memberOption): ?>
           <?php $memberLabel = trim($memberOption['first_name'] . ' ' . ($memberOption['last_name'] ?? '')); ?>
-          <button class="custom-select-option <?= $paymentValues['member_id'] === $memberOption['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($memberOption['id']) ?>">
+          <button class="custom-select-option <?= $paymentValues['member_id'] === $memberOption['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($memberOption['id']) ?>" data-search="<?= e(strtolower($memberLabel . ' ' . ($memberOption['email'] ?? ''))) ?>">
             <?= e($memberLabel) ?>
           </button>
         <?php endforeach; ?>
@@ -60,7 +61,7 @@ $paymentMethodOptions = [
 
   <div class="field">
     <span>Membresia asociada</span>
-    <div class="custom-select custom-select--field" data-custom-select>
+    <div class="custom-select custom-select--field" data-custom-select data-payment-subscription-select>
       <input type="hidden" name="subscription_id" value="<?= e($paymentValues['subscription_id'] ?? '') ?>" data-custom-select-value>
       <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
         <?php
@@ -74,9 +75,10 @@ $paymentMethodOptions = [
         <span data-custom-select-label><?= e($selectedSubscriptionLabel) ?></span>
       </button>
       <div class="custom-select-menu" data-custom-select-menu hidden>
-        <button class="custom-select-option <?= empty($paymentValues['subscription_id']) ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="">Sin membresia asociada</button>
+        <input class="custom-select-search" type="search" placeholder="Buscar membresia..." data-custom-select-search>
+        <button class="custom-select-option <?= empty($paymentValues['subscription_id']) ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="" data-member-id="" data-search="sin membresia asociada">Sin membresia asociada</button>
         <?php foreach ($subscriptions as $subscriptionOption): ?>
-          <button class="custom-select-option <?= ($paymentValues['subscription_id'] ?? '') === $subscriptionOption['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($subscriptionOption['id']) ?>">
+          <button class="custom-select-option <?= ($paymentValues['subscription_id'] ?? '') === $subscriptionOption['id'] ? 'selected' : '' ?>" type="button" data-custom-select-option data-value="<?= e($subscriptionOption['id']) ?>" data-member-id="<?= e($subscriptionOption['member_id']) ?>" data-search="<?= e(strtolower($subscriptionOption['member_name'] . ' ' . $subscriptionOption['plan_name'] . ' ' . format_date_short($subscriptionOption['ends_at']))) ?>">
             <?= e($subscriptionOption['member_name']) ?> · <?= e($subscriptionOption['plan_name']) ?> · <?= e(money_amount($subscriptionOption['price'])) ?> · vence <?= e(format_date_short($subscriptionOption['ends_at'])) ?>
           </button>
         <?php endforeach; ?>

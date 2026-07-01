@@ -326,9 +326,20 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
   const valueInput = select.querySelector('[data-custom-select-value]');
   const label = select.querySelector('[data-custom-select-label]');
   const options = select.querySelectorAll('[data-custom-select-option]');
+  const searchInput = select.querySelector('[data-custom-select-search]');
 
   if (!trigger || !menu || !valueInput || !label) {
     return;
+  }
+
+  function applyCustomSelectSearch() {
+    const term = normalizeSearchText(searchInput?.value.trim() || '');
+    options.forEach((option) => {
+      const searchable = option.dataset.search || option.textContent || '';
+      const matchesTerm = term === '' || normalizeSearchText(searchable).includes(term);
+      const allowed = option.dataset.customAllowed !== 'false';
+      option.hidden = !matchesTerm || !allowed;
+    });
   }
 
   trigger.addEventListener('click', () => {
@@ -336,6 +347,25 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
     closeCustomSelects(select);
     menu.hidden = nextHiddenState;
     trigger.setAttribute('aria-expanded', String(!menu.hidden));
+    if (!menu.hidden && searchInput) {
+      searchInput.value = '';
+      applyCustomSelectSearch();
+      searchInput.focus();
+    }
+  });
+
+  searchInput?.addEventListener('input', applyCustomSelectSearch);
+  searchInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      Array.from(options).find((option) => !option.hidden)?.focus();
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      menu.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.focus();
+    }
   });
 
   trigger.addEventListener('keydown', (event) => {
@@ -345,7 +375,7 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
       menu.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
       const selected = select.querySelector('[data-custom-select-option].selected');
-      const nextFocus = selected || options[0];
+      const nextFocus = (selected && !selected.hidden) ? selected : Array.from(options).find((option) => !option.hidden);
       if (nextFocus) {
         nextFocus.focus();
       }
@@ -368,14 +398,15 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
     });
 
     option.addEventListener('keydown', (event) => {
-      const currentIndex = Array.from(options).indexOf(option);
+      const visibleOptions = Array.from(options).filter((item) => !item.hidden);
+      const currentIndex = visibleOptions.indexOf(option);
       if (event.key === 'ArrowDown') {
         event.preventDefault();
-        options[Math.min(currentIndex + 1, options.length - 1)]?.focus();
+        visibleOptions[Math.min(currentIndex + 1, visibleOptions.length - 1)]?.focus();
       }
       if (event.key === 'ArrowUp') {
         event.preventDefault();
-        options[Math.max(currentIndex - 1, 0)]?.focus();
+        visibleOptions[Math.max(currentIndex - 1, 0)]?.focus();
       }
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -385,6 +416,53 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
       }
     });
   });
+});
+
+function setCustomSelectValue(select, value, fallbackLabel) {
+  const valueInput = select?.querySelector('[data-custom-select-value]');
+  const label = select?.querySelector('[data-custom-select-label]');
+  const options = select?.querySelectorAll('[data-custom-select-option]');
+  const option = Array.from(options || []).find((item) => (item.dataset.value || '') === value);
+
+  if (!valueInput || !label || !options) {
+    return;
+  }
+
+  valueInput.value = option?.dataset.value || '';
+  label.textContent = option?.textContent.trim() || fallbackLabel || '';
+  options.forEach((item) => item.classList.toggle('selected', item === option));
+}
+
+document.querySelectorAll('[data-payment-form]').forEach((form) => {
+  const memberInput = form.querySelector('[name="member_id"]');
+  const subscriptionSelect = form.querySelector('[data-payment-subscription-select]');
+  const subscriptionInput = subscriptionSelect?.querySelector('[name="subscription_id"]');
+  const subscriptionOptions = subscriptionSelect?.querySelectorAll('[data-custom-select-option]');
+
+  if (!memberInput || !subscriptionSelect || !subscriptionInput || !subscriptionOptions) {
+    return;
+  }
+
+  function syncSubscriptionOptions() {
+    const memberId = memberInput.value;
+    let selectedStillAllowed = subscriptionInput.value === '';
+
+    subscriptionOptions.forEach((option) => {
+      const optionMemberId = option.dataset.memberId || '';
+      const allowed = optionMemberId === '' || memberId === '' || optionMemberId === memberId;
+      option.dataset.customAllowed = allowed ? 'true' : 'false';
+      if (allowed && option.dataset.value === subscriptionInput.value) {
+        selectedStillAllowed = true;
+      }
+    });
+
+    if (!selectedStillAllowed) {
+      setCustomSelectValue(subscriptionSelect, '', 'Sin membresia asociada');
+    }
+  }
+
+  memberInput.addEventListener('custom-select-change', syncSubscriptionOptions);
+  syncSubscriptionOptions();
 });
 
 document.querySelectorAll('[data-empresa-form]').forEach((form) => {
