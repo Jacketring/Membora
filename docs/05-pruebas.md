@@ -309,7 +309,6 @@ Resultado esperado:
 
 ## 7. Riesgos pendientes
 
-- Auditoria exhaustiva y permisos finos quedan como mejoras futuras.
 - Las reservas estan implementadas dentro del modulo de clases, pero conviene validarlas en produccion con datos reales.
 - La aplicacion crea tablas auxiliares automaticamente; conviene validar permisos de usuario MariaDB en Plesk.
 - Hay que validar el flujo completo en produccion justo antes de grabar el video final.

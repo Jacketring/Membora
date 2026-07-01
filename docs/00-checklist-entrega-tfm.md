@@ -66,14 +66,16 @@ Recorrido recomendado:
 4. Socios: ficha, foto y membresia.
 5. Membresias: precio, duracion y caducidad.
 6. Pagos: importe, metodo, estado y vencimiento.
-7. Check-ins: entrada manual y asociacion a reservas.
-8. Alertas: pagos vencidos, tareas, membresias, leads, actividad y clases llenas.
-9. Clases: calendario, creacion, edicion y reservas.
-10. Tareas: varios socios vinculados y acciones.
-11. Usuarios internos.
-12. Perfil y configuracion visual.
-13. Login como administrador de plataforma.
-14. Panel `Admin CRM`, leads web, empresas, pagos, web comercial y acceso de soporte.
+7. Facturacion: configuracion, exportacion CSV, sincronizacion simulada y logs.
+8. Check-ins: entrada manual y asociacion a reservas.
+9. Alertas: pagos vencidos, tareas, membresias, leads, actividad y clases llenas.
+10. Clases: calendario, creacion, edicion y reservas.
+11. Tareas: varios socios vinculados y acciones.
+12. Auditoria: acciones registradas y filtros.
+13. Usuarios internos y permisos por rol.
+14. Perfil y configuracion visual.
+15. Login como administrador de plataforma.
+16. Panel `Admin CRM`, leads web, empresas, pagos, web comercial y acceso de soporte.
 
 ## 5. Slides
 

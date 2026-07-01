@@ -27,8 +27,11 @@ Rutas de gimnasio:
 - `?route=members`: socios.
 - `?route=memberships`: planes y suscripciones.
 - `?route=payments`: pagos manuales de socios.
+- `?route=billing`: configuracion y logs de facturacion externa generica.
+- `?route=billing-export`: descarga CSV de pagos preparados para facturacion.
 - `?route=checkins`: entradas y asistencias de socios.
 - `?route=alerts`: alertas de riesgo operativas.
+- `?route=audit`: auditoria de acciones internas.
 - `?route=classes`: tipos de clase, calendario, sesiones y reservas.
 - `?route=tasks`: tareas.
 - `?route=users`: usuarios internos.
@@ -96,6 +99,8 @@ Gimnasio:
 - `create_checkin`
 - `delete_checkin`
 - `update_risk_alert_status`
+- `save_billing_integration`
+- `sync_billing_integration`
 - `create_class_type`
 - `create_class_session`
 - `update_class_session`

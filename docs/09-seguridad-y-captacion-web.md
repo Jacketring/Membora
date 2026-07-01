@@ -271,12 +271,12 @@ La seguridad del MVP se basa en defensa por capas:
 - Validacion de uploads.
 - Honeypot y rate limit en captacion web.
 - Logs tecnicos para trazabilidad.
+- Auditoria de acciones internas.
+- Permisos por rol en rutas y acciones POST.
 
 No se implementan todavia:
 
 - 2FA.
-- Auditoria completa de cada accion.
-- Roles/permisos granulares por accion.
 - Cifrado campo a campo de datos personales.
 - WAF dedicado.
 - Backups automatizados desde la propia app.

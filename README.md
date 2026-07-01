@@ -7,7 +7,7 @@ El proyecto se ha migrado a una app PHP monolitica para simplificar el despliegu
 ## Estado actual
 
 ```text
-Aplicacion PHP funcional en migracion avanzada.
+Aplicacion PHP funcional para entrega MVP.
 Despliegue: https://app.crm.josehurtado.dev
 Produccion sin Node.js, sin npm install y sin npm run build.
 Web comercial externa: https://app.web.josehurtado.dev
@@ -21,8 +21,11 @@ Pantallas disponibles:
 - Socios con foto, edicion y eliminacion controlada.
 - Membresias con planes, precios, duracion y caducidad automatica.
 - Pagos de socios con importe, metodo, estado, vencimiento e historial.
+- Facturacion externa generica con configuracion, exportacion CSV, sincronizacion simulada y logs.
 - Check-ins manuales de socios, con asociacion opcional a reservas de clase.
 - Alertas de riesgo para pagos vencidos, tareas, membresias, leads y actividad.
+- Auditoria de acciones internas.
+- Permisos por rol para rutas y acciones.
 - Clases con listado, calendario mensual y reservas de socios.
 - Tareas con filtros, responsables y varios socios vinculados.
 - Usuarios internos del gimnasio.
@@ -32,8 +35,7 @@ Pantallas disponibles:
 
 Pendiente o futuro:
 
-- Auditoria de acciones.
-- Integraciones futuras de facturacion externa.
+- Pasarela de pagos real con cobro automatico.
 
 Repositorio:
 
@@ -222,8 +224,11 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - Gestion de socios con foto.
 - Membresias y suscripciones.
 - Pagos de socios, vencimientos y cobros pendientes.
+- Facturacion externa generica con exportacion CSV y sincronizacion simulada.
 - Check-ins manuales y asociados a reservas.
 - Alertas de riesgo generadas desde pagos, tareas, membresias, leads, check-ins y clases.
+- Auditoria de acciones internas con datos sanitizados.
+- Permisos por rol en rutas y acciones POST.
 - Clases, calendario mensual y reservas.
 - Tareas con varios socios vinculados.
 - Usuarios internos y roles.
