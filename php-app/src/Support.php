@@ -290,8 +290,8 @@ function status_label(?string $status): string
         'no_show' => 'No-show',
         'ACTIVE' => 'Activo',
         'INACTIVE' => 'Inactivo',
-        'PAYMENT_PENDING' => 'Activo',
-        'AT_RISK' => 'Activo',
+        'PAYMENT_PENDING' => 'Pago pendiente',
+        'AT_RISK' => 'En riesgo',
     ]);
 }
 
@@ -407,6 +407,11 @@ function risk_alert_type_label(?string $type): string
         'MEMBER_INACTIVE' => 'Socio sin actividad',
         'LEAD_STALE' => 'Lead sin seguimiento',
         'CLASS_FULL' => 'Clase llena',
+        'PAYMENT_PENDING' => 'Pago pendiente',
+        'INACTIVE_MEMBER' => 'Socio inactivo',
+        'LEAD_WITHOUT_FOLLOW_UP' => 'Lead sin seguimiento',
+        'OVERDUE_TASK' => 'Tarea vencida',
+        'HIGH_CLASS_OCCUPANCY' => 'Clase con alta ocupacion',
     ]);
 }
 
