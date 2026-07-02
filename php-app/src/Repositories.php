@@ -42,6 +42,10 @@ final class AuditLogRepository
             'label' => 'Usuarios',
             'actions' => ['create_user', 'update_user', 'delete_user'],
         ],
+        'companies' => [
+            'label' => 'Empresas',
+            'actions' => ['create_empresa', 'update_empresa', 'enter_empresa_crm', 'exit_empresa_crm'],
+        ],
         'members' => [
             'label' => 'Socios',
             'actions' => ['create_member', 'update_member', 'delete_member'],
@@ -93,6 +97,19 @@ final class AuditLogRepository
                 INDEX audit_logs_created_at_idx (created_at)
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
         );
+
+        self::ensureColumn('audit_logs', 'tenant_id', 'VARCHAR(191) NULL');
+        self::ensureColumn('audit_logs', 'user_id', 'VARCHAR(191) NULL');
+        self::ensureColumn('audit_logs', 'action', 'VARCHAR(96) NOT NULL DEFAULT ""');
+        self::ensureColumn('audit_logs', 'entity_type', 'VARCHAR(96) NULL');
+        self::ensureColumn('audit_logs', 'entity_id', 'VARCHAR(191) NULL');
+        self::ensureColumn('audit_logs', 'route', 'VARCHAR(96) NULL');
+        self::ensureColumn('audit_logs', 'ip_address', 'VARCHAR(64) NULL');
+        self::ensureColumn('audit_logs', 'user_agent', 'VARCHAR(255) NULL');
+        self::ensureColumn('audit_logs', 'metadata', 'TEXT NULL');
+        self::ensureColumn('audit_logs', 'created_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+        self::modifyColumn('audit_logs', 'tenant_id', 'VARCHAR(191) NULL');
+        self::modifyColumn('audit_logs', 'user_id', 'VARCHAR(191) NULL');
     }
 
     public static function record(string $action, array $payload = []): void
@@ -107,7 +124,7 @@ final class AuditLogRepository
         );
         $stmt->execute([
             'id' => cuid(),
-            'tenant_id' => $user['tenant_id'] ?? null,
+            'tenant_id' => self::tenantIdForAudit($payload, $user),
             'user_id' => $user['id'] ?? null,
             'action' => $action,
             'entity_type' => self::entityType($action),
@@ -375,6 +392,50 @@ final class AuditLogRepository
         }
 
         return array_values(array_unique($actions));
+    }
+
+    private static function ensureColumn(string $table, string $column, string $definition): void
+    {
+        try {
+            $stmt = Database::connection()->query('SHOW COLUMNS FROM ' . $table . ' LIKE "' . $column . '"');
+            if ($stmt && $stmt->fetchColumn()) {
+                return;
+            }
+
+            Database::connection()->exec('ALTER TABLE ' . $table . ' ADD COLUMN ' . $column . ' ' . $definition);
+        } catch (Throwable) {
+        }
+    }
+
+    private static function modifyColumn(string $table, string $column, string $definition): void
+    {
+        try {
+            Database::connection()->exec('ALTER TABLE ' . $table . ' MODIFY COLUMN ' . $column . ' ' . $definition);
+        } catch (Throwable) {
+        }
+    }
+
+    private static function tenantIdForAudit(array $payload, ?array $user): ?string
+    {
+        if (!empty($user['tenant_id'])) {
+            return (string) $user['tenant_id'];
+        }
+
+        $empresaId = trim((string) ($payload['id'] ?? $payload['empresa_id'] ?? ''));
+        if ($empresaId !== '') {
+            try {
+                EmpresaRepository::ensureTables();
+                $stmt = Database::connection()->prepare('SELECT tenant_id FROM empresas WHERE id = :id LIMIT 1');
+                $stmt->execute(['id' => $empresaId]);
+                $tenantId = $stmt->fetchColumn();
+                if ($tenantId) {
+                    return (string) $tenantId;
+                }
+            } catch (Throwable) {
+            }
+        }
+
+        return null;
     }
 
     private static function sanitizePayload(array $payload): array
