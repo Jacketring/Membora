@@ -111,6 +111,12 @@ final class AuditLogRepository
         self::ensureColumn('audit_logs', 'created_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
         self::modifyColumn('audit_logs', 'tenant_id', 'VARCHAR(191) NULL');
         self::modifyColumn('audit_logs', 'user_id', 'VARCHAR(191) NULL');
+        self::modifyColumn('audit_logs', 'entity_type', 'VARCHAR(96) NULL');
+        self::modifyColumn('audit_logs', 'entity_id', 'VARCHAR(191) NULL');
+        self::modifyColumn('audit_logs', 'route', 'VARCHAR(96) NULL');
+        self::modifyColumn('audit_logs', 'ip_address', 'VARCHAR(64) NULL');
+        self::modifyColumn('audit_logs', 'user_agent', 'VARCHAR(255) NULL');
+        self::modifyColumn('audit_logs', 'metadata', 'TEXT NULL');
         self::relaxLegacyRequiredColumns('audit_logs');
     }
 
@@ -129,8 +135,8 @@ final class AuditLogRepository
             'tenant_id' => self::tenantIdForAudit($payload, $user),
             'user_id' => $user['id'] ?? null,
             'action' => $action,
-            'entity_type' => self::entityType($action),
-            'entity_id' => self::entityId($payload),
+            'entity_type' => self::entityType($action) ?? '',
+            'entity_id' => self::entityId($payload) ?? '',
             'route' => trim((string) ($_GET['route'] ?? '')),
             'ip_address' => substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64),
             'user_agent' => substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
