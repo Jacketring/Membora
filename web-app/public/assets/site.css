@@ -523,6 +523,129 @@ button, input, textarea { font: inherit; }
 .trust-grid strong {
   font-size: 18px;
 }
+
+.reviews-layout {
+  align-items: stretch;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+}
+
+.rating-summary,
+.review-cards article {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.rating-summary {
+  align-content: start;
+  display: grid;
+  gap: 16px;
+  padding: 26px;
+}
+
+.google-badge {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.google-badge span {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d9e2ef;
+  border-radius: 50%;
+  color: #4285f4;
+  display: flex;
+  font-weight: 950;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+
+.google-badge strong {
+  color: #2f3d51;
+  font-size: 15px;
+}
+
+.rating-score {
+  color: var(--ink);
+  font-size: 64px;
+  line-height: 0.9;
+}
+
+.stars {
+  color: #fbbc04;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+}
+
+.rating-summary p,
+.review-cards p {
+  color: var(--muted);
+  line-height: 1.62;
+  margin: 0;
+}
+
+.review-cards {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.review-cards article {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.review-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.review-avatar {
+  align-items: center;
+  background: var(--soft);
+  border-radius: 14px;
+  color: var(--primary);
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 950;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.review-avatar--green {
+  background: #dcfce7;
+  color: #0b6b3d;
+}
+
+.review-avatar--orange {
+  background: #fef3c7;
+  color: #925400;
+}
+
+.review-head strong,
+.review-head small {
+  display: block;
+}
+
+.review-head strong {
+  color: var(--ink);
+}
+
+.review-head small {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 3px;
+}
+
 .pricing-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -1097,6 +1220,8 @@ button, input, textarea { font: inherit; }
   .screenshot-grid,
   .module-list,
   .trust-grid,
+  .reviews-layout,
+  .review-cards,
   .pricing-grid,
   .contact-section,
   .lead-form,
