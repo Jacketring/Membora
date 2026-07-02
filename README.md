@@ -266,6 +266,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - `docs/07-estado-actual-php.md`: estado actual de la version PHP.
 - `docs/08-auditoria-testing-2026-06-29.md`: auditoria tecnica y checklist manual de testing.
 - `docs/09-seguridad-y-captacion-web.md`: medidas de seguridad y estrategia webhook/base de datos.
+- `docs/10-incidencias-y-soluciones.md`: incidencias tecnicas del TFM y soluciones aplicadas.
 
 ## Notas
 
