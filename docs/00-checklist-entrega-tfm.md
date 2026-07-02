@@ -79,11 +79,18 @@ Recorrido recomendado:
 
 ## 5. Slides
 
-Pendiente:
+Estado:
 
-- [ ] Crear presentacion del proyecto.
-- [ ] Publicar URL de acceso publico o adjuntar el documento al codigo.
-- [ ] Anadir URL de slides al README.
+- [x] Crear presentacion del proyecto.
+- [x] Adjuntar el documento al codigo.
+- [x] Anadir referencia de slides al README.
+- [ ] Publicar URL de acceso publico si la entrega lo exige.
+
+Archivo:
+
+```text
+docs/entrega/membora-crm-tfm-presentacion.pptx
+```
 
 Contenido recomendado:
 

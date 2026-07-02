@@ -268,6 +268,10 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - `docs/09-seguridad-y-captacion-web.md`: medidas de seguridad y estrategia webhook/base de datos.
 - `docs/10-incidencias-y-soluciones.md`: incidencias tecnicas del TFM y soluciones aplicadas.
 
+## Presentacion TFM
+
+- `docs/entrega/membora-crm-tfm-presentacion.pptx`: slides editables para la defensa/demo del proyecto.
+
 ## Notas
 
 La aplicacion PHP reutiliza la base de datos MariaDB existente y crea algunas tablas/columnas auxiliares si faltan. La version Node anterior ya no es necesaria para produccion.
