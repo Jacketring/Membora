@@ -37,6 +37,30 @@ final class DashboardRepository
 
 final class AuditLogRepository
 {
+    private const BUSINESS_ACTIONS = [
+        'create_user',
+        'update_user',
+        'delete_user',
+        'create_member',
+        'update_member',
+        'delete_member',
+        'create_membership_plan',
+        'update_membership_plan',
+        'delete_membership_plan',
+        'create_checkin',
+        'delete_checkin',
+        'create_class_type',
+        'create_class_session',
+        'update_class_session',
+        'delete_class_session',
+        'create_task',
+        'update_task',
+        'update_task_status',
+        'delete_task',
+        'update_risk_alert_status',
+        'view_audit',
+    ];
+
     public static function ensureTable(): void
     {
         Database::connection()->exec(
@@ -88,12 +112,16 @@ final class AuditLogRepository
     {
         self::ensureTable();
         $tenantWhere = self::tenantWhere($tenantId);
+        $where = [$tenantWhere['sql']];
+        $params = $tenantWhere['params'];
+        self::addBusinessActionWhere($where, $params, 'action');
+        $baseWhere = implode(' AND ', $where);
 
         return [
-            'today' => self::count($tenantWhere['sql'] . ' AND DATE(created_at) = CURDATE()', $tenantWhere['params']),
-            'week' => self::count($tenantWhere['sql'] . ' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)', $tenantWhere['params']),
-            'writes' => self::count($tenantWhere['sql'] . ' AND (action LIKE "create_%" OR action LIKE "update_%" OR action LIKE "delete_%" OR action LIKE "convert_%" OR action LIKE "mark_%")', $tenantWhere['params']),
-            'deletes' => self::count($tenantWhere['sql'] . ' AND action LIKE "delete_%"', $tenantWhere['params']),
+            'today' => self::count($baseWhere . ' AND DATE(created_at) = CURDATE()', $params),
+            'week' => self::count($baseWhere . ' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)', $params),
+            'writes' => self::count($baseWhere . ' AND (action LIKE "create_%" OR action LIKE "update_%" OR action LIKE "delete_%" OR action = "view_audit")', $params),
+            'deletes' => self::count($baseWhere . ' AND action LIKE "delete_%"', $params),
         ];
     }
 
@@ -104,6 +132,8 @@ final class AuditLogRepository
         $tenantWhere = self::tenantWhere($tenantId, 'audit_logs');
         $where = [$tenantWhere['sql']];
         $params = $tenantWhere['params'];
+
+        self::addBusinessActionWhere($where, $params);
 
         if ($query !== '') {
             $where[] = '(audit_logs.action LIKE :query OR audit_logs.entity_type LIKE :query OR audit_logs.entity_id LIKE :query OR audit_logs.metadata LIKE :query OR users.name LIKE :query OR users.email LIKE :query)';
@@ -147,29 +177,32 @@ final class AuditLogRepository
     {
         self::ensureTable();
         $tenantWhere = self::tenantWhere($tenantId);
+        $where = [$tenantWhere['sql']];
+        $params = $tenantWhere['params'];
+        self::addBusinessActionWhere($where, $params);
+
         $stmt = Database::connection()->prepare(
-            'SELECT DISTINCT action FROM audit_logs WHERE ' . $tenantWhere['sql'] . ' ORDER BY action ASC LIMIT 200'
+            'SELECT DISTINCT action FROM audit_logs WHERE ' . implode(' AND ', $where) . ' ORDER BY action ASC LIMIT 200'
         );
-        $stmt->execute($tenantWhere['params']);
+        $stmt->execute($params);
 
-        $options = ['' => 'Todas'];
-        foreach ($stmt->fetchAll() as $row) {
-            $options[$row['action']] = audit_action_label($row['action']);
-        }
-
-        return $options;
+        return self::orderedActionOptions(array_column($stmt->fetchAll(), 'action'));
     }
 
     public static function platformMetrics(string $tenantId = ''): array
     {
         self::ensureTable();
         $filter = self::platformWhere($tenantId);
+        $where = [$filter['sql']];
+        $params = $filter['params'];
+        self::addBusinessActionWhere($where, $params, 'action');
+        $baseWhere = implode(' AND ', $where);
 
         return [
-            'today' => self::count($filter['sql'] . ' AND DATE(created_at) = CURDATE()', $filter['params']),
-            'week' => self::count($filter['sql'] . ' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)', $filter['params']),
-            'writes' => self::count($filter['sql'] . ' AND (action LIKE "create_%" OR action LIKE "update_%" OR action LIKE "delete_%" OR action LIKE "convert_%" OR action LIKE "mark_%" OR action LIKE "sync_%")', $filter['params']),
-            'tenants' => self::countDistinctTenants($filter['sql'], $filter['params']),
+            'today' => self::count($baseWhere . ' AND DATE(created_at) = CURDATE()', $params),
+            'week' => self::count($baseWhere . ' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)', $params),
+            'writes' => self::count($baseWhere . ' AND (action LIKE "create_%" OR action LIKE "update_%" OR action LIKE "delete_%" OR action = "view_audit")', $params),
+            'tenants' => self::countDistinctTenants($baseWhere, $params),
         ];
     }
 
@@ -180,6 +213,8 @@ final class AuditLogRepository
         $filter = self::platformWhere($tenantId, 'audit_logs');
         $where = [$filter['sql']];
         $params = $filter['params'];
+
+        self::addBusinessActionWhere($where, $params);
 
         if ($query !== '') {
             $where[] = '(audit_logs.action LIKE :query OR audit_logs.entity_type LIKE :query OR audit_logs.entity_id LIKE :query OR audit_logs.metadata LIKE :query OR users.name LIKE :query OR users.email LIKE :query OR tenants.name LIKE :query)';
@@ -222,17 +257,16 @@ final class AuditLogRepository
     {
         self::ensureTable();
         $filter = self::platformWhere($tenantId);
+        $where = [$filter['sql']];
+        $params = $filter['params'];
+        self::addBusinessActionWhere($where, $params);
+
         $stmt = Database::connection()->prepare(
-            'SELECT DISTINCT action FROM audit_logs WHERE ' . $filter['sql'] . ' ORDER BY action ASC LIMIT 300'
+            'SELECT DISTINCT action FROM audit_logs WHERE ' . implode(' AND ', $where) . ' ORDER BY action ASC LIMIT 300'
         );
-        $stmt->execute($filter['params']);
+        $stmt->execute($params);
 
-        $options = ['' => 'Todas'];
-        foreach ($stmt->fetchAll() as $row) {
-            $options[$row['action']] = audit_action_label($row['action']);
-        }
-
-        return $options;
+        return self::orderedActionOptions(array_column($stmt->fetchAll(), 'action'));
     }
 
     public static function tenantOptions(): array
@@ -291,6 +325,29 @@ final class AuditLogRepository
         }
 
         return ['sql' => '1 = 1', 'params' => []];
+    }
+
+    private static function addBusinessActionWhere(array &$where, array &$params, string $column = 'audit_logs.action'): void
+    {
+        $placeholders = [];
+        foreach (self::BUSINESS_ACTIONS as $index => $action) {
+            $key = 'business_action_' . $index;
+            $placeholders[] = ':' . $key;
+            $params[$key] = $action;
+        }
+
+        $where[] = $column . ' IN (' . implode(', ', $placeholders) . ')';
+    }
+
+    private static function orderedActionOptions(array $existingActions): array
+    {
+        $options = ['' => 'Todas las acciones'];
+
+        foreach (self::BUSINESS_ACTIONS as $action) {
+            $options[$action] = audit_action_label($action);
+        }
+
+        return $options;
     }
 
     private static function sanitizePayload(array $payload): array

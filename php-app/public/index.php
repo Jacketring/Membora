@@ -269,6 +269,10 @@ switch ($route) {
             'date_from' => trim((string) ($_GET['date_from'] ?? '')),
             'date_to' => trim((string) ($_GET['date_to'] ?? '')),
         ];
+        try {
+            AuditLogRepository::record('view_audit', ['scope' => 'platform', 'filters' => $filters]);
+        } catch (Throwable) {
+        }
         render_layout('Logs CRM', 'platform-audit', [
             'filters' => $filters,
             'metrics' => AuditLogRepository::platformMetrics($filters['tenant_id']),
@@ -472,6 +476,10 @@ switch ($route) {
             'date_from' => trim((string) ($_GET['date_from'] ?? '')),
             'date_to' => trim((string) ($_GET['date_to'] ?? '')),
         ];
+        try {
+            AuditLogRepository::record('view_audit', ['scope' => 'tenant', 'filters' => $filters]);
+        } catch (Throwable) {
+        }
         render_layout('Auditoria', 'audit', [
             'filters' => $filters,
             'metrics' => AuditLogRepository::metrics($tenantId),
