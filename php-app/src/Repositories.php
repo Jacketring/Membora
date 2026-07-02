@@ -37,28 +37,39 @@ final class DashboardRepository
 
 final class AuditLogRepository
 {
-    private const BUSINESS_ACTIONS = [
-        'create_user',
-        'update_user',
-        'delete_user',
-        'create_member',
-        'update_member',
-        'delete_member',
-        'create_membership_plan',
-        'update_membership_plan',
-        'delete_membership_plan',
-        'create_checkin',
-        'delete_checkin',
-        'create_class_type',
-        'create_class_session',
-        'update_class_session',
-        'delete_class_session',
-        'create_task',
-        'update_task',
-        'update_task_status',
-        'delete_task',
-        'update_risk_alert_status',
-        'view_audit',
+    private const ACTION_GROUPS = [
+        'users' => [
+            'label' => 'Usuarios',
+            'actions' => ['create_user', 'update_user', 'delete_user'],
+        ],
+        'members' => [
+            'label' => 'Socios',
+            'actions' => ['create_member', 'update_member', 'delete_member'],
+        ],
+        'memberships' => [
+            'label' => 'Membresias',
+            'actions' => ['create_membership_plan', 'update_membership_plan', 'delete_membership_plan'],
+        ],
+        'checkins' => [
+            'label' => 'Check-ins',
+            'actions' => ['create_checkin', 'delete_checkin'],
+        ],
+        'classes' => [
+            'label' => 'Clases',
+            'actions' => ['create_class_type', 'create_class_session', 'update_class_session', 'delete_class_session'],
+        ],
+        'tasks' => [
+            'label' => 'Tareas',
+            'actions' => ['create_task', 'update_task', 'update_task_status', 'delete_task'],
+        ],
+        'alerts' => [
+            'label' => 'Alertas',
+            'actions' => ['update_risk_alert_status'],
+        ],
+        'audit' => [
+            'label' => 'Auditoria',
+            'actions' => ['view_audit'],
+        ],
     ];
 
     public static function ensureTable(): void
@@ -141,8 +152,7 @@ final class AuditLogRepository
         }
 
         if ($action !== '') {
-            $where[] = 'audit_logs.action = :action';
-            $params['action'] = $action;
+            self::addSelectedActionWhere($where, $params, $action);
         }
 
         if ($userId !== '') {
@@ -175,18 +185,7 @@ final class AuditLogRepository
 
     public static function actionOptions(?string $tenantId): array
     {
-        self::ensureTable();
-        $tenantWhere = self::tenantWhere($tenantId);
-        $where = [$tenantWhere['sql']];
-        $params = $tenantWhere['params'];
-        self::addBusinessActionWhere($where, $params);
-
-        $stmt = Database::connection()->prepare(
-            'SELECT DISTINCT action FROM audit_logs WHERE ' . implode(' AND ', $where) . ' ORDER BY action ASC LIMIT 200'
-        );
-        $stmt->execute($params);
-
-        return self::orderedActionOptions(array_column($stmt->fetchAll(), 'action'));
+        return self::actionGroupOptions();
     }
 
     public static function platformMetrics(string $tenantId = ''): array
@@ -217,13 +216,12 @@ final class AuditLogRepository
         self::addBusinessActionWhere($where, $params);
 
         if ($query !== '') {
-            $where[] = '(audit_logs.action LIKE :query OR audit_logs.entity_type LIKE :query OR audit_logs.entity_id LIKE :query OR audit_logs.metadata LIKE :query OR users.name LIKE :query OR users.email LIKE :query OR tenants.name LIKE :query)';
+            $where[] = '(audit_logs.action LIKE :query OR audit_logs.entity_type LIKE :query OR audit_logs.entity_id LIKE :query OR audit_logs.metadata LIKE :query OR users.name LIKE :query OR users.email LIKE :query OR tenants.name LIKE :query OR empresas.name LIKE :query)';
             $params['query'] = '%' . $query . '%';
         }
 
         if ($action !== '') {
-            $where[] = 'audit_logs.action = :action';
-            $params['action'] = $action;
+            self::addSelectedActionWhere($where, $params, $action);
         }
 
         if ($dateFrom !== '') {
@@ -240,10 +238,11 @@ final class AuditLogRepository
             'SELECT audit_logs.*,
                     users.name AS user_name,
                     users.email AS user_email,
-                    tenants.name AS tenant_name
+                    COALESCE(empresas.name, tenants.name) AS tenant_name
              FROM audit_logs
              LEFT JOIN users ON users.id = audit_logs.user_id
              LEFT JOIN tenants ON tenants.id = audit_logs.tenant_id
+             LEFT JOIN empresas ON empresas.tenant_id = audit_logs.tenant_id
              WHERE ' . implode(' AND ', $where) . '
              ORDER BY audit_logs.created_at DESC
              LIMIT ' . max(1, min($limit, 600))
@@ -255,33 +254,31 @@ final class AuditLogRepository
 
     public static function platformActionOptions(string $tenantId = ''): array
     {
-        self::ensureTable();
-        $filter = self::platformWhere($tenantId);
-        $where = [$filter['sql']];
-        $params = $filter['params'];
-        self::addBusinessActionWhere($where, $params);
-
-        $stmt = Database::connection()->prepare(
-            'SELECT DISTINCT action FROM audit_logs WHERE ' . implode(' AND ', $where) . ' ORDER BY action ASC LIMIT 300'
-        );
-        $stmt->execute($params);
-
-        return self::orderedActionOptions(array_column($stmt->fetchAll(), 'action'));
+        return self::actionGroupOptions();
     }
 
     public static function tenantOptions(): array
     {
         self::ensureTable();
-        $stmt = Database::connection()->query(
-            'SELECT DISTINCT tenants.id, tenants.name
-             FROM audit_logs
-             INNER JOIN tenants ON tenants.id = audit_logs.tenant_id
-             ORDER BY tenants.name ASC'
-        );
-
         $options = ['' => 'Todas las empresas', '__platform' => 'Admin CRM'];
-        foreach ($stmt->fetchAll() as $tenant) {
-            $options[$tenant['id']] = $tenant['name'];
+
+        try {
+            EmpresaRepository::ensureTables();
+            $stmt = Database::connection()->query(
+                'SELECT id AS value, name
+                 FROM tenants
+                 UNION
+                 SELECT COALESCE(tenant_id, CONCAT("empresa:", id)) AS value, name
+                 FROM empresas
+                 ORDER BY name ASC'
+            );
+
+            foreach ($stmt->fetchAll() as $tenant) {
+                if (!empty($tenant['value'])) {
+                    $options[$tenant['value']] = $tenant['name'];
+                }
+            }
+        } catch (Throwable) {
         }
 
         return $options;
@@ -320,6 +317,10 @@ final class AuditLogRepository
             return ['sql' => $prefix . 'tenant_id IS NULL', 'params' => []];
         }
 
+        if (str_starts_with($tenantId, 'empresa:')) {
+            return ['sql' => '0 = 1', 'params' => []];
+        }
+
         if ($tenantId !== '') {
             return ['sql' => $prefix . 'tenant_id = :tenant_id', 'params' => ['tenant_id' => $tenantId]];
         }
@@ -330,7 +331,7 @@ final class AuditLogRepository
     private static function addBusinessActionWhere(array &$where, array &$params, string $column = 'audit_logs.action'): void
     {
         $placeholders = [];
-        foreach (self::BUSINESS_ACTIONS as $index => $action) {
+        foreach (self::businessActions() as $index => $action) {
             $key = 'business_action_' . $index;
             $placeholders[] = ':' . $key;
             $params[$key] = $action;
@@ -339,15 +340,41 @@ final class AuditLogRepository
         $where[] = $column . ' IN (' . implode(', ', $placeholders) . ')';
     }
 
-    private static function orderedActionOptions(array $existingActions): array
+    private static function addSelectedActionWhere(array &$where, array &$params, string $selected, string $column = 'audit_logs.action'): void
     {
-        $options = ['' => 'Todas las acciones'];
+        $actions = self::ACTION_GROUPS[$selected]['actions'] ?? [$selected];
+        $placeholders = [];
 
-        foreach (self::BUSINESS_ACTIONS as $action) {
-            $options[$action] = audit_action_label($action);
+        foreach ($actions as $index => $action) {
+            $key = 'selected_action_' . $index;
+            $placeholders[] = ':' . $key;
+            $params[$key] = $action;
+        }
+
+        $where[] = $column . ' IN (' . implode(', ', $placeholders) . ')';
+    }
+
+    private static function actionGroupOptions(): array
+    {
+        $options = ['' => 'Todas'];
+
+        foreach (self::ACTION_GROUPS as $key => $group) {
+            $options[$key] = $group['label'];
         }
 
         return $options;
+    }
+
+    private static function businessActions(): array
+    {
+        $actions = [];
+        foreach (self::ACTION_GROUPS as $group) {
+            foreach ($group['actions'] as $action) {
+                $actions[] = $action;
+            }
+        }
+
+        return array_values(array_unique($actions));
     }
 
     private static function sanitizePayload(array $payload): array
