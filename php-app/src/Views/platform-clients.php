@@ -3,8 +3,7 @@ $filters = $filters ?? ['q' => '', 'status' => ''];
 $clients = $clients ?? [];
 $metrics = $metrics ?? ['lead' => 0, 'qualified' => 0, 'customer' => 0, 'lost' => 0];
 $statusOptions = [
-    '' => 'Todos',
-    'LEAD' => 'Lead',
+    '' => 'Clientes y cualificados',
     'QUALIFIED' => 'Cualificado',
     'CUSTOMER' => 'Cliente',
     'LOST' => 'Perdido',

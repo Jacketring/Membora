@@ -2258,6 +2258,8 @@ final class PlatformClientRepository
         if ($status !== '') {
             $where[] = 'status = :status';
             $params['status'] = $status;
+        } else {
+            $where[] = 'status <> "LEAD"';
         }
 
         $stmt = Database::connection()->prepare(
