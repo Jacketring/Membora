@@ -100,7 +100,6 @@
           <th scope="col">Accion</th>
           <th scope="col">Modulo</th>
           <th scope="col">Area</th>
-          <th scope="col">IP</th>
           <th scope="col">Detalle</th>
         </tr>
       </thead>
@@ -117,7 +116,6 @@
               <strong><?= e(audit_entity_label($log['entity_type'])) ?></strong>
             </td>
             <td><?= e(audit_area_label($log['route'])) ?></td>
-            <td><?= e($log['ip_address'] ?: 'Sin IP') ?></td>
             <td>
               <details class="audit-details">
                 <summary>Ver</summary>
@@ -128,11 +126,11 @@
         <?php endforeach; ?>
         <?php if (!$logs): ?>
           <tr data-live-search-empty>
-            <td class="leads-empty-cell" colspan="7">No hay registros de auditoria que coincidan con los filtros actuales.</td>
+            <td class="leads-empty-cell" colspan="6">No hay registros de auditoria que coincidan con los filtros actuales.</td>
           </tr>
         <?php else: ?>
           <tr data-live-search-empty hidden>
-            <td class="leads-empty-cell" colspan="7">No hay registros de auditoria que coincidan con la busqueda actual.</td>
+            <td class="leads-empty-cell" colspan="6">No hay registros de auditoria que coincidan con la busqueda actual.</td>
           </tr>
         <?php endif; ?>
       </tbody>

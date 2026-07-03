@@ -619,12 +619,12 @@ function audit_action_label(?string $action): string
     $readable = strtolower(str_replace(['_', '-'], ' ', $value));
     $readable = trim(preg_replace('/\s+/', ' ', $readable) ?: '');
 
-    return $readable !== '' ? ucfirst($readable) : 'Accion no identificada';
+    return $readable !== '' ? ucfirst($readable) : 'Actividad registrada';
 }
 
 function audit_entity_label(?string $entity): string
 {
-    return enum_label((string) $entity, [
+    $label = enum_label((string) $entity, [
         'user' => 'Usuario',
         'users' => 'Usuario',
         'member' => 'Socio',
@@ -648,12 +648,22 @@ function audit_entity_label(?string $entity): string
         'platform_payment' => 'Pago CRM',
         'platform_plan' => 'Plan CRM',
         'audit' => 'Auditoria',
+        'view_audit' => 'Auditoria',
+        'lead_note' => 'Nota',
+        'lead_stage' => 'Lead',
+        'lead_lost' => 'Lead',
+        'billing_integration' => 'Facturacion',
+        'reservation' => 'Reserva',
+        'reservation_status' => 'Reserva',
+        'task_status' => 'Tarea',
     ], 'General');
+
+    return $label === '' || str_contains($label, '_') ? 'Actividad' : $label;
 }
 
 function audit_area_label(?string $route): string
 {
-    return enum_label((string) $route, [
+    $label = enum_label((string) $route, [
         'users' => 'Usuarios',
         'members' => 'Socios',
         'memberships' => 'Membresias',
@@ -673,6 +683,8 @@ function audit_area_label(?string $route): string
         'profile' => 'Perfil',
         'settings' => 'Configuracion',
     ], 'CRM');
+
+    return $label === '' || str_contains($label, '_') || str_contains($label, '-') ? 'CRM' : $label;
 }
 
 function audit_metadata_summary(?string $metadata): string
@@ -686,7 +698,7 @@ function audit_metadata_summary(?string $metadata): string
         return 'Detalle interno oculto';
     }
 
-    $blockedKeys = ['id', 'tenant_id', 'user_id', 'role_id', 'member_id', 'lead_id', 'task_id', 'payment_id', 'reservation_id', 'class_session_id', 'empresa_id', 'client_id', 'plan_id', 'form_token', 'csrf', 'token', 'password', 'password_hash', 'route', 'action'];
+    $blockedKeys = ['id', 'tenant_id', 'user_id', 'role_id', 'member_id', 'lead_id', 'task_id', 'payment_id', 'reservation_id', 'class_session_id', 'empresa_id', 'client_id', 'plan_id', 'form_token', 'csrf', 'token', 'password', 'password_hash', 'route', 'action', 'scope', 'filters', 'ip', 'ip_address', 'user_agent'];
     $labels = [
         'name' => 'Nombre',
         'first_name' => 'Nombre',
@@ -709,12 +721,22 @@ function audit_metadata_summary(?string $metadata): string
         'contact_email' => 'Email de contacto',
         'admin_email' => 'Email administrador',
         'admin_name' => 'Administrador',
+        'amount' => 'Importe',
+        'monthly_price' => 'Precio mensual',
+        'next_payment_at' => 'Proximo pago',
+        'contact_name' => 'Contacto',
+        'company_name' => 'Empresa',
     ];
 
     $parts = [];
     foreach ($data as $key => $value) {
         $normalizedKey = strtolower((string) $key);
-        if (in_array($normalizedKey, $blockedKeys, true) || str_contains($normalizedKey, 'token') || str_contains($normalizedKey, 'password')) {
+        if (
+            in_array($normalizedKey, $blockedKeys, true)
+            || str_contains($normalizedKey, 'token')
+            || str_contains($normalizedKey, 'password')
+            || str_ends_with($normalizedKey, '_id')
+        ) {
             continue;
         }
 
@@ -727,7 +749,12 @@ function audit_metadata_summary(?string $metadata): string
             continue;
         }
 
-        $parts[] = ($labels[$normalizedKey] ?? ucfirst(str_replace('_', ' ', $normalizedKey))) . ': ' . $text;
+        $label = $labels[$normalizedKey] ?? ucfirst(str_replace('_', ' ', $normalizedKey));
+        if (str_contains($label, '_')) {
+            continue;
+        }
+
+        $parts[] = $label . ': ' . $text;
         if (count($parts) >= 4) {
             break;
         }

@@ -138,7 +138,7 @@ final class AuditLogRepository
             'entity_type' => self::entityType($action) ?? '',
             'entity_id' => self::entityId($payload) ?? '',
             'route' => trim((string) ($_GET['route'] ?? '')),
-            'ip_address' => substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64),
+            'ip_address' => null,
             'user_agent' => substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
             'metadata' => json_encode($sanitizedPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ]);
