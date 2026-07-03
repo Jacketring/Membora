@@ -2656,6 +2656,7 @@ final class EmpresaRepository
 
         self::ensureColumn('empresas', 'client_id', 'ALTER TABLE empresas ADD COLUMN client_id VARCHAR(191) NULL AFTER tenant_id');
         self::syncFromTenants();
+        self::markOverduePayments();
     }
 
     public static function ensurePlatformAdmin(): void
@@ -2955,6 +2956,20 @@ final class EmpresaRepository
             'next_payment_at' => $nextPaymentAt,
             'notes' => trim((string) ($data['notes'] ?? '')) ?: null,
         ];
+    }
+
+    private static function markOverduePayments(): void
+    {
+        Database::connection()->exec(
+            'UPDATE empresas
+             SET payment_status = "OVERDUE",
+                 updated_at = NOW()
+             WHERE status IN ("ACTIVE", "TRIAL")
+               AND payment_status IN ("PAID", "PENDING")
+               AND monthly_price > 0
+               AND next_payment_at IS NOT NULL
+               AND next_payment_at < CURDATE()'
+        );
     }
 
     private static function defaultNextPaymentDate(): string
