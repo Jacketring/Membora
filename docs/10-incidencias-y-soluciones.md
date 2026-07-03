@@ -351,7 +351,7 @@ Solucion aplicada:
 - Modulo `Alertas`.
 - Tabla `risk_alerts`.
 - Generacion automatica al abrir dashboard o alertas.
-- Alertas por pagos vencidos, tareas vencidas, membresias caducadas, socios sin actividad, leads sin seguimiento y clases llenas.
+- Alertas por pagos vencidos, tareas vencidas, membresias caducadas o proximas a renovar, socios sin actividad, leads sin seguimiento y clases llenas.
 - Estados `OPEN`, `RESOLVED`, `DISMISSED`.
 
 Resultado:

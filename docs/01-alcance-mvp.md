@@ -30,7 +30,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Pagos de socios con importe, metodo, estado, vencimiento, fecha de pago y notas.
 - Integracion de facturacion externa generica con configuracion, exportacion CSV, sincronizacion simulada y logs.
 - Check-ins manuales de socios, con asociacion opcional a reservas de clase.
-- Alertas de riesgo para pagos vencidos, tareas vencidas, membresias caducadas, leads sin seguimiento, socios sin actividad y clases llenas.
+- Alertas de riesgo para pagos vencidos, tareas vencidas, membresias caducadas o proximas a renovar, leads sin seguimiento, socios sin actividad y clases llenas.
 - Auditoria de acciones internas con usuario, tenant, accion, entidad, ruta, IP, navegador y datos sanitizados.
 - Tipos de clase.
 - Sesiones de clase con fecha, hora, entrenador, aforo y estado.

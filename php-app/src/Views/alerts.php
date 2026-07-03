@@ -1,7 +1,7 @@
 <div class="page-heading">
   <div>
     <h2>Alertas</h2>
-    <p>Prioriza pagos vencidos, tareas atrasadas, membresias caducadas y socios sin actividad.</p>
+    <p>Prioriza pagos vencidos, tareas atrasadas, membresias por renovar y socios sin actividad.</p>
   </div>
   <a class="secondary-action" href="index.php?route=alerts">Regenerar alertas</a>
 </div>

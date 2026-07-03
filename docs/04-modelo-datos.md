@@ -196,7 +196,7 @@ Automatismos principales:
 - Crea `platform_leads`, `platform_clients`, `empresas`, `empresa_payments` y `saas_plans`.
 - Crea `lead_notes`, `task_members`, `membership_plans`, `subscriptions`, `class_types`, `class_sessions` y `reservations`.
 - Crea `checkins` para entradas manuales y asistencias asociadas a reservas.
-- Crea `risk_alerts` para pagos vencidos, tareas vencidas, membresias caducadas, leads sin seguimiento, socios sin actividad y clases llenas.
+- Crea `risk_alerts` para pagos vencidos, tareas vencidas, membresias caducadas o proximas a renovar, leads sin seguimiento, socios sin actividad y clases llenas.
 - Crea `audit_logs` para registrar acciones POST internas, usuario, ruta, IP, navegador y datos sin contrasenas ni tokens.
 - Crea `billing_integrations` y `billing_sync_logs` para configurar proveedor externo, exportar pagos y registrar sincronizaciones.
 - Anade columnas de sincronizacion externa a `payments`.

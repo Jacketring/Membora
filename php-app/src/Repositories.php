@@ -680,7 +680,7 @@ final class RiskAlertRepository
             '' => 'Todas',
             'PAYMENT_OVERDUE' => 'Pagos vencidos',
             'TASK_OVERDUE' => 'Tareas vencidas',
-            'MEMBERSHIP_EXPIRED' => 'Membresias caducadas',
+            'MEMBERSHIP_EXPIRED' => 'Membresias por renovar',
             'MEMBER_INACTIVE' => 'Socios sin actividad',
             'LEAD_STALE' => 'Leads sin seguimiento',
             'CLASS_FULL' => 'Clases llenas',
@@ -786,18 +786,21 @@ final class RiskAlertRepository
              INNER JOIN membership_plans ON membership_plans.id = subscriptions.membership_plan_id AND membership_plans.tenant_id = subscriptions.tenant_id
              WHERE subscriptions.tenant_id = :tenant_id
              AND subscriptions.status = "ACTIVE"
-             AND subscriptions.ends_at < CURDATE()
+             AND subscriptions.ends_at <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
              LIMIT 50'
         );
         $stmt->execute(['tenant_id' => $tenantId]);
 
         return array_map(static function (array $row): array {
             $name = trim($row['first_name'] . ' ' . ($row['last_name'] ?? ''));
+            $endsAt = (string) ($row['ends_at'] ?? '');
+            $isExpired = $endsAt !== '' && $endsAt < date('Y-m-d');
+
             return [
                 'type' => 'MEMBERSHIP_EXPIRED',
                 'severity' => 'HIGH',
                 'member_id' => $row['member_id'],
-                'message' => 'Membresia caducada de ' . $name . ': ' . $row['plan_name'] . '.',
+                'message' => ($isExpired ? 'Membresia caducada de ' : 'Renovacion proxima de ') . $name . ': ' . $row['plan_name'] . ' vence el ' . format_date_short($endsAt) . '.',
             ];
         }, $stmt->fetchAll());
     }

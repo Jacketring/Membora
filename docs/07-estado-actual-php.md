@@ -105,7 +105,7 @@ No se usa Node.js en produccion.
 - Generacion automatica al abrir dashboard o pantalla de alertas.
 - Pagos vencidos.
 - Tareas vencidas.
-- Membresias caducadas.
+- Membresias caducadas o proximas a renovar.
 - Socios sin check-in reciente.
 - Leads sin seguimiento reciente.
 - Clases llenas.

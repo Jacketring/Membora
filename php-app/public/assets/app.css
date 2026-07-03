@@ -1235,6 +1235,12 @@ td.empty-state,
 }
 .leads-table td { border-bottom: 1px solid #edf0f7; color: #30384c; font-size: 14px; padding: 14px; vertical-align: middle; }
 .lead-data-row:hover td { background: #fbfdff; }
+.lead-data-row.member-row--renewal td {
+  background: #fff1f2;
+}
+.lead-data-row.member-row--renewal:hover td {
+  background: #ffe4e6;
+}
 .clickable-row { cursor: pointer; }
 .clickable-row:hover td {
   background: #f5f9ff;
@@ -2697,6 +2703,10 @@ td.empty-state,
   background: #fee2e2;
   color: #b91c1c;
 }
+.membership-expiry--renewal {
+  background: #ffe4e6;
+  color: #b91c1c;
+}
 .membership-subscriptions-card {
   margin-top: 18px;
 }
@@ -3065,6 +3075,12 @@ body[data-theme="dark"] .row-actions button[aria-disabled="true"] {
 body[data-theme="dark"] .lead-data-row:hover td,
 body[data-theme="dark"] .clickable-row:hover td {
   background: rgba(255, 255, 255, 0.04);
+}
+body[data-theme="dark"] .lead-data-row.member-row--renewal td {
+  background: rgba(239, 68, 68, 0.13);
+}
+body[data-theme="dark"] .lead-data-row.member-row--renewal:hover td {
+  background: rgba(239, 68, 68, 0.2);
 }
 body[data-theme="dark"] .page-heading p,
 body[data-theme="dark"] .dashboard-card-header p {

@@ -528,7 +528,7 @@ function risk_alert_type_label(?string $type): string
     return enum_label((string) $type, [
         'PAYMENT_OVERDUE' => 'Pago vencido',
         'TASK_OVERDUE' => 'Tarea vencida',
-        'MEMBERSHIP_EXPIRED' => 'Membresia caducada',
+        'MEMBERSHIP_EXPIRED' => 'Membresia por renovar',
         'MEMBER_INACTIVE' => 'Socio sin actividad',
         'LEAD_STALE' => 'Lead sin seguimiento',
         'CLASS_FULL' => 'Clase llena',

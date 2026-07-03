@@ -100,7 +100,7 @@ $memberStatusOptions = [
                 && !empty($member['subscription_id'])
                 && !empty($member['membership_name']);
           ?>
-          <tr class="lead-data-row clickable-row" data-open-modal="member-detail-<?= e($member['id']) ?>" data-live-search-row>
+          <tr class="lead-data-row clickable-row <?= $canRenewMembership ? 'member-row--renewal' : '' ?>" data-open-modal="member-detail-<?= e($member['id']) ?>" data-live-search-row>
             <td>
               <div class="member-identity">
                 <?php if (!empty($member['photo_path'])): ?>
@@ -128,7 +128,7 @@ $memberStatusOptions = [
             </td>
             <td>
               <?php if (!empty($member['membership_ends_at'])): ?>
-                <span class="membership-expiry <?= strtotime($member['membership_ends_at']) < strtotime(date('Y-m-d')) ? 'membership-expiry--expired' : '' ?>">
+                <span class="membership-expiry <?= $canRenewMembership ? 'membership-expiry--renewal' : '' ?> <?= strtotime($member['membership_ends_at']) < strtotime(date('Y-m-d')) ? 'membership-expiry--expired' : '' ?>">
                   <?= e(format_date_short($member['membership_ends_at'])) ?>
                 </span>
               <?php else: ?>

@@ -230,7 +230,6 @@ $taskStatusOptions = [
             <?php endforeach; ?>
             </div>
           </div>
-          <small>Categoria de trabajo para organizar el equipo.</small>
         </div>
         <div class="field">
           <span>Estado</span>
@@ -302,7 +301,7 @@ $taskStatusOptions = [
             <?php endforeach; ?>
           </div>
         </div>
-        <small>Usalo para indicar si es bienvenida, seguimiento, cobro u operacion interna.</small>
+        <small></small>
       </div>
       <label class="field">
         <span>Vencimiento</span>
