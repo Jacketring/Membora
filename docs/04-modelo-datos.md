@@ -59,7 +59,7 @@ Estas tablas son globales de Membora CRM y no representan datos internos de un g
 
 - `platform_leads`: solicitudes recibidas desde la web publica.
 - `platform_clients`: contactos comerciales antes de crear CRM.
-- `empresas`: empresas cliente del SaaS.
+- `empresas`: empresas cliente del SaaS, plan contratado, estado, pago y dias de prueba comercial.
 - `empresa_payments`: cobros SaaS por empresa.
 - `saas_plans`: catalogo comercial de planes SaaS.
 - `webhook_settings`: configuracion historica/tecnica de integraciones.
@@ -91,6 +91,7 @@ Estas tablas son globales de Membora CRM y no representan datos internos de un g
 - `Empresa` 0..1 -> 1 `Tenant` cuando el CRM esta creado.
 - `Empresa` 1 -> N `EmpresaPayment`.
 - `SaasPlan` 1 -> N `Empresa` cuando se asigna un plan comercial.
+- `Empresa.trial_days` define la duracion de la prueba cuando `status` o `plan` esta en `TRIAL`.
 
 ## 6. Reglas de aislamiento
 
@@ -200,6 +201,7 @@ Automatismos principales:
 - Crea `audit_logs` para registrar acciones POST internas, usuario, ruta, IP, navegador y datos sin contrasenas ni tokens.
 - Crea `billing_integrations` y `billing_sync_logs` para configurar proveedor externo, exportar pagos y registrar sincronizaciones.
 - Anade columnas de sincronizacion externa a `payments`.
+- Anade `empresas.trial_days` para pruebas comerciales configurables.
 - Crea `webhook_settings` y `webhook_logs` para integraciones y diagnostico.
 - Anade columnas auxiliares de imagen, color, planes, clases y suscripciones si faltan.
 

@@ -24,6 +24,7 @@ body[data-theme="dark"] {
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   background: var(--background);
   color: var(--text);
