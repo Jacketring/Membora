@@ -2483,18 +2483,37 @@ final class EmpresaRepository
         $status = in_array($data['status'] ?? '', ['ACTIVE', 'TRIAL', 'SUSPENDED', 'CANCELLED'], true) ? $data['status'] : 'ACTIVE';
         $paymentStatus = in_array($data['payment_status'] ?? '', ['PAID', 'PENDING', 'OVERDUE', 'TRIAL'], true) ? $data['payment_status'] : 'PAID';
         $price = str_replace(',', '.', (string) ($data['monthly_price'] ?? '0'));
+        $plan = strtoupper(trim((string) ($data['plan'] ?? 'BASIC'))) ?: 'BASIC';
+        $nextPaymentAt = trim((string) ($data['next_payment_at'] ?? '')) ?: null;
+        if ($nextPaymentAt === null && $status !== 'CANCELLED' && $plan !== '') {
+            $nextPaymentAt = self::defaultNextPaymentDate();
+        }
 
         return [
             'name' => trim((string) ($data['name'] ?? '')),
             'contact_email' => trim((string) ($data['contact_email'] ?? '')) ?: null,
             'client_id' => trim((string) ($data['client_id'] ?? '')) ?: null,
-            'plan' => strtoupper(trim((string) ($data['plan'] ?? 'BASIC'))) ?: 'BASIC',
+            'plan' => $plan,
             'status' => $status,
             'payment_status' => $paymentStatus,
             'monthly_price' => number_format(max(0, (float) $price), 2, '.', ''),
-            'next_payment_at' => trim((string) ($data['next_payment_at'] ?? '')) ?: null,
+            'next_payment_at' => $nextPaymentAt,
             'notes' => trim((string) ($data['notes'] ?? '')) ?: null,
         ];
+    }
+
+    private static function defaultNextPaymentDate(): string
+    {
+        $today = new DateTimeImmutable('today');
+        $nextMonthStart = $today->modify('first day of next month');
+        $lastDayOfNextMonth = (int) $nextMonthStart->format('t');
+        $day = min((int) $today->format('j'), $lastDayOfNextMonth);
+
+        return $nextMonthStart->setDate(
+            (int) $nextMonthStart->format('Y'),
+            (int) $nextMonthStart->format('m'),
+            $day
+        )->format('Y-m-d');
     }
 
     private static function tableColumns(string $table): array

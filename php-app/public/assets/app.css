@@ -1186,6 +1186,16 @@ td.empty-state,
 .custom-select-option[hidden] {
   display: none;
 }
+.custom-select-empty {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+  margin: 2px 0 0;
+  padding: 9px 10px;
+}
+.custom-select-empty[hidden] {
+  display: none;
+}
 .custom-select-option::after {
   background: transparent;
   border-radius: 999px;
@@ -3100,13 +3110,15 @@ body[data-theme="dark"] .phone-prefix-trigger {
 }
 body[data-theme="dark"] .field input::placeholder,
 body[data-theme="dark"] .field textarea::placeholder,
-body[data-theme="dark"] .field .member-picker-search::placeholder {
+body[data-theme="dark"] .field .member-picker-search::placeholder,
+body[data-theme="dark"] .custom-select-search::placeholder {
   color: #7f8da0;
 }
 body[data-theme="dark"] .modal-card header button,
 body[data-theme="dark"] .member-picker-shell,
 body[data-theme="dark"] .member-picker label,
 body[data-theme="dark"] .member-picker-empty,
+body[data-theme="dark"] .custom-select-empty,
 body[data-theme="dark"] .phone-prefix-options button,
 body[data-theme="dark"] .notes-list article,
 body[data-theme="dark"] .note-item,

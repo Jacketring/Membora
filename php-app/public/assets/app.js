@@ -327,6 +327,7 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
   const label = select.querySelector('[data-custom-select-label]');
   const options = select.querySelectorAll('[data-custom-select-option]');
   const searchInput = select.querySelector('[data-custom-select-search]');
+  const emptyState = select.querySelector('[data-custom-select-empty]');
 
   if (!trigger || !menu || !valueInput || !label) {
     return;
@@ -334,12 +335,19 @@ document.querySelectorAll('[data-custom-select]').forEach((select) => {
 
   function applyCustomSelectSearch() {
     const term = normalizeSearchText(searchInput?.value.trim() || '');
+    let visibleCount = 0;
     options.forEach((option) => {
       const searchable = option.dataset.search || option.textContent || '';
       const matchesTerm = term === '' || normalizeSearchText(searchable).includes(term);
       const allowed = option.dataset.customAllowed !== 'false';
       option.hidden = !matchesTerm || !allowed;
+      if (!option.hidden) {
+        visibleCount += 1;
+      }
     });
+    if (emptyState) {
+      emptyState.hidden = visibleCount > 0;
+    }
   }
 
   trigger.addEventListener('click', () => {
@@ -500,6 +508,7 @@ document.querySelectorAll('[data-checkin-form]').forEach((form) => {
 document.querySelectorAll('[data-empresa-form]').forEach((form) => {
   const planSelect = form.querySelector('[data-plan-price-select]');
   const priceInput = form.querySelector('[data-plan-price-input]');
+  const nextPaymentInput = form.querySelector('[data-next-payment-input]');
 
   if (!planSelect || !priceInput) {
     return;
@@ -524,11 +533,47 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
     }
   };
 
+  const nextMonthPaymentDate = () => {
+    const now = new Date();
+    const lastDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0).getDate();
+    const nextPayment = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      Math.min(now.getDate(), lastDayOfNextMonth)
+    );
+
+    return formatDateInputValue(nextPayment);
+  };
+
+  const shouldAutoFillNextPayment = () => nextPaymentInput
+    && planSelect.value
+    && (nextPaymentInput.value.trim() === '' || nextPaymentInput.dataset.autoNextPayment === 'true');
+
+  const applyNextPaymentDate = () => {
+    if (!shouldAutoFillNextPayment()) {
+      return;
+    }
+
+    nextPaymentInput.value = nextMonthPaymentDate();
+    nextPaymentInput.dataset.autoNextPayment = 'true';
+  };
+
   if (priceInput.value.trim() === '' || Number.parseFloat(priceInput.value.replace(',', '.')) === 0) {
     applyPlanPrice();
   }
 
-  planSelect.addEventListener('change', applyPlanPrice);
+  if (nextPaymentInput && nextPaymentInput.value.trim() === '') {
+    applyNextPaymentDate();
+  }
+
+  nextPaymentInput?.addEventListener('input', () => {
+    nextPaymentInput.dataset.autoNextPayment = 'false';
+  });
+
+  planSelect.addEventListener('change', () => {
+    applyPlanPrice();
+    applyNextPaymentDate();
+  });
 });
 
 document.addEventListener('click', (event) => {

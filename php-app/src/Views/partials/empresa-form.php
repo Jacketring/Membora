@@ -14,6 +14,17 @@ $empresaValues = $isEditingEmpresa ? $empresa : [
     'next_payment_at' => '',
     'notes' => '',
 ];
+$selectedClientId = (string) ($empresaValues['client_id'] ?? '');
+$selectedClientLabel = 'Sin cliente vinculado';
+foreach (($clients ?? []) as $clientOption) {
+    if ((string) $clientOption['id'] === $selectedClientId) {
+        $selectedClientLabel = trim((string) $clientOption['company_name']);
+        if (!empty($clientOption['email'])) {
+            $selectedClientLabel .= ' - ' . $clientOption['email'];
+        }
+        break;
+    }
+}
 ?>
 
 <form class="empresa-form" method="post" data-empresa-form data-plan-prices='<?= e(json_encode($planPrices, JSON_UNESCAPED_UNICODE)) ?>'>
@@ -24,15 +35,45 @@ $empresaValues = $isEditingEmpresa ? $empresa : [
 
   <?php if (!empty($clients)): ?>
     <label class="field form-full">
-      <span>Cliente origen</span>
-      <select name="client_id">
-        <option value="">Sin cliente vinculado</option>
+      <span>Cliente vinculado</span>
+      <div class="custom-select custom-select--field custom-select--searchable" data-custom-select>
+        <input type="hidden" name="client_id" value="<?= e($selectedClientId) ?>" data-custom-select-value>
+        <button class="custom-select-trigger" type="button" data-custom-select-trigger aria-expanded="false">
+          <span data-custom-select-label><?= e($selectedClientLabel) ?></span>
+        </button>
+        <div class="custom-select-menu" data-custom-select-menu hidden>
+          <input class="custom-select-search" type="search" placeholder="Buscar cliente por empresa, contacto o email" data-custom-select-search>
+          <button
+            class="custom-select-option <?= $selectedClientId === '' ? 'selected' : '' ?>"
+            type="button"
+            data-custom-select-option
+            data-value=""
+            data-search="sin cliente vinculado"
+          >Sin cliente vinculado</button>
         <?php foreach ($clients as $clientOption): ?>
-          <option value="<?= e($clientOption['id']) ?>" <?= ($empresaValues['client_id'] ?? '') === $clientOption['id'] ? 'selected' : '' ?>>
-            <?= e($clientOption['company_name']) ?><?= $clientOption['email'] ? ' - ' . e($clientOption['email']) : '' ?>
-          </option>
+          <?php
+            $clientLabel = trim((string) $clientOption['company_name']);
+            if (!empty($clientOption['email'])) {
+                $clientLabel .= ' - ' . $clientOption['email'];
+            }
+            $clientSearch = implode(' ', array_filter([
+                $clientOption['company_name'] ?? '',
+                $clientOption['contact_name'] ?? '',
+                $clientOption['email'] ?? '',
+                $clientOption['phone'] ?? '',
+            ]));
+          ?>
+          <button
+            class="custom-select-option <?= $selectedClientId === (string) $clientOption['id'] ? 'selected' : '' ?>"
+            type="button"
+            data-custom-select-option
+            data-value="<?= e($clientOption['id']) ?>"
+            data-search="<?= e($clientSearch) ?>"
+          ><?= e($clientLabel) ?></button>
         <?php endforeach; ?>
-      </select>
+          <p class="custom-select-empty" data-custom-select-empty hidden>No hay clientes que coincidan con la busqueda.</p>
+        </div>
+      </div>
     </label>
   <?php endif; ?>
 
@@ -74,7 +115,7 @@ $empresaValues = $isEditingEmpresa ? $empresa : [
   </label>
   <label class="field">
     <span>Proximo pago</span>
-    <input name="next_payment_at" type="date" value="<?= e($empresaValues['next_payment_at'] ? date('Y-m-d', strtotime($empresaValues['next_payment_at'])) : '') ?>">
+    <input name="next_payment_at" type="date" value="<?= e($empresaValues['next_payment_at'] ? date('Y-m-d', strtotime($empresaValues['next_payment_at'])) : '') ?>" data-next-payment-input>
   </label>
   <label class="field form-full">
     <span>Notas internas</span>
