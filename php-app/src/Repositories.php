@@ -3008,13 +3008,11 @@ final class EmpresaRepository
         $plan = strtoupper(trim((string) ($data['plan'] ?? 'BASIC'))) ?: 'BASIC';
         $nextPaymentAt = trim((string) ($data['next_payment_at'] ?? '')) ?: null;
         $trialDays = max(1, min(365, (int) ($data['trial_days'] ?? 30)));
-        if ($plan === 'TRIAL' || $status === 'TRIAL') {
+        if ($plan === 'TRIAL') {
             $status = 'TRIAL';
             $paymentStatus = 'TRIAL';
             $nextPaymentAt = null;
-            if ($plan === 'TRIAL') {
-                $price = '0';
-            }
+            $price = '0';
         } elseif ($nextPaymentAt === null && $status !== 'CANCELLED' && $plan !== '') {
             $nextPaymentAt = self::defaultNextPaymentDate();
         }

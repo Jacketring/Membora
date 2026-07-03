@@ -248,7 +248,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - Estado del CRM: activo, prueba, suspendido o cancelado.
 - Estado de pago: al dia, pendiente, vencido o prueba.
 - Precio mensual y proximo pago para planes de pago.
-- Plan de prueba con duracion configurable por dias; mientras la empresa esta en prueba se oculta el proximo pago y no aparece renovacion.
+- Plan de prueba con duracion configurable por dias; solo cuando el plan es `Prueba` se oculta el proximo pago y no aparece renovacion.
 - MRR estimado.
 - Seccion `Pagos` para registrar cobros SaaS, vencimientos, pagados, pendientes y cancelados.
 - Seccion `Planes` para definir catalogo comercial, precio mensual, setup, limites y prestaciones.

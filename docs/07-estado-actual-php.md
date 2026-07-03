@@ -172,7 +172,7 @@ No se usa Node.js en produccion.
 - Estado del CRM: activo, prueba, suspendido o cancelado.
 - Estado de pago: al dia, pendiente, vencido o prueba.
 - Precio mensual y proximo pago para planes de pago.
-- Plan de prueba configurable por dias. Mientras la empresa esta en prueba, se oculta el proximo pago, se muestra la duracion de prueba y no se ofrece renovacion.
+- Plan de prueba configurable por dias. Solo cuando el plan seleccionado es `Prueba`, se oculta el proximo pago, se muestra la duracion de prueba y no se ofrece renovacion.
 - MRR estimado.
 - Tabla `empresa_payments` para cobros SaaS por empresa.
 - Registro y edicion de pagos con concepto, importe, vencimiento, fecha de pago, estado y notas.

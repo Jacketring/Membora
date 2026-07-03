@@ -539,18 +539,17 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
 
   const syncTrialPlanFields = () => {
     const isTrialPlan = planSelect.value === 'TRIAL';
-    const isTrialState = isTrialPlan || crmStatusSelect?.value === 'TRIAL';
     if (nextPaymentField) {
-      nextPaymentField.hidden = isTrialState;
+      nextPaymentField.hidden = isTrialPlan;
     }
     if (trialPlanField) {
-      trialPlanField.hidden = !isTrialState;
+      trialPlanField.hidden = !isTrialPlan;
     }
-    if (isTrialState && nextPaymentInput) {
+    if (isTrialPlan && nextPaymentInput) {
       nextPaymentInput.value = '';
       nextPaymentInput.dataset.autoNextPayment = 'false';
     }
-    if (isTrialState) {
+    if (isTrialPlan) {
       if (crmStatusSelect) crmStatusSelect.value = 'TRIAL';
       if (paymentStatusSelect) paymentStatusSelect.value = 'TRIAL';
     }
@@ -571,7 +570,6 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
   const shouldAutoFillNextPayment = () => nextPaymentInput
     && planSelect.value
     && planSelect.value !== 'TRIAL'
-    && crmStatusSelect?.value !== 'TRIAL'
     && (nextPaymentInput.value.trim() === '' || nextPaymentInput.dataset.autoNextPayment === 'true');
 
   const applyNextPaymentDate = () => {
@@ -589,7 +587,7 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
 
   syncTrialPlanFields();
 
-  if (planSelect.value !== 'TRIAL' && crmStatusSelect?.value !== 'TRIAL' && nextPaymentInput && nextPaymentInput.value.trim() === '') {
+  if (planSelect.value !== 'TRIAL' && nextPaymentInput && nextPaymentInput.value.trim() === '') {
     applyNextPaymentDate();
   }
 

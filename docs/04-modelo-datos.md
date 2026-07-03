@@ -91,7 +91,7 @@ Estas tablas son globales de Membora CRM y no representan datos internos de un g
 - `Empresa` 0..1 -> 1 `Tenant` cuando el CRM esta creado.
 - `Empresa` 1 -> N `EmpresaPayment`.
 - `SaasPlan` 1 -> N `Empresa` cuando se asigna un plan comercial.
-- `Empresa.trial_days` define la duracion de la prueba cuando `status` o `plan` esta en `TRIAL`.
+- `Empresa.trial_days` define la duracion de la prueba cuando `plan` esta en `TRIAL`.
 
 ## 6. Reglas de aislamiento
 

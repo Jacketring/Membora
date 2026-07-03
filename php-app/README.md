@@ -87,7 +87,7 @@ La app crea y usa tablas de administracion SaaS para controlar clientes, empresa
 - Estado de pago.
 - Precio mensual.
 - Proximo pago para planes de pago.
-- Dias de prueba configurables cuando la empresa esta en estado de prueba.
+- Dias de prueba configurables cuando el plan de la empresa es `Prueba`.
 - Notas internas.
 - Acceso de soporte al CRM de la empresa si tiene `tenant_id`.
 - Creacion de tenant y usuario administrador al pasar de cliente a empresa.

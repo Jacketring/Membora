@@ -52,7 +52,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Empresas cliente.
 - Creacion de tenant y usuario administrador al crear una empresa CRM.
 - Estados de CRM y pago.
-- Plan de prueba configurable por dias, sin proximo pago visible mientras la empresa esta en prueba.
+- Plan de prueba configurable por dias, sin proximo pago visible solo cuando el plan seleccionado es `Prueba`.
 - Planes comerciales SaaS.
 - Pagos SaaS por empresa.
 - Web comercial: diagnostico de webhook, correo y ultimos envios.
@@ -151,7 +151,7 @@ Tablas SaaS principales:
 - `saas_plans`
 - `webhook_logs`
 
-La tabla `empresas` incluye `trial_days` para controlar la duracion de la prueba comercial. Si una empresa esta en estado `TRIAL`, el CRM oculta la fecha de proximo pago, no marca renovacion y muestra la duracion de prueba configurada.
+La tabla `empresas` incluye `trial_days` para controlar la duracion de la prueba comercial. Si el plan de una empresa es `TRIAL`, el CRM oculta la fecha de proximo pago, no marca renovacion y muestra la duracion de prueba configurada.
 
 ## 8. Recorrido recomendado de demo
 
