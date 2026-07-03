@@ -196,7 +196,6 @@ php -l php-app/src/Auth.php
 php -l php-app/src/Support.php
 node --check php-app/public/assets/app.js
 node --check web-app/public/assets/site.js
-node --check web-app/public/assets/demo.js
 git diff --check
 ```
 
@@ -204,6 +203,7 @@ Pruebas manuales clave:
 
 - Login de administrador de gimnasio.
 - Login de superadmin.
+- Demo temporal desde la web publica con contador de 20 minutos.
 - Creacion y conversion de lead.
 - Creacion/edicion de socio con foto.
 - Asignacion de membresia.

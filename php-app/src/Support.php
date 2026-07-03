@@ -40,12 +40,33 @@ function request_origin_allowed(): bool
 
 function enforce_internal_post_security(): void
 {
+    if (post_value('action', '') === 'demo_login' && demo_origin_allowed()) {
+        return;
+    }
+
     if (request_origin_allowed()) {
         return;
     }
 
     flash('Solicitud bloqueada por seguridad. Recarga la pagina e intentalo de nuevo.', 'error');
     redirect('dashboard');
+}
+
+function demo_origin_allowed(): bool
+{
+    $origin = rtrim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''), '/');
+    $referer = rtrim((string) ($_SERVER['HTTP_REFERER'] ?? ''), '/');
+    $allowedWeb = rtrim((string) (getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev'), '/');
+
+    if ($origin !== '') {
+        return hash_equals($allowedWeb, $origin);
+    }
+
+    if ($referer !== '') {
+        return str_starts_with($referer, $allowedWeb . '/') || hash_equals($allowedWeb, $referer);
+    }
+
+    return true;
 }
 
 function redirect(string $route): never

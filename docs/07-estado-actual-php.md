@@ -29,6 +29,8 @@ No se usa Node.js en produccion.
 ### Autenticacion
 
 - Login con usuarios existentes.
+- Login demo automatico para cliente y administrador.
+- Sesiones demo temporales de 20 minutos con contador y cierre automatico.
 - Roles internos.
 - Sesion PHP.
 - Cierre de sesion.
@@ -180,6 +182,7 @@ No se usa Node.js en produccion.
 - Gestion de planes con precio mensual, setup, limites de usuarios/socios, estado y prestaciones.
 - Web comercial externa en `web-app/public`.
 - Web comercial con enlaces a aviso legal, privacidad y cookies.
+- Enlaces de demo desde la web publica hacia una sesion funcional del CRM durante 20 minutos.
 - Webhook publico sin token manual para registrar solicitudes en `Admin CRM > Leads`.
 - Email HTML automatico de confirmacion para el visitante cuando envia el formulario web.
 - Acceso de soporte al CRM de una empresa conectada.

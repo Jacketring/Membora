@@ -32,6 +32,7 @@ Pantallas disponibles:
 - Perfil de usuario.
 - Configuracion visual personal.
 - Panel de administracion de Membora CRM separado en resumen, leads web, clientes, empresas, pagos, planes, web comercial y logs.
+- Demo funcional desde la web publica con login automatico, contador de 20 minutos y retorno automatico a la web.
 
 Pendiente o futuro:
 
@@ -176,6 +177,7 @@ No hay que editar tokens en la web. El formulario envia al webhook del CRM y las
 Si `MAIL_ENABLED` esta activo y el SMTP esta configurado, la persona que rellena el formulario recibe un email HTML de confirmacion indicando que el equipo revisara su solicitud y contactara en 24-48 horas. Los fallos de correo quedan visibles en `Admin CRM > Web`.
 La seccion `Admin CRM > Web` incluye una prueba de correo para enviar un email tecnico a una direccion concreta, ver la configuracion detectada y registrar el error SMTP exacto si falla.
 La web publica incluye enlaces a textos legales basicos: aviso legal, privacidad y cookies.
+Los enlaces de demo de la web publica no abren una maqueta estatica: inician una sesion demo real del CRM durante 20 minutos. Al finalizar el contador, el CRM cierra la sesion y devuelve al usuario a `WEB_APP_URL`.
 
 En el `.env` del CRM debe existir `WEB_APP_URL="https://app.web.josehurtado.dev"` para permitir el envio del formulario entre subdominios.
 

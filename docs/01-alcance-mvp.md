@@ -61,7 +61,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 ### Web comercial
 
 - Web estatica desplegable en `web-app/public`.
-- Demo estatica de solo lectura en `demo.html`.
+- Acceso a demo funcional del CRM desde la web publica, con sesion temporal de 20 minutos.
 - Formulario publico conectado al webhook del CRM.
 - Email HTML de confirmacion cuando SMTP esta configurado.
 

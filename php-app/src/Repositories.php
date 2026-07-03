@@ -240,7 +240,7 @@ final class DemoRepository
                      payment_status = "PAID",
                      monthly_price = "49.00",
                      next_payment_at = DATE_ADD(CURDATE(), INTERVAL 1 MONTH),
-                     notes = "Empresa demo reiniciada automaticamente cada 24 horas.",
+                     notes = "Empresa demo con sesion temporal de 20 minutos y datos reiniciados periodicamente.",
                      updated_at = NOW()
                  WHERE tenant_id = :tenant_id'
             );
@@ -256,7 +256,7 @@ final class DemoRepository
             'id' => cuid(),
             'tenant_id' => self::TENANT_ID,
             'email' => self::CLIENT_EMAIL,
-            'notes' => 'Empresa demo reiniciada automaticamente cada 24 horas.',
+            'notes' => 'Empresa demo con sesion temporal de 20 minutos y datos reiniciados periodicamente.',
         ]);
     }
 

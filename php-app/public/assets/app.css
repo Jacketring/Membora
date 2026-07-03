@@ -607,6 +607,38 @@ a.global-search-result:hover {
 }
 .notice-error { color: var(--danger); }
 .notice-success { color: var(--secondary); }
+.demo-session-banner {
+  align-items: center;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  color: #7c2d12;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+}
+.demo-session-banner strong,
+.demo-session-banner span {
+  display: block;
+}
+.demo-session-banner span {
+  color: #9a3412;
+  font-size: 14px;
+  margin-top: 2px;
+}
+.demo-session-banner time {
+  background: #7c2d12;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 950;
+  min-width: 86px;
+  padding: 9px 14px;
+  text-align: center;
+}
 
 .lead-metrics {
   display: grid;
@@ -3003,6 +3035,18 @@ body[data-theme="dark"] .confirm-dialog,
 body[data-theme="dark"] .notice {
   background: var(--surface);
   border-color: var(--outline);
+}
+body[data-theme="dark"] .demo-session-banner {
+  background: rgba(124, 45, 18, 0.18);
+  border-color: rgba(251, 146, 60, 0.36);
+  color: #fed7aa;
+}
+body[data-theme="dark"] .demo-session-banner span {
+  color: #fdba74;
+}
+body[data-theme="dark"] .demo-session-banner time {
+  background: #fed7aa;
+  color: #7c2d12;
 }
 body[data-theme="dark"] .topbar {
   background: rgba(15, 28, 46, 0.92);

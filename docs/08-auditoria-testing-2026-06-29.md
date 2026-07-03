@@ -64,7 +64,7 @@ Assets verificados:
 
 - `web-app/public/assets/site.css`: HTTP 200.
 - `web-app/public/assets/site.js`: HTTP 200.
-- `web-app/public/assets/demo.js`: HTTP 200.
+- Demo publica: redireccion/control de entrada hacia demo funcional del CRM.
 - `php-app/public/assets/app.css`: HTTP 200.
 - `php-app/public/assets/app.js`: HTTP 200.
 - `php-app/public/assets/favicon.svg`: HTTP 200.
@@ -338,7 +338,7 @@ Se corrigio anteriormente que crear empresa editaba la primera. Debe revalidarse
 ### Web publica
 
 - [ ] Navegacion por anclas funciona.
-- [ ] Demo abre en solo lectura.
+- [ ] Demo publica abre una sesion funcional con contador de 20 minutos.
 - [ ] Formulario envia solicitud.
 - [ ] Mensaje de exito aparece.
 - [ ] Lead aparece en `Admin CRM > Leads`.

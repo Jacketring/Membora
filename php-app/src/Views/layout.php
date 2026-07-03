@@ -17,8 +17,9 @@ $jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
 <?php
 $tenantPrimaryColor = hex_color_or_default($user['tenant_primary_color'] ?? '#0754d6');
 $isPlatformAdmin = is_platform_admin($user);
+$demoRemainingSeconds = Auth::demoRemainingSeconds();
 ?>
-<body data-tenant-accent="<?= e($tenantPrimaryColor) ?>">
+<body data-tenant-accent="<?= e($tenantPrimaryColor) ?>" <?= $demoRemainingSeconds > 0 ? 'data-demo-expires-in="' . e((string) $demoRemainingSeconds) . '"' : '' ?>>
   <main class="app-shell">
     <aside class="sidebar">
       <div class="brand-lockup brand-lockup--sidebar">
@@ -115,6 +116,15 @@ $isPlatformAdmin = is_platform_admin($user);
       <div class="content">
         <?php if ($flash): ?>
           <div class="notice <?= $flash['type'] === 'error' ? 'notice-error' : 'notice-success' ?>" role="<?= $flash['type'] === 'error' ? 'alert' : 'status' ?>"><?= e($flash['message']) ?></div>
+        <?php endif; ?>
+        <?php if ($demoRemainingSeconds > 0): ?>
+          <div class="demo-session-banner" role="status">
+            <div>
+              <strong>Demo temporal</strong>
+              <span>Esta sesion de prueba se cerrara automaticamente.</span>
+            </div>
+            <time data-demo-countdown datetime="PT<?= (int) $demoRemainingSeconds ?>S">20:00</time>
+          </div>
         <?php endif; ?>
         <?php if (is_platform_support_context()): ?>
           <div class="support-context-banner" role="status">

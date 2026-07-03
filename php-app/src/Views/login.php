@@ -51,8 +51,8 @@ $platformAdminPassword = EmpresaRepository::PLATFORM_ADMIN_PASSWORD;
         <div class="demo-note demo-note--platform">
           <div>
             <strong>Acceso de evaluacion</strong>
-            <span>La demo cliente se reinicia automaticamente cada 24 horas.</span>
-            <span>La demo administrador abre el panel SaaS.</span>
+            <span>Las demos abren una sesion temporal de 20 minutos.</span>
+            <span>Al finalizar, el sistema cierra la sesion y vuelve a la web publica.</span>
           </div>
         </div>
       </form>

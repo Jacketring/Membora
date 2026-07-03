@@ -16,15 +16,15 @@ web-app/public
 
 No necesita Node.js, npm ni build.
 
-## Demo de solo lectura
+## Demo temporal
 
-La web incluye una demo navegable del CRM en:
+La web no mantiene una demo estatica separada. Los enlaces de demo envian al CRM real y abren una sesion temporal con datos de prueba:
 
 ```text
 https://app.web.josehurtado.dev/demo.html
 ```
 
-Esta demo es estatica, no conecta con la base de datos y no crea ni modifica informacion. Permite revisar panel, leads, socios, membresias, clases, tareas y modales simulados antes de pedir informacion.
+`demo.html` actua como puente de entrada. Envia al login demo del CRM, inicia una sesion de 20 minutos, muestra un contador dentro de la aplicacion y al finalizar cierra sesion y devuelve al usuario a la web publica.
 
 ## Conexion con el CRM
 

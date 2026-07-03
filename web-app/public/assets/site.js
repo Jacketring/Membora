@@ -1,4 +1,33 @@
 const MEMBORA_WEBHOOK_URL = 'https://app.crm.josehurtado.dev/webhook/lead';
+const MEMBORA_DEMO_LOGIN_URL = 'https://app.crm.josehurtado.dev/index.php?route=login';
+
+function startDemoLogin(type = 'client') {
+  const form = document.createElement('form');
+  form.method = 'post';
+  form.action = MEMBORA_DEMO_LOGIN_URL;
+  form.style.display = 'none';
+
+  const actionInput = document.createElement('input');
+  actionInput.type = 'hidden';
+  actionInput.name = 'action';
+  actionInput.value = 'demo_login';
+
+  const typeInput = document.createElement('input');
+  typeInput.type = 'hidden';
+  typeInput.name = 'demo_type';
+  typeInput.value = type;
+
+  form.append(actionInput, typeInput);
+  document.body.appendChild(form);
+  form.submit();
+}
+
+document.querySelectorAll('[data-demo-login]').forEach((trigger) => {
+  trigger.addEventListener('click', (event) => {
+    event.preventDefault();
+    startDemoLogin(trigger.dataset.demoLogin || 'client');
+  });
+});
 
 const form = document.querySelector('[data-lead-form]');
 const alertBox = document.querySelector('[data-form-alert]');

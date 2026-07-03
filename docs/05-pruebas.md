@@ -84,6 +84,22 @@ Resultado esperado:
 - No es necesario ejecutar `npm run build`.
 - No es necesario reiniciar una aplicacion Node.
 
+### PD-04 Demo temporal desde la web publica
+
+Pasos:
+
+1. Abrir `https://app.web.josehurtado.dev`.
+2. Pulsar un enlace de demo.
+3. Confirmar que se inicia sesion automaticamente en el CRM con datos de prueba.
+4. Verificar que aparece un contador de 20 minutos en la parte superior.
+5. Forzar o esperar el fin de la sesion temporal.
+
+Resultado esperado:
+
+- La demo no abre una version estatica separada.
+- El CRM muestra una sesion funcional con datos demo.
+- Al finalizar el contador, se cierra la sesion y se vuelve a la web publica.
+
 ## 4. Pruebas funcionales de gimnasio
 
 ### PF-01 Login administrador

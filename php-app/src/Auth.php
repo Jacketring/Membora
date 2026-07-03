@@ -90,11 +90,55 @@ final class Auth
     {
         if ($type === 'admin') {
             DemoRepository::prepareAdminDemo();
-            return self::attempt(EmpresaRepository::PLATFORM_ADMIN_EMAIL, EmpresaRepository::PLATFORM_ADMIN_PASSWORD);
+            $success = self::attempt(EmpresaRepository::PLATFORM_ADMIN_EMAIL, EmpresaRepository::PLATFORM_ADMIN_PASSWORD);
+            if ($success) {
+                self::markDemoSession('admin');
+            }
+
+            return $success;
         }
 
         DemoRepository::prepareClientDemo();
-        return self::attempt(DemoRepository::CLIENT_EMAIL, DemoRepository::CLIENT_PASSWORD);
+        $success = self::attempt(DemoRepository::CLIENT_EMAIL, DemoRepository::CLIENT_PASSWORD);
+        if ($success) {
+            self::markDemoSession('client');
+        }
+
+        return $success;
+    }
+
+    public static function enforceDemoExpiry(): void
+    {
+        if (!self::user() || empty($_SESSION['demo_expires_at'])) {
+            return;
+        }
+
+        if ((int) $_SESSION['demo_expires_at'] > time()) {
+            return;
+        }
+
+        self::logout();
+        header('Location: ' . self::demoReturnUrl());
+        exit;
+    }
+
+    public static function demoRemainingSeconds(): int
+    {
+        if (empty($_SESSION['demo_expires_at'])) {
+            return 0;
+        }
+
+        return max(0, (int) $_SESSION['demo_expires_at'] - time());
+    }
+
+    public static function isDemoSession(): bool
+    {
+        return self::demoRemainingSeconds() > 0;
+    }
+
+    public static function demoReturnUrl(): string
+    {
+        return rtrim((string) (getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev'), '/') . '/';
     }
 
     public static function logout(): void
@@ -171,5 +215,11 @@ final class Auth
         $tenant = $stmt->fetch();
 
         return $tenant ?: null;
+    }
+
+    private static function markDemoSession(string $type): void
+    {
+        $_SESSION['demo_type'] = $type;
+        $_SESSION['demo_expires_at'] = time() + 20 * 60;
     }
 }

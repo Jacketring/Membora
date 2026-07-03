@@ -65,6 +65,7 @@ No hace falta ejecutar `npm install`, `npm run build`, `prisma generate` ni rein
 ## Pantallas incluidas
 
 - Login.
+- Login demo automatico con caducidad de 20 minutos.
 - Dashboard del gimnasio.
 - Leads.
 - Socios.
@@ -126,6 +127,8 @@ Esto permite desplegar cambios incrementales en Plesk sin ejecutar migraciones N
 ## Web comercial
 
 La captacion web se revisa desde el panel de administradores de Membora CRM, no desde cada gimnasio cliente.
+
+Los enlaces de demo de la web publica envian un `POST` al login demo del CRM. La sesion se crea con datos de prueba, dura 20 minutos, muestra un contador en la interfaz y al terminar devuelve al usuario a `WEB_APP_URL`.
 
 El formulario de `web-app/public` envia al webhook:
 

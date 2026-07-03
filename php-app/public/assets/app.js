@@ -607,6 +607,29 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
   });
 });
 
+const demoCountdown = document.querySelector('[data-demo-countdown]');
+const demoExpiresIn = Number.parseInt(document.body.dataset.demoExpiresIn || '0', 10);
+if (demoCountdown && demoExpiresIn > 0) {
+  let remainingSeconds = demoExpiresIn;
+  const renderDemoCountdown = () => {
+    const minutes = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+    const seconds = String(remainingSeconds % 60).padStart(2, '0');
+    demoCountdown.textContent = `${minutes}:${seconds}`;
+  };
+
+  renderDemoCountdown();
+  const demoTimer = window.setInterval(() => {
+    remainingSeconds -= 1;
+    if (remainingSeconds <= 0) {
+      window.clearInterval(demoTimer);
+      window.location.href = 'index.php?route=demo-expired';
+      return;
+    }
+
+    renderDemoCountdown();
+  }, 1000);
+}
+
 document.addEventListener('click', (event) => {
   if (!event.target.closest('[data-custom-select]')) {
     closeCustomSelects(null);

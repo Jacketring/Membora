@@ -43,9 +43,22 @@ if ($isWebhookLeadRequest) {
     exit;
 }
 
+$postAction = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['action'] ?? '') : '';
+if (!in_array($postAction, ['login', 'demo_login'], true)) {
+    Auth::enforceDemoExpiry();
+}
+
 Actions::handle();
 
 $route = $_GET['route'] ?? 'dashboard';
+
+if ($route === 'demo-expired') {
+    Auth::logout();
+    header('Location: ' . Auth::demoReturnUrl());
+    exit;
+}
+
+Auth::enforceDemoExpiry();
 
 if ($route === 'login') {
     if (Auth::user()) {
