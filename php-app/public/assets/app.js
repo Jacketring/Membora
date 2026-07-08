@@ -1,14 +1,15 @@
 const crmSettingsKey = 'membora-crm-settings';
 const tenantAccent = document.body?.dataset.tenantAccent || '#0754d6';
 const defaultCrmSettings = {
-  theme: 'system',
+  theme: 'light',
   accent: tenantAccent,
   compact: false,
 };
 
 function readCrmSettings() {
   try {
-    return { ...defaultCrmSettings, ...JSON.parse(localStorage.getItem(crmSettingsKey) || '{}') };
+    const settings = { ...defaultCrmSettings, ...JSON.parse(localStorage.getItem(crmSettingsKey) || '{}') };
+    return { ...settings, theme: settings.theme === 'dark' ? 'dark' : 'light' };
   } catch {
     return { ...defaultCrmSettings };
   }
@@ -28,8 +29,7 @@ function darkenHexColor(hex, amount = 34) {
 }
 
 function applyCrmSettings(settings = readCrmSettings()) {
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const theme = settings.theme === 'system' ? (prefersDark ? 'dark' : 'light') : settings.theme;
+  const theme = settings.theme === 'dark' ? 'dark' : 'light';
 
   document.body.dataset.theme = theme;
   document.body.dataset.density = settings.compact ? 'compact' : 'comfortable';

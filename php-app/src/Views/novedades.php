@@ -15,6 +15,7 @@ $releaseNotes = [
             'Permisos por rol y acceso de soporte desde Admin CRM.',
             'Login demo cliente y demo administrador con sesion temporal.',
             'Navegacion reorganizada y acceso a Logs CRM desde el menu del usuario.',
+            'Modo claro como apariencia predeterminada; el modo oscuro queda como opcion manual del usuario.',
         ],
     ],
     [

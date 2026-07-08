@@ -39,11 +39,6 @@ $initial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
 
         <div class="theme-choice-grid">
           <label class="theme-choice">
-            <input type="radio" name="theme" value="system" data-setting-theme>
-            <span class="theme-choice-preview theme-choice-preview--system"></span>
-            <strong>Sistema</strong>
-          </label>
-          <label class="theme-choice">
             <input type="radio" name="theme" value="light" data-setting-theme>
             <span class="theme-choice-preview theme-choice-preview--light"></span>
             <strong>Claro</strong>

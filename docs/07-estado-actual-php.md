@@ -1,6 +1,6 @@
 # Estado actual de la version PHP - Membora CRM
 
-Fecha de actualizacion: 30/06/2026.
+Fecha de actualizacion: 08/07/2026.
 
 ## 1. Resumen
 
@@ -41,7 +41,7 @@ No se usa Node.js en produccion.
 - Dashboard con indicadores.
 - Buscador global superior.
 - Navegacion lateral.
-- Modo claro/oscuro y color personal.
+- Modo claro por defecto, modo oscuro opcional y color personal.
 - Perfil de usuario con imagen.
 
 ### Leads

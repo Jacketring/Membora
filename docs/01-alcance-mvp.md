@@ -1,6 +1,6 @@
 # Alcance del MVP - Membora CRM
 
-Fecha de actualizacion: 30/06/2026.
+Fecha de actualizacion: 08/07/2026.
 
 ## 1. Objetivo
 
@@ -40,7 +40,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Usuarios internos del gimnasio.
 - Permisos por rol para rutas y acciones internas.
 - Perfil de usuario con imagen.
-- Configuracion visual basica.
+- Configuracion visual basica con modo claro por defecto y modo oscuro opcional para el usuario.
 - Canal `Novedades` con version actual e historial de cambios visibles para usuarios autenticados.
 
 ### Administracion SaaS
