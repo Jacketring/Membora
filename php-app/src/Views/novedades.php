@@ -47,7 +47,7 @@ $releaseNotes = [
 <div class="page-heading novedades-heading">
   <div>
     <h2>Novedades</h2>
-    <p>Canal interno de versiones y cambios publicados desde el repositorio del proyecto.</p>
+    <p>Canal interno de versiones, mejoras y cambios relevantes del CRM.</p>
   </div>
   <span class="version-pill">v<?= e($currentVersion) ?></span>
 </div>
@@ -59,9 +59,9 @@ $releaseNotes = [
     <p>El producto sigue en fase de desarrollo del MVP. La version 0.5 recoge las funciones principales, pero todavia no se considera una version final de produccion.</p>
   </article>
   <article>
-    <span>Publicacion</span>
-    <strong>GitHub</strong>
-    <p>Las actualizaciones se registran en el repositorio y este canal se actualiza junto con los cambios de codigo y documentacion.</p>
+    <span>Actualizaciones</span>
+    <strong>Canal de producto</strong>
+    <p>Las mejoras se agrupan por version para que el equipo pueda revisar rapidamente que ha cambiado y que queda pendiente.</p>
   </article>
 </section>
 

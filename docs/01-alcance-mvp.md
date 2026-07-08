@@ -41,7 +41,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Permisos por rol para rutas y acciones internas.
 - Perfil de usuario con imagen.
 - Configuracion visual basica.
-- Canal `Novedades` con version actual, historial de cambios y publicacion de actualizaciones desde GitHub.
+- Canal `Novedades` con version actual e historial de cambios visibles para usuarios autenticados.
 
 ### Administracion SaaS
 
