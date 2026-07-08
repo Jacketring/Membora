@@ -94,6 +94,10 @@ $demoRemainingSeconds = Auth::demoRemainingSeconds();
               <strong>Configuracion</strong>
               <small>Apariencia y comodidad</small>
             </a>
+            <a href="index.php?route=novedades" role="menuitem">
+              <strong>Novedades</strong>
+              <small>Versiones y cambios del CRM</small>
+            </a>
             <?php if ($isPlatformAdmin): ?>
               <a href="index.php?route=platform-dashboard" role="menuitem">
                 <strong>Admin CRM</strong>

@@ -31,6 +31,7 @@ Pantallas disponibles:
 - Usuarios internos del gimnasio.
 - Perfil de usuario.
 - Configuracion visual personal.
+- Canal de novedades con version actual del CRM e historial de cambios.
 - Panel de administracion de Membora CRM separado en resumen, contactos, empresas, pagos, planes, web comercial y logs.
 - Demo funcional desde la web publica con login automatico, contador de 20 minutos y retorno automatico a la web.
 

@@ -370,7 +370,7 @@ function can_access_route(string $route, ?array $user = null): bool
     }
 
     if (is_platform_admin($user)) {
-        return str_starts_with($route, 'platform-') || in_array($route, ['profile', 'settings', 'global-search'], true);
+        return str_starts_with($route, 'platform-') || in_array($route, ['profile', 'settings', 'novedades', 'global-search'], true);
     }
 
     if (is_gym_admin($user)) {
@@ -378,14 +378,14 @@ function can_access_route(string $route, ?array $user = null): bool
     }
 
     $routesByRole = [
-        'SALES_RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
-        'RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
-        'SALES' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'tasks', 'alerts', 'profile', 'settings', 'global-search'],
-        'TRAINER' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'global-search'],
-        'STAFF' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'global-search'],
+        'SALES_RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
+        'RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
+        'SALES' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
+        'TRAINER' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'novedades', 'global-search'],
+        'STAFF' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'novedades', 'global-search'],
     ];
 
-    return in_array($route, $routesByRole[$role] ?? ['dashboard', 'profile', 'settings'], true);
+    return in_array($route, $routesByRole[$role] ?? ['dashboard', 'profile', 'settings', 'novedades'], true);
 }
 
 function can_perform_action(string $action, ?array $user = null): bool
@@ -706,6 +706,7 @@ function audit_area_label(?string $route): string
         'dashboard' => 'Panel',
         'profile' => 'Perfil',
         'settings' => 'Configuracion',
+        'novedades' => 'Novedades',
     ], 'CRM');
 
     return $label === '' || str_contains($label, '_') || str_contains($label, '-') ? 'CRM' : $label;

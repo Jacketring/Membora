@@ -389,6 +389,10 @@ switch ($route) {
         render_layout('Configuracion', 'settings', []);
         break;
 
+    case 'novedades':
+        render_layout('Novedades', 'novedades', []);
+        break;
+
     case 'members':
         $tenantId = Auth::tenantId();
         $filters = [
