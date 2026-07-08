@@ -63,7 +63,7 @@ $clientStatusOptions = [
   </article>
 </section>
 
-<form class="lead-toolbar platform-toolbar platform-toolbar--payments" method="get" action="index.php" data-auto-filter-form>
+<form class="lead-toolbar platform-toolbar" method="get" action="index.php" data-auto-filter-form>
   <input type="hidden" name="route" value="platform-contacts">
   <label class="field platform-search">
     <span>Buscar</span>
