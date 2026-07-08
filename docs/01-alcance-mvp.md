@@ -48,7 +48,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Resumen con MRR, ARR, ARPA, pagos y prioridades.
 - Contactos unificados con leads web y clientes comerciales.
 - Conversion de lead web a cliente comercial.
-- Alta y edicion de clientes comerciales desde la misma tabla de contactos.
+- Alta y edicion de contactos desde la misma tabla, incluyendo cambio de tipo para devolver un cliente a lead.
 - Empresas cliente.
 - Creacion de tenant y usuario administrador al crear una empresa CRM.
 - Estados de CRM y pago.

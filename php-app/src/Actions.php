@@ -270,6 +270,18 @@ final class Actions
         }
 
         PlatformLeadRepository::update($id, $_POST);
+        if (post_value('contact_type') === 'client') {
+            try {
+                PlatformLeadRepository::convertToClient($id);
+            } catch (Throwable $exception) {
+                flash($exception->getMessage() ?: 'No se pudo convertir el contacto en cliente.', 'error');
+                redirect('platform-contacts');
+            }
+
+            flash('Lead convertido en cliente correctamente.');
+            redirect('platform-contacts');
+        }
+
         flash('Contacto actualizado correctamente.');
         redirect('platform-contacts');
     }
@@ -356,7 +368,7 @@ final class Actions
         }
 
         PlatformClientRepository::update($id, $_POST);
-        if (post_value('status') === 'LEAD') {
+        if (post_value('contact_type') === 'lead' || post_value('status') === 'LEAD') {
             flash('Contacto devuelto a lead correctamente.');
         } else {
             flash('Contacto actualizado correctamente.');

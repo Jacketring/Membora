@@ -15,6 +15,7 @@ $clientStatusOptions = [
     'CUSTOMER' => 'Cliente',
     'LOST' => 'Perdido',
 ];
+$clientType = $clientValues['status'] === 'LEAD' ? 'lead' : 'client';
 ?>
 
 <form class="empresa-form" method="post">
@@ -22,6 +23,14 @@ $clientStatusOptions = [
   <?php if ($isEditingClient): ?>
     <input type="hidden" name="id" value="<?= e($clientValues['id']) ?>">
   <?php endif; ?>
+
+  <label class="field">
+    <span>Tipo</span>
+    <select name="contact_type">
+      <option value="client" <?= $clientType === 'client' ? 'selected' : '' ?>>Cliente CRM</option>
+      <option value="lead" <?= $clientType === 'lead' ? 'selected' : '' ?>>Lead</option>
+    </select>
+  </label>
 
   <label class="field">
     <span>Empresa</span>

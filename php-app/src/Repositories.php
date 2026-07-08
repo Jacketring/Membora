@@ -2333,6 +2333,11 @@ final class PlatformClientRepository
     private static function clientParams(array $data): array
     {
         $status = in_array($data['status'] ?? '', ['LEAD', 'QUALIFIED', 'CUSTOMER', 'LOST'], true) ? $data['status'] : 'LEAD';
+        if (($data['contact_type'] ?? '') === 'lead') {
+            $status = 'LEAD';
+        } elseif (($data['contact_type'] ?? '') === 'client' && $status === 'LEAD') {
+            $status = 'QUALIFIED';
+        }
 
         return [
             'company_name' => trim((string) ($data['company_name'] ?? '')),
@@ -2392,6 +2397,31 @@ final class PlatformClientRepository
         ]);
     }
 
+    public static function syncLeadStatusClients(): void
+    {
+        self::ensureTable();
+        PlatformLeadRepository::ensureTable();
+
+        $stmt = Database::connection()->query(
+            'SELECT platform_clients.*
+             FROM platform_clients
+             LEFT JOIN platform_leads ON platform_leads.client_id = platform_clients.id
+             WHERE platform_clients.status = "LEAD"
+               AND platform_leads.id IS NULL'
+        );
+
+        foreach ($stmt->fetchAll() as $client) {
+            self::syncLeadFromClient((string) $client['id'], [
+                'company_name' => $client['company_name'],
+                'contact_name' => $client['contact_name'],
+                'email' => $client['email'],
+                'phone' => $client['phone'],
+                'status' => 'LEAD',
+                'notes' => $client['notes'],
+            ]);
+        }
+    }
+
     private static function count(PDO $pdo, string $where): int
     {
         $stmt = $pdo->query("SELECT COUNT(*) FROM platform_clients WHERE {$where}");
@@ -2419,13 +2449,15 @@ final class PlatformContactRepository
 
     public static function all(string $query = '', string $status = '', string $type = ''): array
     {
+        PlatformClientRepository::syncLeadStatusClients();
+
         $contacts = [];
         $leadStatus = self::leadStatus($status);
         $clientStatus = self::clientStatus($status);
 
         if (($type === '' || $type === 'lead') && ($status === '' || $leadStatus !== '')) {
             foreach (PlatformLeadRepository::all($query, $leadStatus) as $lead) {
-                if ($type === '' && $status === '' && $lead['status'] === 'CONVERTED' && !empty($lead['client_id'])) {
+                if ($lead['status'] === 'CONVERTED' && !empty($lead['client_id'])) {
                     continue;
                 }
 
@@ -2450,6 +2482,10 @@ final class PlatformContactRepository
 
         if (($type === '' || $type === 'client') && ($status === '' || $clientStatus !== '')) {
             foreach (PlatformClientRepository::all($query, $clientStatus, true) as $client) {
+                if ($client['status'] === 'LEAD') {
+                    continue;
+                }
+
                 $contacts[] = [
                     'type' => 'client',
                     'id' => $client['id'],

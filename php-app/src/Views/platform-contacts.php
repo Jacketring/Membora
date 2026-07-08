@@ -190,6 +190,13 @@ $clientStatusOptions = [
         <input type="hidden" name="action" value="update_platform_lead">
         <input type="hidden" name="id" value="<?= e($lead['id']) ?>">
         <label class="field">
+          <span>Tipo</span>
+          <select name="contact_type">
+            <option value="lead" selected>Lead</option>
+            <option value="client">Cliente CRM</option>
+          </select>
+        </label>
+        <label class="field">
           <span>Contacto</span>
           <input name="contact_name" required value="<?= e($lead['contact_name']) ?>">
         </label>
