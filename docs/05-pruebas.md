@@ -6,7 +6,7 @@ Este documento define las pruebas manuales recomendadas para validar la version 
 
 El objetivo es comprobar que:
 
-- La aplicacion carga en Plesk desde `php-app/public`.
+- La aplicacion carga en Plesk desde `apps/crm/public`.
 - El login funciona con usuarios demo.
 - Los datos se separan por `tenant_id`.
 - Los modulos principales funcionan sin errores 500.
@@ -52,7 +52,7 @@ Pasos:
 
 1. Entrar en Plesk.
 2. Revisar configuracion de hosting.
-3. Confirmar que la raiz del documento apunta a `php-app/public`.
+3. Confirmar que la raiz del documento apunta a `apps/crm/public`.
 
 Resultado esperado:
 
@@ -62,7 +62,7 @@ Resultado esperado:
 
 Pasos:
 
-1. Revisar `php-app/.env`.
+1. Revisar `apps/crm/.env`.
 2. Abrir el login.
 3. Intentar iniciar sesion.
 
@@ -332,7 +332,7 @@ Comandos usados antes de subir cambios:
 
 ```bash
 php -l archivo.php
-node --check php-app/public/assets/app.js
+node --check apps/crm/public/assets/app.js
 git diff --check
 ```
 

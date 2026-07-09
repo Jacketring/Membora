@@ -48,11 +48,11 @@ https://app.crm.josehurtado.dev
 Estado:
 
 - [x] Despliegue PHP en Plesk definido.
-- [x] Document root: `php-app/public`.
+- [x] Document root: `apps/crm/public`.
 - [x] Base de datos MariaDB.
 - [x] Produccion sin Node.js.
 - [x] Produccion sin build frontend.
-- [x] Configuracion mediante `php-app/.env`.
+- [x] Configuracion mediante `apps/crm/.env`.
 - [ ] Validar URL final justo antes de entregar.
 - [ ] Validar login con usuarios demo justo antes de entregar.
 

@@ -82,7 +82,7 @@ $webUrl = $webUrl ?? 'https://app.web.josehurtado.dev';
     <header>
       <div>
         <h3>Configuracion detectada</h3>
-        <p>Valores actuales leidos desde `php-app/.env`.</p>
+        <p>Valores actuales leidos desde `apps/crm/.env`.</p>
       </div>
       <span><?= e($mailDiagnostics['transport'] ?? 'Sin dato') ?></span>
     </header>

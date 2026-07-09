@@ -38,14 +38,14 @@ El stack inicial era correcto para una arquitectura moderna separada, pero no er
 Solucion aplicada:
 
 - Migracion a aplicacion PHP monolitica.
-- Entrada unica en `php-app/public/index.php`.
+- Entrada unica en `apps/crm/public/index.php`.
 - Renderizado HTML desde PHP.
 - Persistencia mediante PDO y MariaDB.
 - Eliminacion de `npm install`, `npm run build`, Prisma y procesos Node en produccion.
 
 Resultado:
 
-El despliegue queda reducido a configurar el document root en `php-app/public`, subir `.env` y abrir la URL.
+El despliegue queda reducido a configurar el document root en `apps/crm/public`, subir `.env` y abrir la URL.
 
 Prevencion:
 
@@ -71,7 +71,7 @@ Solucion aplicada:
 
 - Documentar `.env` con valores entre comillas.
 - Mantener compatibilidad con `DATABASE_URL`, pero recomendar variables separadas.
-- Separar credenciales reales del repositorio mediante `php-app/.env`.
+- Separar credenciales reales del repositorio mediante `apps/crm/.env`.
 
 Resultado:
 
@@ -193,7 +193,7 @@ Los fallos quedan registrados en logs y la prueba de correo permite validar la c
 
 Problema:
 
-Las fotos de perfil y socio dependen de que Plesk permita escribir en `php-app/public/uploads`.
+Las fotos de perfil y socio dependen de que Plesk permita escribir en `apps/crm/public/uploads`.
 
 Causa raiz:
 

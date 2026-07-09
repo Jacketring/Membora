@@ -1,12 +1,10 @@
 # Dependencies
 node_modules/
 
-# Environment files
+# Environment files (secretos fuera del repo, en cualquier nivel)
 .env
 .env.*
 !.env.example
-backend/.env
-frontend/.env.local
 
 # Build outputs
 dist/
@@ -14,16 +12,18 @@ build/
 .next/
 out/
 
+# Almacenamiento en tiempo de ejecucion (se conservan las carpetas via .gitkeep)
+apps/crm/public/uploads/*
+!apps/crm/public/uploads/.gitkeep
+shared/storage/*
+!shared/storage/.gitkeep
+
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
-# Prisma local artifacts
-backend/prisma/dev.db
-backend/prisma/dev.db-journal
 
 # OS and editor
 .DS_Store

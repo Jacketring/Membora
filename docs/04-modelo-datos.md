@@ -207,7 +207,7 @@ Automatismos principales:
 
 Requisito operativo:
 
-- El usuario MariaDB usado por `php-app/.env` debe tener permisos para `CREATE TABLE` y `ALTER TABLE` durante actualizaciones incrementales.
+- El usuario MariaDB usado por `apps/crm/.env` debe tener permisos para `CREATE TABLE` y `ALTER TABLE` durante actualizaciones incrementales.
 
 ## 9. Fuera del alcance actual
 

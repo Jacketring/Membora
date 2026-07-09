@@ -212,7 +212,7 @@ Requisitos minimos si se implementa:
 
 - Usar PDO con consultas preparadas.
 - No exponer credenciales en JavaScript.
-- Guardar credenciales en `web-app/.env` o config fuera de `public` si Plesk lo permite.
+- Guardar credenciales en `shared/config/.env` o config fuera de `public` si Plesk lo permite.
 - Mantener honeypot.
 - Mantener rate limit por IP.
 - Validar email/telefono.
@@ -245,8 +245,8 @@ Motivo:
 
 ## Checklist de seguridad antes de entrega
 
-- [ ] Confirmar `APP_URL` correcto en `php-app/.env`.
-- [ ] Confirmar `WEB_APP_URL` correcto en `php-app/.env`.
+- [ ] Confirmar `APP_URL` correcto en `apps/crm/.env`.
+- [ ] Confirmar `WEB_APP_URL` correcto en `apps/crm/.env`.
 - [ ] Confirmar HTTPS activo en app y web.
 - [ ] Confirmar que no hay listado de directorios.
 - [ ] Probar login y comprobar que no rompe por origen.

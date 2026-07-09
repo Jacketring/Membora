@@ -178,7 +178,7 @@ No se usa Node.js en produccion.
 - Registro y edicion de pagos con concepto, importe, vencimiento, fecha de pago, estado y notas.
 - Tabla `saas_plans` para catalogo comercial.
 - Gestion de planes con precio mensual, setup, limites de usuarios/socios, estado y prestaciones.
-- Web comercial externa en `web-app/public`.
+- Web comercial externa en `httpdocs`.
 - Web comercial con enlaces a aviso legal, privacidad y cookies.
 - Enlaces de demo desde la web publica hacia una sesion funcional del CRM durante 20 minutos.
 - Webhook publico sin token manual para registrar solicitudes en `Admin CRM > Contactos`.
@@ -252,8 +252,8 @@ Tambien puede anadir columnas auxiliares para imagenes y configuracion visual si
 ## 7. Flujo de despliegue recomendado
 
 1. Pull desde GitHub en Plesk.
-2. Confirmar que el document root apunta a `php-app/public`.
-3. Confirmar que `php-app/.env` tiene las credenciales reales.
+2. Confirmar que el document root apunta a `apps/crm/public`.
+3. Confirmar que `apps/crm/.env` tiene las credenciales reales.
 4. Abrir el subdominio.
 5. Iniciar sesion con un usuario demo o con el admin de plataforma.
 

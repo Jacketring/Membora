@@ -2,7 +2,7 @@
 
 Aplicacion PHP monolitica para ejecutar Membora CRM en un unico subdominio, sin Next.js, NestJS ni procesos Node en produccion.
 
-La web comercial publica no vive dentro de `php-app`; esta separada en `web-app/public` para desplegarla en otro subdominio.
+La web comercial publica no vive dentro de esta app; esta separada en `httpdocs/` (raiz del repo) para desplegarla en otro subdominio.
 
 ## Requisitos
 
@@ -10,11 +10,11 @@ La web comercial publica no vive dentro de `php-app`; esta separada en `web-app/
 - Extension PDO MySQL activada.
 - MariaDB/MySQL existente.
 - Apache con `mod_rewrite` activado.
-- Document root apuntando a `php-app/public`.
+- Document root apuntando a `apps/crm/public`.
 
 ## Configuracion
 
-Crear `php-app/.env` a partir de `.env.example`.
+Crear `apps/crm/.env` a partir de `.env.example`.
 
 Configuracion recomendada:
 
@@ -53,10 +53,10 @@ DATABASE_URL="mysql://usuario:password@localhost:3306/membora_crm"
 2. Configurar el subdominio para que el document root apunte a:
 
 ```text
-php-app/public
+apps/crm/public
 ```
 
-3. Crear `php-app/.env` en el servidor con la conexion real a MariaDB.
+3. Crear `apps/crm/.env` en el servidor con la conexion real a MariaDB.
 4. Verificar que PHP usa una version 8.2 o superior.
 5. Abrir el subdominio.
 
@@ -130,7 +130,7 @@ La captacion web se revisa desde el panel de administradores de Membora CRM, no 
 
 Los enlaces de demo de la web publica envian un `POST` al login demo del CRM. La sesion se crea con datos de prueba, dura 20 minutos, muestra un contador en la interfaz y al terminar devuelve al usuario a `WEB_APP_URL`.
 
-El formulario de `web-app/public` envia al webhook:
+El formulario de `httpdocs` envia al webhook:
 
 ```text
 /webhook/lead

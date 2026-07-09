@@ -7,7 +7,7 @@ Fecha de actualizacion: 30/06/2026.
 La version actual no usa una API NestJS/JWT separada. El backend activo es una aplicacion PHP monolitica con entrada unica en:
 
 ```text
-php-app/public/index.php
+apps/crm/public/index.php
 ```
 
 La navegacion se resuelve con el parametro `route` y las acciones de escritura se envian por `POST` con un campo `action`. La sesion PHP identifica al usuario autenticado y fija el contexto de gimnasio mediante `tenant_id`.
@@ -189,13 +189,13 @@ Tambien se admite `DATABASE_URL` para la conexion MariaDB.
 Antes de desplegar cambios:
 
 ```bash
-php -l php-app/public/index.php
-php -l php-app/src/Actions.php
-php -l php-app/src/Repositories.php
-php -l php-app/src/Auth.php
-php -l php-app/src/Support.php
-node --check php-app/public/assets/app.js
-node --check web-app/public/assets/site.js
+php -l apps/crm/public/index.php
+php -l apps/crm/src/Actions.php
+php -l apps/crm/src/Repositories.php
+php -l apps/crm/src/Auth.php
+php -l apps/crm/src/Support.php
+node --check apps/crm/public/assets/app.js
+node --check httpdocs/assets/site.js
 git diff --check
 ```
 

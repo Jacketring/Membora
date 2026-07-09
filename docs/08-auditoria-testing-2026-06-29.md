@@ -26,7 +26,7 @@ Produccion web: https://app.web.josehurtado.dev
 Limitacion de la prueba local:
 
 ```text
-No existe php-app/.env local, por lo que no se han ejecutado pruebas con MariaDB local.
+No existe apps/crm/.env local, por lo que no se han ejecutado pruebas con MariaDB local.
 Los flujos que dependen de base de datos deben validarse en Plesk.
 ```
 
@@ -40,7 +40,7 @@ Resultado:
 OK
 ```
 
-Se ejecuto `php -l` sobre todos los archivos PHP de `php-app`.
+Se ejecuto `php -l` sobre todos los archivos PHP de la app CRM (por aquel entonces en `php-app/`, hoy en `apps/crm/`).
 
 Resultado:
 
@@ -56,18 +56,18 @@ OK
 
 Rutas verificadas:
 
-- `web-app/public/index.html`: HTTP 200.
-- `web-app/public/demo.html`: HTTP 200.
-- `php-app/public/index.php?route=login`: HTTP 200.
+- `httpdocs/index.html`: HTTP 200.
+- `httpdocs/demo.html`: HTTP 200.
+- `apps/crm/public/index.php?route=login`: HTTP 200.
 
 Assets verificados:
 
-- `web-app/public/assets/site.css`: HTTP 200.
-- `web-app/public/assets/site.js`: HTTP 200.
+- `httpdocs/assets/site.css`: HTTP 200.
+- `httpdocs/assets/site.js`: HTTP 200.
 - Demo publica: redireccion/control de entrada hacia demo funcional del CRM.
-- `php-app/public/assets/app.css`: HTTP 200.
-- `php-app/public/assets/app.js`: HTTP 200.
-- `php-app/public/assets/favicon.svg`: HTTP 200.
+- `apps/crm/public/assets/app.css`: HTTP 200.
+- `apps/crm/public/assets/app.js`: HTTP 200.
+- `apps/crm/public/assets/favicon.svg`: HTTP 200.
 
 ### Formularios y acciones
 
@@ -116,7 +116,7 @@ Pendiente de decidir
 
 Detalle:
 
-`web-app/public/assets/site.js` apunta directamente a:
+`httpdocs/assets/site.js` apunta directamente a:
 
 ```text
 https://app.crm.josehurtado.dev/webhook/lead
@@ -231,7 +231,7 @@ El CRM sube imagenes de:
 Necesita poder escribir en:
 
 ```text
-php-app/public/uploads
+apps/crm/public/uploads
 ```
 
 Prueba necesaria:
@@ -307,10 +307,10 @@ Se corrigio anteriormente que crear empresa editaba la primera. Debe revalidarse
 
 - [ ] `app.crm.josehurtado.dev` abre login.
 - [ ] `app.web.josehurtado.dev` abre web publica.
-- [ ] Document root CRM apunta a `php-app/public`.
-- [ ] Document root web apunta a `web-app/public`.
-- [ ] `php-app/.env` tiene DB real.
-- [ ] `php-app/.env` tiene SMTP real.
+- [ ] Document root CRM apunta a `apps/crm/public`.
+- [ ] Document root web apunta a `httpdocs`.
+- [ ] `apps/crm/.env` tiene DB real.
+- [ ] `apps/crm/.env` tiene SMTP real.
 
 ### Login
 

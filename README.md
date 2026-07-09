@@ -51,8 +51,8 @@ https://github.com/Jacketring/Membora-CRM.git
 - MariaDB.
 - PDO.
 - HTML, CSS y JavaScript de navegador.
-- Apache/Plesk con document root en `php-app/public`.
-- Web comercial estatica en `web-app/public`.
+- Apache/Plesk con document root en `apps/crm/public`.
+- Web comercial estatica en `httpdocs`.
 - Sin Node.js en produccion.
 - Sin `npm install`.
 - Sin `npm run build`.
@@ -73,40 +73,58 @@ La base de datos mantiene separacion por `tenant_id` para datos de gimnasios. La
 
 ## Estructura
 
+La estructura mapea directamente sobre Plesk: cada subdominio apunta su document
+root a una carpeta `public/` (o a `httpdocs/`), y el codigo de aplicacion,
+la configuracion sensible y el almacenamiento comun quedan fuera del webroot.
+
 ```text
-membora-crm/
-|-- php-app/
-|   |-- config/
-|   |-- public/
-|   |   |-- assets/
-|   |   |-- uploads/
-|   |   |-- .htaccess
-|   |   |-- index.php
-|   |-- src/
-|   |   |-- Views/
-|   |   |-- Actions.php
-|   |   |-- Auth.php
-|   |   |-- Database.php
-|   |   |-- Repositories.php
-|   |   |-- Support.php
-|   |   |-- View.php
-|   |   |-- bootstrap.php
-|   |-- .env.example
-|   |-- README.md
-|-- web-app/
-|   |-- public/
-|   |   |-- assets/
-|   |   |-- .htaccess
-|   |   |-- index.html
+membora-crm/                     # raiz del repo = raiz de la suscripcion Plesk
+|-- httpdocs/                    # WEB PUBLICA (marketing)  <- docroot de la web publica
+|   |-- assets/
+|   |-- .htaccess
+|   |-- index.html
+|   |-- aviso-legal.html
+|   |-- privacidad.html
+|   |-- cookies.html
+|   |-- demo.html
+|-- apps/
+|   |-- crm/                     # aplicacion CRM (PHP)
+|   |   |-- public/              # <- docroot subdominio app.crm
+|   |   |   |-- assets/
+|   |   |   |-- uploads/         # fotos de socios/usuarios (servidas como estaticas)
+|   |   |   |-- .htaccess
+|   |   |   |-- index.php
+|   |   |-- src/
+|   |   |   |-- Views/
+|   |   |   |-- Actions.php
+|   |   |   |-- Auth.php
+|   |   |   |-- Database.php
+|   |   |   |-- Repositories.php
+|   |   |   |-- Support.php
+|   |   |   |-- View.php
+|   |   |   |-- bootstrap.php
+|   |   |-- config/
+|   |   |-- .env.example
+|   |   |-- README.md
+|-- shared/                      # comun a todo, fuera de cualquier public
+|   |-- config/                  # configuracion global compartida (futuro .env comun)
+|   |-- storage/                 # almacenamiento comun no publico (logs, exports)
 |   |-- README.md
 |-- docs/
 |-- README.md
 |-- .gitignore
 ```
 
+Mapeo de despliegue en Plesk:
+
+| Parte | Document root |
+| --- | --- |
+| Web publica (`app.web.josehurtado.dev`) | `.../httpdocs` |
+| CRM (`app.crm.josehurtado.dev`) | `.../apps/crm/public` |
+
 ## Configuracion
 
-Crear `php-app/.env` en local o en Plesk.
+Crear `apps/crm/.env` en local o en Plesk.
 
 Opcion recomendada en Plesk, especialmente si la contrasena tiene caracteres especiales:
 
@@ -152,16 +170,16 @@ DATABASE_URL="mysql://usuario:password@localhost:3306/nombre_base_datos"
 5. Configurar la raiz del documento apuntando a:
 
 ```text
-php-app/public
+apps/crm/public
 ```
 
 Si Plesk ha clonado el repositorio dentro de otra carpeta, la ruta debe acabar igualmente en:
 
 ```text
-.../php-app/public
+.../apps/crm/public
 ```
 
-6. Crear `php-app/.env` con los datos reales de MariaDB.
+6. Crear `apps/crm/.env` con los datos reales de MariaDB.
 7. Abrir el subdominio.
 
 No hay que ejecutar comandos Node, compilar frontend ni reiniciar una app Node.
@@ -171,7 +189,7 @@ No hay que ejecutar comandos Node, compilar frontend ni reiniciar una app Node.
 Configurar `app.web.josehurtado.dev` como sitio web separado y apuntar la raiz del documento a:
 
 ```text
-web-app/public
+httpdocs
 ```
 
 No hay que editar tokens en la web. El formulario envia al webhook del CRM y las solicitudes aparecen en `Admin CRM > Contactos`.

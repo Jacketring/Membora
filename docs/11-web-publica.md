@@ -11,7 +11,7 @@ app.web.josehurtado.dev
 Configura el subdominio como hosting estatico/PHP normal y apunta la raiz del documento a:
 
 ```text
-web-app/public
+httpdocs
 ```
 
 No necesita Node.js, npm ni build.

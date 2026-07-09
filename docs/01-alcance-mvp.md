@@ -61,7 +61,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 
 ### Web comercial
 
-- Web estatica desplegable en `web-app/public`.
+- Web estatica desplegable en `httpdocs`.
 - Acceso a demo funcional del CRM desde la web publica, con sesion temporal de 20 minutos.
 - Seccion de planes cargada desde el catalogo activo de `Admin CRM > Planes`.
 - Formulario publico conectado al webhook del CRM.
@@ -103,14 +103,14 @@ CRM:
 
 ```text
 https://app.crm.josehurtado.dev
-Document root: php-app/public
+Document root: apps/crm/public
 ```
 
 Web comercial:
 
 ```text
 https://app.web.josehurtado.dev
-Document root: web-app/public
+Document root: httpdocs
 ```
 
 El CRM recibe solicitudes comerciales en:
