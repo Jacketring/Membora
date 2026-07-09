@@ -51,11 +51,11 @@ function renderPlanCard(plan, index) {
   }
 
   const title = document.createElement('h3');
-  title.textContent = plan.name || 'Plan CRM';
+  title.textContent = plan.name || 'Plan Membora';
 
   const description = document.createElement('p');
   const features = Array.isArray(plan.features) ? plan.features.filter(Boolean) : [];
-  description.textContent = features[0] || 'Plan comercial de Membora CRM.';
+  description.textContent = features[0] || 'Plan comercial de Membora.';
 
   const price = document.createElement('strong');
   if (plan.original_monthly_price) {
