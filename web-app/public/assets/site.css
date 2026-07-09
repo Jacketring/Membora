@@ -1242,15 +1242,16 @@ button, input, textarea { font: inherit; }
 .module-list article {
   align-items: center;
   display: grid;
-  gap: 12px;
-  grid-template-rows: 56px auto 1fr;
+  gap: 10px;
+  grid-template-rows: 48px 68px 72px;
   justify-items: center;
-  min-height: 210px;
-  padding: 26px 20px;
+  min-height: 230px;
+  padding: 24px 20px;
   text-align: center;
 }
 .module-list .ui-icon {
   align-self: center;
+  grid-row: 2;
   height: 56px;
   margin: 0;
   position: static;
@@ -1266,14 +1267,19 @@ button, input, textarea { font: inherit; }
   display: block;
 }
 .module-list strong {
-  align-self: start;
+  align-items: end;
+  align-self: stretch;
+  display: flex;
   font-size: 18px;
+  grid-row: 1;
+  justify-content: center;
   line-height: 1.2;
   max-width: none;
 }
 .module-list span {
   align-self: start;
   color: var(--muted);
+  grid-row: 3;
   line-height: 1.5;
   margin-top: 0;
   max-width: 18rem;
