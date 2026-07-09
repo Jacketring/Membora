@@ -238,6 +238,43 @@ clientFeatureSelect?.addEventListener('change', (event) => {
 
 renderClientFeature(clientFeatureSelect?.value || 'dashboard');
 
+const clientFeatureMenu = document.querySelector('[data-client-feature-menu]');
+const clientFeatureToggle = document.querySelector('[data-client-feature-toggle]');
+const clientFeaturePanel = document.querySelector('[data-client-feature-panel]');
+
+function closeClientFeatureMenu() {
+  if (!clientFeaturePanel || !clientFeatureToggle) {
+    return;
+  }
+
+  clientFeaturePanel.hidden = true;
+  clientFeatureToggle.setAttribute('aria-expanded', 'false');
+}
+
+clientFeatureToggle?.addEventListener('click', () => {
+  const isOpen = clientFeaturePanel && !clientFeaturePanel.hidden;
+  if (!clientFeaturePanel) {
+    return;
+  }
+
+  clientFeaturePanel.hidden = isOpen;
+  clientFeatureToggle.setAttribute('aria-expanded', String(!isOpen));
+});
+
+document.addEventListener('click', (event) => {
+  if (!clientFeatureMenu || clientFeatureMenu.contains(event.target)) {
+    return;
+  }
+
+  closeClientFeatureMenu();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeClientFeatureMenu();
+  }
+});
+
 const form = document.querySelector('[data-lead-form]');
 const alertBox = document.querySelector('[data-form-alert]');
 

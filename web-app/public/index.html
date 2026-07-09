@@ -20,6 +20,36 @@
     </a>
     <nav aria-label="Navegacion principal">
       <a href="#producto">Producto</a>
+      <div class="nav-feature-menu" data-client-feature-menu>
+        <button class="nav-feature-toggle" type="button" data-client-feature-toggle aria-expanded="false">
+          Funcionalidades
+        </button>
+        <div class="nav-feature-panel" data-client-feature-panel hidden>
+          <label for="client-feature-select">Ver funcionalidad</label>
+          <select id="client-feature-select" data-client-feature-select>
+            <option value="dashboard">Dashboard</option>
+            <option value="leads">CRM de leads</option>
+            <option value="members">Gestion de socios</option>
+            <option value="memberships">Membresias y cuotas</option>
+            <option value="classes">Clases y reservas</option>
+            <option value="checkins">Check-ins</option>
+            <option value="payments">Pagos y facturas</option>
+            <option value="tasks">Tareas internas</option>
+            <option value="alerts">Alertas</option>
+            <option value="users">Usuarios y roles</option>
+          </select>
+          <article class="client-feature-card nav-feature-card" data-client-feature-card>
+            <span data-client-feature-tag>Panel operativo</span>
+            <h3 data-client-feature-title>Dashboard</h3>
+            <p data-client-feature-description>Resumen diario del gimnasio con socios activos, conversion, reservas, tareas pendientes y pagos recientes.</p>
+            <ul data-client-feature-list>
+              <li>KPIs principales del centro.</li>
+              <li>Actividad reciente y proximas acciones.</li>
+              <li>Acceso rapido a modulos clave.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
       <a href="#capturas">Capturas</a>
       <a href="#modulos">Modulos</a>
       <a href="#opiniones">Opiniones</a>
@@ -37,7 +67,7 @@
         <p class="hero-copy">Centraliza leads, socios, membresias, cuotas, clases, reservas, check-ins y metricas en una sola plataforma con CRM integrado.</p>
         <div class="hero-actions">
           <a class="primary-link" href="#contacto">Solicitar demo</a>
-          <a class="secondary-link" href="#modulos">Conocer funcionalidades</a>
+          <a class="secondary-link" href="#modulos">Ver modulos</a>
           <a class="dark-link" href="https://app.crm.josehurtado.dev/index.php?route=login" data-demo-login="client">Acceder al panel</a>
         </div>
       </div>
@@ -107,38 +137,6 @@
         <strong>Soporte y personalizacion</strong>
         <span>Preparado para adaptar planes, colores, empresas y procesos.</span>
       </article>
-    </section>
-
-    <section class="section client-explorer" aria-label="Explorador de funcionalidades del panel cliente">
-      <div class="client-explorer-copy">
-        <h2>Explora las funcionalidades del panel cliente</h2>
-        <p>Selecciona una parte de Membora para ver que formulario o pantalla usa el gimnasio en su gestion diaria.</p>
-      </div>
-      <div class="client-explorer-panel">
-        <label for="client-feature-select">Ver modulo</label>
-        <select id="client-feature-select" data-client-feature-select>
-          <option value="dashboard">Dashboard</option>
-          <option value="leads">CRM de leads</option>
-          <option value="members">Gestion de socios</option>
-          <option value="memberships">Membresias y cuotas</option>
-          <option value="classes">Clases y reservas</option>
-          <option value="checkins">Check-ins</option>
-          <option value="payments">Pagos y facturas</option>
-          <option value="tasks">Tareas internas</option>
-          <option value="alerts">Alertas</option>
-          <option value="users">Usuarios y roles</option>
-        </select>
-        <article class="client-feature-card" data-client-feature-card>
-          <span data-client-feature-tag>Panel operativo</span>
-          <h3 data-client-feature-title>Dashboard</h3>
-          <p data-client-feature-description>Resumen diario del gimnasio con socios activos, conversion, reservas, tareas pendientes y pagos recientes.</p>
-          <ul data-client-feature-list>
-            <li>KPIs principales del centro.</li>
-            <li>Actividad reciente y proximas acciones.</li>
-            <li>Acceso rapido a modulos clave.</li>
-          </ul>
-        </article>
-      </div>
     </section>
 
     <section class="section pain-section">
