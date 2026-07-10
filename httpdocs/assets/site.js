@@ -1,6 +1,7 @@
 const MEMBORA_WEBHOOK_URL = 'https://app.crm.josehurtado.dev/webhook/lead';
 const MEMBORA_DEMO_LOGIN_URL = 'https://app.crm.josehurtado.dev/index.php?route=login';
-const MEMBORA_PUBLIC_PLANS_URL = window.MEMBORA_PUBLIC_PLANS_URL || 'https://app.crm.josehurtado.dev/api/plans';
+const MEMBORA_PUBLIC_PLANS_URL = window.MEMBORA_PUBLIC_PLANS_URL || 'api/plans.php';
+const MEMBORA_REMOTE_PUBLIC_PLANS_URL = 'https://app.crm.josehurtado.dev/api/plans';
 
 function startDemoLogin(type = 'client') {
   const form = document.createElement('form');
@@ -88,24 +89,36 @@ function renderPlanCard(plan, index) {
   return article;
 }
 
+async function fetchPublicPlans(url) {
+  const plansUrl = new URL(url, window.location.href);
+  plansUrl.searchParams.set('_', String(Date.now()));
+
+  const response = await fetch(plansUrl.toString(), {
+    cache: 'no-store',
+    headers: { Accept: 'application/json' },
+  });
+  const result = await response.json();
+  if (!response.ok || !result.success || !Array.isArray(result.plans) || result.plans.length === 0) {
+    throw new Error(result.message || 'No se pudieron cargar los planes.');
+  }
+
+  return result.plans;
+}
+
 async function loadPublicPlans() {
   if (!pricingGrid) {
     return;
   }
 
   try {
-    const plansUrl = new URL(MEMBORA_PUBLIC_PLANS_URL, window.location.href);
-    plansUrl.searchParams.set('_', String(Date.now()));
-    const response = await fetch(plansUrl.toString(), {
-      cache: 'no-store',
-      headers: { Accept: 'application/json' },
-    });
-    const result = await response.json();
-    if (!response.ok || !result.success || !Array.isArray(result.plans) || result.plans.length === 0) {
-      return;
+    let plans;
+    try {
+      plans = await fetchPublicPlans(MEMBORA_PUBLIC_PLANS_URL);
+    } catch (error) {
+      plans = await fetchPublicPlans(MEMBORA_REMOTE_PUBLIC_PLANS_URL);
     }
 
-    pricingGrid.replaceChildren(...result.plans.map(renderPlanCard));
+    pricingGrid.replaceChildren(...plans.map(renderPlanCard));
   } catch (error) {
     // La web mantiene los planes estaticos si el CRM no responde.
   }
