@@ -2097,11 +2097,11 @@ td.empty-state,
   border-radius: 10px;
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(240px, 2.2fr) repeat(6, minmax(82px, 1fr)) minmax(92px, auto) auto;
+  grid-template-columns: minmax(220px, 2.2fr) repeat(6, minmax(72px, 1fr)) minmax(82px, auto) auto;
   padding: 12px;
 }
 .invoice-line-description {
-  min-width: 180px;
+  min-width: 0;
 }
 .invoice-line-total {
   color: var(--primary);
@@ -2659,6 +2659,14 @@ td.empty-state,
   max-width: 720px;
   padding: 28px;
   width: min(720px, calc(100vw - 32px));
+}
+.modal-card.invoice-modal {
+  max-width: 1500px;
+  overflow-x: hidden;
+  width: min(1500px, calc(100vw - 28px));
+}
+.modal-card.invoice-modal .empresa-form {
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
 }
 .lead-detail-modal { max-width: 860px; }
 .lead-detail-modal header p { color: var(--muted); margin: 6px 0 0; }
@@ -3805,6 +3813,22 @@ body[data-theme="dark"] .subscription-blocker-card,
 body[data-theme="dark"] .subscription-plan-grid article {
   background: var(--surface);
   border-color: var(--outline);
+}
+
+@media (max-width: 1200px) {
+  .modal-card.invoice-modal .empresa-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .invoice-line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .invoice-line-description,
+  .invoice-line-total {
+    grid-column: 1 / -1;
+  }
+  .invoice-line-total {
+    text-align: left;
+  }
 }
 
 @media (max-width: 900px) {
