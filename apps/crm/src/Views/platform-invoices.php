@@ -132,7 +132,7 @@ $statusOptions = [
 </section>
 
 <?php unset($invoice); ?>
-<dialog class="modal-card empresa-modal" id="invoice-create-modal">
+<dialog class="modal-card empresa-modal invoice-modal" id="invoice-create-modal">
   <header>
     <div>
       <h2>Nueva factura</h2>
@@ -144,7 +144,7 @@ $statusOptions = [
 </dialog>
 
 <?php foreach ($invoices as $invoice): ?>
-  <dialog class="modal-card empresa-modal" id="invoice-edit-<?= e($invoice['id']) ?>">
+  <dialog class="modal-card empresa-modal invoice-modal" id="invoice-edit-<?= e($invoice['id']) ?>">
     <header>
       <div>
         <h2><?= e($invoice['invoice_code'] ?: 'Borrador') ?></h2>

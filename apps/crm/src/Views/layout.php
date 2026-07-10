@@ -41,8 +41,13 @@ $publicPlans = $subscriptionBlocked ? PlatformPlanRepository::publicPlans() : []
           <a class="<?= $route === 'platform-dashboard' ? 'active' : '' ?>" href="index.php?route=platform-dashboard">Resumen</a>
           <a class="<?= in_array($route, ['platform-contacts', 'platform-leads', 'platform-clients'], true) ? 'active' : '' ?>" href="index.php?route=platform-contacts">Contactos</a>
           <a class="<?= $route === 'platform-companies' ? 'active' : '' ?>" href="index.php?route=platform-companies">Empresas</a>
-          <a class="<?= $route === 'platform-payments' ? 'active' : '' ?>" href="index.php?route=platform-payments">Pagos</a>
-          <a class="<?= in_array($route, ['platform-invoices', 'platform-invoice'], true) ? 'active' : '' ?>" href="index.php?route=platform-invoices">Facturas</a>
+          <details class="sidebar-nav-group" <?= in_array($route, ['platform-payments', 'platform-invoices', 'platform-invoice'], true) ? 'open' : '' ?>>
+            <summary class="<?= in_array($route, ['platform-payments', 'platform-invoices', 'platform-invoice'], true) ? 'active' : '' ?>">Facturacion</summary>
+            <div class="sidebar-nav-submenu">
+              <a class="<?= $route === 'platform-payments' ? 'active' : '' ?>" href="index.php?route=platform-payments">Pagos</a>
+              <a class="<?= in_array($route, ['platform-invoices', 'platform-invoice'], true) ? 'active' : '' ?>" href="index.php?route=platform-invoices">Facturas</a>
+            </div>
+          </details>
           <a class="<?= $route === 'platform-plans' ? 'active' : '' ?>" href="index.php?route=platform-plans">Planes</a>
         <?php else: ?>
           <?php foreach ([
