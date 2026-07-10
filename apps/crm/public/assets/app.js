@@ -634,6 +634,104 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
   });
 });
 
+function parseInvoiceNumber(value) {
+  const parsed = Number.parseFloat(String(value || '0').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatInvoiceMoney(value) {
+  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value);
+}
+
+function recalculateInvoice(form) {
+  let subtotal = 0;
+  let discountTotal = 0;
+  let baseTotal = 0;
+  let taxTotal = 0;
+  let total = 0;
+
+  form.querySelectorAll('[data-invoice-line]').forEach((line, index) => {
+    const quantity = Math.max(0, parseInvoiceNumber(line.querySelector('[data-line-quantity]')?.value));
+    const price = Math.max(0, parseInvoiceNumber(line.querySelector('[data-line-price]')?.value));
+    const discountValue = Math.max(0, parseInvoiceNumber(line.querySelector('[data-line-discount]')?.value));
+    const discountType = line.querySelector('[data-line-discount-type]')?.value || 'PERCENT';
+    const taxRate = Math.max(0, parseInvoiceNumber(line.querySelector('[data-line-tax]')?.value));
+    const lineSubtotal = quantity * price;
+    const lineDiscount = discountType === 'FIXED'
+      ? Math.min(lineSubtotal, discountValue)
+      : Math.min(lineSubtotal, lineSubtotal * discountValue / 100);
+    const base = Math.max(0, lineSubtotal - lineDiscount);
+    const tax = base * taxRate / 100;
+    const lineTotal = base + tax;
+
+    subtotal += lineSubtotal;
+    discountTotal += lineDiscount;
+    baseTotal += base;
+    taxTotal += tax;
+    total += lineTotal;
+
+    const orderInput = line.querySelector('[data-line-order]');
+    if (orderInput) orderInput.value = String(index + 1);
+    const totalOutput = line.querySelector('[data-line-total]');
+    if (totalOutput) totalOutput.textContent = formatInvoiceMoney(lineTotal);
+  });
+
+  form.querySelector('[data-invoice-subtotal]') && (form.querySelector('[data-invoice-subtotal]').textContent = formatInvoiceMoney(subtotal));
+  form.querySelector('[data-invoice-discount]') && (form.querySelector('[data-invoice-discount]').textContent = formatInvoiceMoney(discountTotal));
+  form.querySelector('[data-invoice-base]') && (form.querySelector('[data-invoice-base]').textContent = formatInvoiceMoney(baseTotal));
+  form.querySelector('[data-invoice-tax]') && (form.querySelector('[data-invoice-tax]').textContent = formatInvoiceMoney(taxTotal));
+  form.querySelector('[data-invoice-total]') && (form.querySelector('[data-invoice-total]').textContent = formatInvoiceMoney(total));
+}
+
+function reindexInvoiceLines(form) {
+  form.querySelectorAll('[data-invoice-line]').forEach((line, index) => {
+    line.querySelectorAll('[name^="items["]').forEach((input) => {
+      input.name = input.name.replace(/items\[\d+\]/, `items[${index}]`);
+    });
+  });
+}
+
+document.querySelectorAll('[data-invoice-form]').forEach((form) => {
+  form.addEventListener('input', (event) => {
+    if (event.target.closest('[data-invoice-line]')) {
+      recalculateInvoice(form);
+    }
+  });
+  form.addEventListener('change', (event) => {
+    if (event.target.closest('[data-invoice-line]')) {
+      recalculateInvoice(form);
+    }
+  });
+  form.querySelector('[data-add-invoice-line]')?.addEventListener('click', () => {
+    const lines = form.querySelector('[data-invoice-lines]');
+    const firstLine = lines?.querySelector('[data-invoice-line]');
+    if (!lines || !firstLine) return;
+    const clone = firstLine.cloneNode(true);
+    clone.querySelectorAll('input').forEach((input) => {
+      if (input.matches('[data-line-quantity]')) input.value = '1.000';
+      else if (input.matches('[data-line-tax]')) input.value = '21.00';
+      else if (input.matches('[data-line-discount]')) input.value = '0.00';
+      else if (input.matches('[data-line-price]')) input.value = '0.00';
+      else if (input.matches('[data-line-order]')) input.value = '';
+      else input.value = '';
+    });
+    clone.querySelector('[data-line-total]') && (clone.querySelector('[data-line-total]').textContent = formatInvoiceMoney(0));
+    lines.appendChild(clone);
+    reindexInvoiceLines(form);
+    recalculateInvoice(form);
+  });
+  form.addEventListener('click', (event) => {
+    const removeButton = event.target.closest('[data-remove-invoice-line]');
+    if (!removeButton) return;
+    const lines = form.querySelectorAll('[data-invoice-line]');
+    if (lines.length <= 1) return;
+    removeButton.closest('[data-invoice-line]')?.remove();
+    reindexInvoiceLines(form);
+    recalculateInvoice(form);
+  });
+  recalculateInvoice(form);
+});
+
 const demoCountdown = document.querySelector('[data-demo-countdown]');
 const demoExpiresIn = Number.parseInt(document.body.dataset.demoExpiresIn || '0', 10);
 if (demoCountdown && demoExpiresIn > 0) {

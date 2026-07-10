@@ -1432,6 +1432,9 @@ td.empty-state,
 .status-badge--converted, .status-badge--completed, .status-badge--active, .status-badge--customer, .status-badge--qualified, .status-badge--attended, .status-badge--exported, .status-badge--synced, .status-badge--success { background: #dcfce7; color: #047857; }
 .status-badge--lost, .status-badge--cancelled, .status-badge--inactive, .status-badge--archived, .status-badge--error { background: #fee2e2; color: var(--danger); }
 .status-badge--pending, .status-badge--open, .status-badge--scheduled, .status-badge--lead, .status-badge--reserved, .status-badge--new, .status-badge--issued { background: #eef4ff; color: var(--primary); }
+.status-badge--draft { background: #f1f5f9; color: #475569; }
+.status-badge--partial { background: #fef3c7; color: #92400e; }
+.status-badge--refunded, .status-badge--rectified { background: #ede9fe; color: #6d28d9; }
 .status-badge--contacted { background: #e0f2fe; color: #0369a1; }
 .status-badge--sent { background: #fef3c7; color: #92400e; }
 .status-badge--no-show { background: #ffedd5; color: #c2410c; }
@@ -2049,6 +2052,59 @@ td.empty-state,
   margin-top: 14px;
   padding-top: 14px;
   border-top: 1px solid rgba(15, 23, 42, 0.12);
+}
+.invoice-lines {
+  display: grid;
+  gap: 12px;
+}
+.invoice-line {
+  align-items: end;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(180px, 2fr) repeat(6, minmax(88px, 1fr)) auto auto;
+  padding: 12px;
+}
+.invoice-line-description {
+  min-width: 180px;
+}
+.invoice-line-total {
+  color: var(--primary);
+  font-weight: 900;
+  min-width: 92px;
+  padding-bottom: 12px;
+  text-align: right;
+}
+.invoice-totals {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  padding: 14px;
+}
+.invoice-totals span {
+  color: var(--muted);
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.invoice-totals strong {
+  color: var(--text);
+  font-size: 15px;
+}
+.invoice-payment-list {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.invoice-payment-list p {
+  color: var(--muted);
+  margin: 0;
 }
 .support-enter-action,
 .support-edit-action,
@@ -3726,8 +3782,12 @@ body[data-theme="dark"] .subscription-plan-grid article {
     flex-direction: column;
   }
   .copy-field,
+  .invoice-line,
   .webhook-log-item {
     grid-template-columns: 1fr;
+  }
+  .invoice-line-total {
+    text-align: left;
   }
   .webhook-card--wide {
     grid-column: auto;

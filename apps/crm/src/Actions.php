@@ -40,6 +40,8 @@ final class Actions
             'update_platform_payment' => self::updatePlatformPayment(),
             'create_platform_invoice' => self::createPlatformInvoice(),
             'update_platform_invoice' => self::updatePlatformInvoice(),
+            'issue_platform_invoice' => self::issuePlatformInvoice(),
+            'add_platform_invoice_payment' => self::addPlatformInvoicePayment(),
             'create_platform_plan' => self::createPlatformPlan(),
             'update_platform_plan' => self::updatePlatformPlan(),
             'enter_empresa_crm' => self::enterEmpresaCrm(),
@@ -496,8 +498,8 @@ final class Actions
     {
         self::requirePlatformAdmin();
 
-        if (post_value('empresa_id', '') === '' || post_value('concept', '') === '') {
-            flash('Indica empresa y concepto de la factura.', 'error');
+        if (post_value('empresa_id', '') === '') {
+            flash('Indica la empresa de la factura.', 'error');
             redirect('platform-invoices');
         }
 
@@ -517,7 +519,7 @@ final class Actions
         self::requirePlatformAdmin();
         $id = post_value('id', '');
 
-        if ($id === '' || post_value('empresa_id', '') === '' || post_value('concept', '') === '') {
+        if ($id === '' || post_value('empresa_id', '') === '') {
             flash('Indica la factura que quieres actualizar.', 'error');
             redirect('platform-invoices');
         }
@@ -530,6 +532,48 @@ final class Actions
         }
 
         flash('Factura actualizada correctamente.');
+        redirect('platform-invoices');
+    }
+
+    private static function issuePlatformInvoice(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+
+        if ($id === '') {
+            flash('No se encontro la factura que quieres emitir.', 'error');
+            redirect('platform-invoices');
+        }
+
+        try {
+            PlatformInvoiceRepository::issue($id);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo emitir la factura.', 'error');
+            redirect('platform-invoices');
+        }
+
+        flash('Factura emitida correctamente.');
+        redirect('platform-invoices');
+    }
+
+    private static function addPlatformInvoicePayment(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('invoice_id', '');
+
+        if ($id === '') {
+            flash('No se encontro la factura para registrar el pago.', 'error');
+            redirect('platform-invoices');
+        }
+
+        try {
+            PlatformInvoiceRepository::addPayment($id, $_POST);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo registrar el pago.', 'error');
+            redirect('platform-invoices');
+        }
+
+        flash('Pago registrado en la factura.');
         redirect('platform-invoices');
     }
 

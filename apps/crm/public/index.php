@@ -331,7 +331,7 @@ switch ($route) {
             redirect('dashboard');
         }
 
-        $invoice = PlatformInvoiceRepository::findWithEmpresa(trim((string) ($_GET['id'] ?? '')));
+        $invoice = PlatformInvoiceRepository::findFull(trim((string) ($_GET['id'] ?? '')));
         if (!$invoice) {
             flash('No se encontro la factura.', 'error');
             redirect('platform-invoices');

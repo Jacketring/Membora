@@ -524,10 +524,15 @@ function platform_payment_status_label(?string $status): string
 function platform_invoice_status_label(?string $status): string
 {
     return enum_label((string) $status, [
+        'DRAFT' => 'Borrador',
         'ISSUED' => 'Emitida',
+        'RECTIFIED' => 'Rectificada',
         'SENT' => 'Enviada',
-        'PAID' => 'Cobrada',
+        'PENDING' => 'Pendiente',
+        'PARTIAL' => 'Parcial',
+        'PAID' => 'Pagada',
         'OVERDUE' => 'Vencida',
+        'REFUNDED' => 'Reembolsada',
         'CANCELLED' => 'Cancelada',
     ]);
 }
@@ -663,6 +668,8 @@ function audit_action_label(?string $action): string
         'update_platform_payment' => 'Actualizacion de pago CRM',
         'create_platform_invoice' => 'Creacion de factura CRM',
         'update_platform_invoice' => 'Actualizacion de factura CRM',
+        'issue_platform_invoice' => 'Emision de factura CRM',
+        'add_platform_invoice_payment' => 'Pago parcial de factura CRM',
         'create_platform_plan' => 'Creacion de plan CRM',
         'update_platform_plan' => 'Actualizacion de plan CRM',
         'enter_empresa_crm' => 'Entrada en soporte',

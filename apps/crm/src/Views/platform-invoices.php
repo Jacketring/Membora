@@ -6,11 +6,14 @@ $payments = $payments ?? [];
 $metrics = $metrics ?? ['issued_month' => 0, 'pending_amount' => 0, 'paid_month' => 0, 'overdue' => 0];
 $statusOptions = [
     '' => 'Todas',
+    'DRAFT' => 'Borrador',
     'ISSUED' => 'Emitida',
-    'SENT' => 'Enviada',
-    'PAID' => 'Cobrada',
+    'RECTIFIED' => 'Rectificada',
+    'PENDING' => 'Pendiente',
+    'PARTIAL' => 'Parcial',
+    'PAID' => 'Pagada',
     'OVERDUE' => 'Vencida',
-    'CANCELLED' => 'Cancelada',
+    'REFUNDED' => 'Reembolsada',
 ];
 ?>
 
@@ -75,41 +78,46 @@ $statusOptions = [
         <tr>
           <th>Factura</th>
           <th>Cliente</th>
-          <th>Concepto</th>
+          <th>Cliente</th>
           <th>Fecha</th>
           <th>Vencimiento</th>
           <th>Base</th>
           <th>IVA</th>
           <th>Total</th>
-          <th>Estado</th>
+          <th>Factura</th>
+          <th>Cobro</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
         <?php foreach ($invoices as $invoice): ?>
-          <?php $statusClass = strtolower((string) $invoice['status']); ?>
+          <?php
+            $invoiceStatusClass = strtolower((string) ($invoice['invoice_status'] ?? 'DRAFT'));
+            $collectionStatusClass = strtolower((string) ($invoice['collection_status'] ?? 'PENDING'));
+            $displayNumber = $invoice['invoice_code'] ?: ($invoice['invoice_series'] . '/' . str_pad((string) ($nextInvoiceNumber ?? 1), 4, '0', STR_PAD_LEFT) . ' sugerido');
+          ?>
           <tr class="lead-data-row clickable-row" tabindex="0" data-open-modal="invoice-edit-<?= e($invoice['id']) ?>">
-            <td><strong><?= e($invoice['invoice_code']) ?></strong></td>
+            <td><strong><?= e($displayNumber) ?></strong></td>
             <td>
-              <?= e($invoice['empresa_name']) ?>
-              <span class="table-subtext"><?= e($invoice['contact_email'] ?: 'Sin contacto') ?></span>
+              <?= e($invoice['customer_name'] ?: $invoice['empresa_name']) ?>
+              <span class="table-subtext"><?= e($invoice['customer_tax_id'] ?: 'Sin NIF/CIF') ?></span>
             </td>
-            <td><?= e($invoice['concept']) ?></td>
             <td><?= e(format_date_short($invoice['issued_at'])) ?></td>
             <td><?= e(format_date_short($invoice['due_at'])) ?></td>
             <td><?= e(money_amount($invoice['taxable_base'])) ?></td>
             <td><?= e(money_amount($invoice['tax_amount'])) ?></td>
             <td><strong><?= e(money_amount($invoice['total_amount'])) ?></strong></td>
-            <td><span class="status-badge status-badge--<?= e($statusClass) ?>"><?= e(platform_invoice_status_label($invoice['status'])) ?></span></td>
+            <td><span class="status-badge status-badge--<?= e($invoiceStatusClass) ?>"><?= e(platform_invoice_status_label($invoice['invoice_status'] ?? 'DRAFT')) ?></span></td>
+            <td><span class="status-badge status-badge--<?= e($collectionStatusClass) ?>"><?= e(platform_invoice_status_label($invoice['collection_status'] ?? 'PENDING')) ?></span></td>
             <td>
               <div class="platform-row-actions">
-                <a class="support-invoice-action" href="index.php?route=platform-invoice&id=<?= urlencode($invoice['id']) ?>" target="_blank" rel="noopener" aria-label="Ver factura <?= e($invoice['invoice_code']) ?>">
+                <a class="support-invoice-action" href="index.php?route=platform-invoice&id=<?= urlencode($invoice['id']) ?>" target="_blank" rel="noopener" aria-label="Ver factura <?= e($displayNumber) ?>">
                   <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 1.8V8h4.2L14 3.8ZM8 11h8v2H8v-2Zm0 4h8v2H8v-2Zm0 4h5v1H8v-1Z"/></svg>
-                  <span>PDF</span>
+                  <span><?= ($invoice['invoice_status'] ?? 'DRAFT') === 'DRAFT' ? 'Preview' : 'PDF' ?></span>
                 </a>
-                <button class="support-edit-action" type="button" data-open-modal="invoice-edit-<?= e($invoice['id']) ?>" aria-label="Editar factura <?= e($invoice['invoice_code']) ?>">
+                <button class="support-edit-action" type="button" data-open-modal="invoice-edit-<?= e($invoice['id']) ?>" aria-label="Editar factura <?= e($displayNumber) ?>">
                   <svg viewBox="0 0 24 24"><path d="M4 17.3V20h2.7L17.9 8.8l-2.7-2.7L4 17.3Zm15.8-10.6a1 1 0 0 0 0-1.4l-1.1-1.1a1 1 0 0 0-1.4 0l-.9.9 2.7 2.7.7-.8Z"/></svg>
-                  <span>Editar</span>
+                  <span><?= ($invoice['invoice_status'] ?? 'DRAFT') === 'DRAFT' ? 'Editar' : 'Ver' ?></span>
                 </button>
               </div>
             </td>
@@ -139,8 +147,8 @@ $statusOptions = [
   <dialog class="modal-card empresa-modal" id="invoice-edit-<?= e($invoice['id']) ?>">
     <header>
       <div>
-        <h2><?= e($invoice['invoice_code']) ?></h2>
-        <p><?= e($invoice['empresa_name']) ?> - <?= e(platform_invoice_status_label($invoice['status'])) ?></p>
+        <h2><?= e($invoice['invoice_code'] ?: 'Borrador') ?></h2>
+        <p><?= e(($invoice['customer_name'] ?: $invoice['empresa_name']) . ' - ' . platform_invoice_status_label($invoice['invoice_status'] ?? 'DRAFT')) ?></p>
       </div>
       <button class="modal-close-action" type="button" data-close-modal aria-label="Cerrar">Cerrar</button>
     </header>
