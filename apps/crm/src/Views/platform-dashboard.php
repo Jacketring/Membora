@@ -129,7 +129,11 @@ $paidRate = count($allEmpresas) > 0 ? (int) round((($paymentCounts['PAID'] ?? 0)
   </a>
   <a href="index.php?route=platform-payments">
     <span>Pagos</span>
-    <strong>Cobros y facturas</strong>
+    <strong>Cobros</strong>
+  </a>
+  <a href="index.php?route=platform-invoices">
+    <span>Facturas</span>
+    <strong>Serie, IVA y PDF</strong>
   </a>
   <a href="index.php?route=platform-plans">
     <span>Planes</span>

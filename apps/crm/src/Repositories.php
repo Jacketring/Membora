@@ -3848,6 +3848,223 @@ final class PlatformPaymentRepository
     }
 }
 
+final class PlatformInvoiceRepository
+{
+    public static function ensureTable(): void
+    {
+        Database::connection()->exec(
+            'CREATE TABLE IF NOT EXISTS platform_invoices (
+                id VARCHAR(191) NOT NULL PRIMARY KEY,
+                empresa_id VARCHAR(191) NOT NULL,
+                payment_id VARCHAR(191) NULL,
+                invoice_series VARCHAR(32) NOT NULL DEFAULT "M-2026",
+                invoice_number INT NOT NULL,
+                invoice_code VARCHAR(64) NOT NULL,
+                issued_at DATE NOT NULL,
+                due_at DATE NULL,
+                concept VARCHAR(191) NOT NULL,
+                taxable_base DECIMAL(10,2) NOT NULL DEFAULT 0,
+                tax_rate DECIMAL(5,2) NOT NULL DEFAULT 21.00,
+                tax_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+                total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+                payment_method VARCHAR(64) NOT NULL DEFAULT "TRANSFER",
+                status VARCHAR(32) NOT NULL DEFAULT "ISSUED",
+                notes TEXT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY platform_invoices_series_number_unique (invoice_series, invoice_number),
+                INDEX platform_invoices_empresa_idx (empresa_id),
+                INDEX platform_invoices_payment_idx (payment_id),
+                INDEX platform_invoices_status_idx (status),
+                INDEX platform_invoices_issued_idx (issued_at)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+        );
+    }
+
+    public static function metrics(): array
+    {
+        self::ensureTable();
+        $pdo = Database::connection();
+
+        $issuedMonth = $pdo->query(
+            'SELECT COALESCE(SUM(total_amount), 0)
+             FROM platform_invoices
+             WHERE issued_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01")
+             AND status <> "CANCELLED"'
+        )->fetchColumn();
+
+        $pending = $pdo->query(
+            'SELECT COALESCE(SUM(total_amount), 0)
+             FROM platform_invoices
+             WHERE status IN ("ISSUED", "SENT", "OVERDUE")'
+        )->fetchColumn();
+
+        $paidMonth = $pdo->query(
+            'SELECT COALESCE(SUM(total_amount), 0)
+             FROM platform_invoices
+             WHERE status = "PAID"
+             AND issued_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01")'
+        )->fetchColumn();
+
+        $overdue = $pdo->query(
+            'SELECT COUNT(*)
+             FROM platform_invoices
+             WHERE status = "OVERDUE"
+             OR (status IN ("ISSUED", "SENT") AND due_at IS NOT NULL AND due_at < CURDATE())'
+        )->fetchColumn();
+
+        return [
+            'issued_month' => (float) $issuedMonth,
+            'pending_amount' => (float) $pending,
+            'paid_month' => (float) $paidMonth,
+            'overdue' => (int) $overdue,
+        ];
+    }
+
+    public static function all(string $query = '', string $status = ''): array
+    {
+        self::ensureTable();
+        EmpresaRepository::ensureTables();
+
+        $params = [];
+        $where = ['1 = 1'];
+        if ($query !== '') {
+            $where[] = '(i.invoice_code LIKE :query OR i.concept LIKE :query OR i.notes LIKE :query OR e.name LIKE :query OR e.contact_email LIKE :query)';
+            $params['query'] = '%' . $query . '%';
+        }
+
+        if ($status !== '') {
+            $where[] = 'i.status = :status';
+            $params['status'] = $status;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT i.*, e.name AS empresa_name, e.contact_email, e.plan
+             FROM platform_invoices i
+             INNER JOIN empresas e ON e.id = i.empresa_id
+             WHERE ' . implode(' AND ', $where) . '
+             ORDER BY i.issued_at DESC, i.invoice_series ASC, i.invoice_number DESC'
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function findWithEmpresa(string $id): ?array
+    {
+        self::ensureTable();
+        EmpresaRepository::ensureTables();
+
+        $stmt = Database::connection()->prepare(
+            'SELECT i.*, e.name AS empresa_name, e.contact_email, e.plan
+             FROM platform_invoices i
+             INNER JOIN empresas e ON e.id = i.empresa_id
+             WHERE i.id = :id
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $id]);
+        $invoice = $stmt->fetch();
+
+        return $invoice ?: null;
+    }
+
+    public static function nextInvoiceNumber(string $series = ''): int
+    {
+        self::ensureTable();
+        $series = self::normalizeSeries($series ?: self::defaultSeries());
+        $stmt = Database::connection()->prepare('SELECT COALESCE(MAX(invoice_number), 0) + 1 FROM platform_invoices WHERE invoice_series = :series');
+        $stmt->execute(['series' => $series]);
+
+        return max(1, (int) $stmt->fetchColumn());
+    }
+
+    public static function create(array $data): void
+    {
+        self::ensureTable();
+        $params = self::invoiceParams($data);
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO platform_invoices (id, empresa_id, payment_id, invoice_series, invoice_number, invoice_code, issued_at, due_at, concept, taxable_base, tax_rate, tax_amount, total_amount, payment_method, status, notes, created_at, updated_at)
+             VALUES (:id, :empresa_id, :payment_id, :invoice_series, :invoice_number, :invoice_code, :issued_at, :due_at, :concept, :taxable_base, :tax_rate, :tax_amount, :total_amount, :payment_method, :status, :notes, NOW(), NOW())'
+        );
+        $stmt->execute($params + ['id' => cuid()]);
+    }
+
+    public static function update(string $id, array $data): void
+    {
+        self::ensureTable();
+        $params = self::invoiceParams($data);
+        $stmt = Database::connection()->prepare(
+            'UPDATE platform_invoices
+             SET empresa_id = :empresa_id,
+                 payment_id = :payment_id,
+                 invoice_series = :invoice_series,
+                 invoice_number = :invoice_number,
+                 invoice_code = :invoice_code,
+                 issued_at = :issued_at,
+                 due_at = :due_at,
+                 concept = :concept,
+                 taxable_base = :taxable_base,
+                 tax_rate = :tax_rate,
+                 tax_amount = :tax_amount,
+                 total_amount = :total_amount,
+                 payment_method = :payment_method,
+                 status = :status,
+                 notes = :notes,
+                 updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute($params + ['id' => $id]);
+    }
+
+    private static function invoiceParams(array $data): array
+    {
+        $series = self::normalizeSeries((string) ($data['invoice_series'] ?? self::defaultSeries()));
+        $number = max(1, (int) ($data['invoice_number'] ?? self::nextInvoiceNumber($series)));
+        $base = max(0, (float) str_replace(',', '.', (string) ($data['taxable_base'] ?? '0')));
+        $taxRate = max(0, (float) str_replace(',', '.', (string) ($data['tax_rate'] ?? '21')));
+        $taxAmount = round($base * ($taxRate / 100), 2);
+        $total = round($base + $taxAmount, 2);
+        $status = in_array($data['status'] ?? '', ['ISSUED', 'SENT', 'PAID', 'OVERDUE', 'CANCELLED'], true) ? $data['status'] : 'ISSUED';
+        $paymentMethod = in_array($data['payment_method'] ?? '', ['TRANSFER', 'CARD', 'STRIPE', 'CASH', 'OTHER'], true) ? $data['payment_method'] : 'TRANSFER';
+
+        return [
+            'empresa_id' => trim((string) ($data['empresa_id'] ?? '')),
+            'payment_id' => trim((string) ($data['payment_id'] ?? '')) ?: null,
+            'invoice_series' => $series,
+            'invoice_number' => $number,
+            'invoice_code' => self::invoiceCode($series, $number),
+            'issued_at' => trim((string) ($data['issued_at'] ?? '')) ?: date('Y-m-d'),
+            'due_at' => trim((string) ($data['due_at'] ?? '')) ?: null,
+            'concept' => trim((string) ($data['concept'] ?? '')),
+            'taxable_base' => number_format($base, 2, '.', ''),
+            'tax_rate' => number_format($taxRate, 2, '.', ''),
+            'tax_amount' => number_format($taxAmount, 2, '.', ''),
+            'total_amount' => number_format($total, 2, '.', ''),
+            'payment_method' => $paymentMethod,
+            'status' => $status,
+            'notes' => trim((string) ($data['notes'] ?? '')) ?: null,
+        ];
+    }
+
+    private static function normalizeSeries(string $series): string
+    {
+        $series = strtoupper(trim($series));
+        $series = preg_replace('/[^A-Z0-9-]/', '', $series) ?: 'M';
+
+        return substr($series, 0, 32);
+    }
+
+    public static function invoiceCode(string $series, int $number): string
+    {
+        return self::normalizeSeries($series) . '/' . str_pad((string) $number, 4, '0', STR_PAD_LEFT);
+    }
+
+    public static function defaultSeries(): string
+    {
+        return 'M-' . date('Y');
+    }
+}
+
 final class PlatformPlanRepository
 {
     public static function ensureTable(): void

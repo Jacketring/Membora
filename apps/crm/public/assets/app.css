@@ -1431,8 +1431,9 @@ td.empty-state,
 }
 .status-badge--converted, .status-badge--completed, .status-badge--active, .status-badge--customer, .status-badge--qualified, .status-badge--attended, .status-badge--exported, .status-badge--synced, .status-badge--success { background: #dcfce7; color: #047857; }
 .status-badge--lost, .status-badge--cancelled, .status-badge--inactive, .status-badge--archived, .status-badge--error { background: #fee2e2; color: var(--danger); }
-.status-badge--pending, .status-badge--open, .status-badge--scheduled, .status-badge--lead, .status-badge--reserved, .status-badge--new { background: #eef4ff; color: var(--primary); }
+.status-badge--pending, .status-badge--open, .status-badge--scheduled, .status-badge--lead, .status-badge--reserved, .status-badge--new, .status-badge--issued { background: #eef4ff; color: var(--primary); }
 .status-badge--contacted { background: #e0f2fe; color: #0369a1; }
+.status-badge--sent { background: #fef3c7; color: #92400e; }
 .status-badge--no-show { background: #ffedd5; color: #c2410c; }
 .status-badge--trial { background: #e0f2fe; color: #0369a1; }
 .status-badge--suspended, .status-badge--overdue { background: #fee2e2; color: var(--danger); }

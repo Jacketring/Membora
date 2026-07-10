@@ -58,6 +58,7 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Bloqueo visual del CRM cliente cuando la demo o el acceso contratado han caducado, con modal para elegir plan y continuar el proceso de contratacion.
 - Planes comerciales SaaS con precio mensual, alta, rebajas y sincronizacion publica con la web comercial.
 - Pagos SaaS por empresa.
+- Facturas SaaS emitidas por Membora a empresas cliente, con serie/numero, fecha, vencimiento, base imponible, IVA, total, forma de pago, estado de cobro y vista imprimible/PDF.
 - Base funcional para checkout y cobros SaaS: la demo pide pocos datos y la contratacion debe completar datos fiscales, plan y forma de pago antes de activar el acceso.
 - Web comercial: diagnostico de webhook, correo y ultimos envios.
 - Acceso de soporte al CRM de una empresa conectada.

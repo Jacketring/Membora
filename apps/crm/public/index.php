@@ -163,6 +163,15 @@ if ($route === 'global-search') {
                 'href' => 'index.php?route=platform-payments&q=' . urlencode($query),
             ];
         }
+        foreach (array_slice(PlatformInvoiceRepository::all($query), 0, 5) as $invoice) {
+            $items[] = [
+                'type' => 'Factura',
+                'kind' => 'invoice',
+                'title' => $invoice['invoice_code'],
+                'description' => $invoice['empresa_name'] . ' - ' . platform_invoice_status_label($invoice['status']),
+                'href' => 'index.php?route=platform-invoices&q=' . urlencode($query),
+            ];
+        }
         foreach (array_slice(PlatformPlanRepository::all($query), 0, 5) as $plan) {
             $items[] = [
                 'type' => 'Plan',
@@ -294,6 +303,42 @@ switch ($route) {
 
         render('platform-payment-invoice', [
             'payment' => $payment,
+        ]);
+        break;
+
+    case 'platform-invoices':
+        if (!is_platform_admin($currentUser)) {
+            redirect('dashboard');
+        }
+
+        $filters = [
+            'q' => trim((string) ($_GET['q'] ?? '')),
+            'status' => trim((string) ($_GET['status'] ?? '')),
+        ];
+        render_layout('Facturas CRM', 'platform-invoices', [
+            'filters' => $filters,
+            'metrics' => PlatformInvoiceRepository::metrics(),
+            'empresas' => EmpresaRepository::all(),
+            'payments' => PlatformPaymentRepository::all(),
+            'nextInvoiceSeries' => PlatformInvoiceRepository::defaultSeries(),
+            'nextInvoiceNumber' => PlatformInvoiceRepository::nextInvoiceNumber(),
+            'invoices' => PlatformInvoiceRepository::all($filters['q'], $filters['status']),
+        ]);
+        break;
+
+    case 'platform-invoice':
+        if (!is_platform_admin($currentUser)) {
+            redirect('dashboard');
+        }
+
+        $invoice = PlatformInvoiceRepository::findWithEmpresa(trim((string) ($_GET['id'] ?? '')));
+        if (!$invoice) {
+            flash('No se encontro la factura.', 'error');
+            redirect('platform-invoices');
+        }
+
+        render('platform-invoice', [
+            'invoice' => $invoice,
         ]);
         break;
 

@@ -42,6 +42,7 @@ $publicPlans = $subscriptionBlocked ? PlatformPlanRepository::publicPlans() : []
           <a class="<?= in_array($route, ['platform-contacts', 'platform-leads', 'platform-clients'], true) ? 'active' : '' ?>" href="index.php?route=platform-contacts">Contactos</a>
           <a class="<?= $route === 'platform-companies' ? 'active' : '' ?>" href="index.php?route=platform-companies">Empresas</a>
           <a class="<?= $route === 'platform-payments' ? 'active' : '' ?>" href="index.php?route=platform-payments">Pagos</a>
+          <a class="<?= in_array($route, ['platform-invoices', 'platform-invoice'], true) ? 'active' : '' ?>" href="index.php?route=platform-invoices">Facturas</a>
           <a class="<?= $route === 'platform-plans' ? 'active' : '' ?>" href="index.php?route=platform-plans">Planes</a>
         <?php else: ?>
           <?php foreach ([

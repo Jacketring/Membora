@@ -521,11 +521,23 @@ function platform_payment_status_label(?string $status): string
     ]);
 }
 
+function platform_invoice_status_label(?string $status): string
+{
+    return enum_label((string) $status, [
+        'ISSUED' => 'Emitida',
+        'SENT' => 'Enviada',
+        'PAID' => 'Cobrada',
+        'OVERDUE' => 'Vencida',
+        'CANCELLED' => 'Cancelada',
+    ]);
+}
+
 function payment_method_label(?string $method): string
 {
     return enum_label((string) $method, [
         'CASH' => 'Efectivo',
         'CARD' => 'Tarjeta',
+        'STRIPE' => 'Stripe',
         'TRANSFER' => 'Transferencia',
         'BIZUM' => 'Bizum',
         'OTHER' => 'Otro',
@@ -649,6 +661,8 @@ function audit_action_label(?string $action): string
         'resume_empresa_subscription' => 'Reactivacion de suscripcion',
         'create_platform_payment' => 'Creacion de pago CRM',
         'update_platform_payment' => 'Actualizacion de pago CRM',
+        'create_platform_invoice' => 'Creacion de factura CRM',
+        'update_platform_invoice' => 'Actualizacion de factura CRM',
         'create_platform_plan' => 'Creacion de plan CRM',
         'update_platform_plan' => 'Actualizacion de plan CRM',
         'enter_empresa_crm' => 'Entrada en soporte',
@@ -689,6 +703,7 @@ function audit_entity_label(?string $entity): string
         'platform_client' => 'Cliente CRM',
         'platform_lead' => 'Lead web',
         'platform_payment' => 'Pago CRM',
+        'platform_invoice' => 'Factura CRM',
         'platform_plan' => 'Plan CRM',
         'audit' => 'Auditoria',
         'view_audit' => 'Auditoria',
@@ -721,6 +736,8 @@ function audit_area_label(?string $route): string
         'platform-clients' => 'Contactos CRM',
         'platform-leads' => 'Contactos CRM',
         'platform-payments' => 'Pagos CRM',
+        'platform-invoices' => 'Facturas CRM',
+        'platform-invoice' => 'Factura CRM',
         'platform-plans' => 'Planes CRM',
         'platform-web' => 'Web comercial',
         'dashboard' => 'Panel',

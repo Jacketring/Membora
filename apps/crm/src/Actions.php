@@ -38,6 +38,8 @@ final class Actions
             'resume_empresa_subscription' => self::resumeEmpresaSubscription(),
             'create_platform_payment' => self::createPlatformPayment(),
             'update_platform_payment' => self::updatePlatformPayment(),
+            'create_platform_invoice' => self::createPlatformInvoice(),
+            'update_platform_invoice' => self::updatePlatformInvoice(),
             'create_platform_plan' => self::createPlatformPlan(),
             'update_platform_plan' => self::updatePlatformPlan(),
             'enter_empresa_crm' => self::enterEmpresaCrm(),
@@ -488,6 +490,47 @@ final class Actions
         PlatformPaymentRepository::update($id, $_POST);
         flash('Pago actualizado correctamente.');
         redirect('platform-payments');
+    }
+
+    private static function createPlatformInvoice(): never
+    {
+        self::requirePlatformAdmin();
+
+        if (post_value('empresa_id', '') === '' || post_value('concept', '') === '') {
+            flash('Indica empresa y concepto de la factura.', 'error');
+            redirect('platform-invoices');
+        }
+
+        try {
+            PlatformInvoiceRepository::create($_POST);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo crear la factura.', 'error');
+            redirect('platform-invoices');
+        }
+
+        flash('Factura creada correctamente.');
+        redirect('platform-invoices');
+    }
+
+    private static function updatePlatformInvoice(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+
+        if ($id === '' || post_value('empresa_id', '') === '' || post_value('concept', '') === '') {
+            flash('Indica la factura que quieres actualizar.', 'error');
+            redirect('platform-invoices');
+        }
+
+        try {
+            PlatformInvoiceRepository::update($id, $_POST);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo actualizar la factura.', 'error');
+            redirect('platform-invoices');
+        }
+
+        flash('Factura actualizada correctamente.');
+        redirect('platform-invoices');
     }
 
     private static function createPlatformPlan(): never
