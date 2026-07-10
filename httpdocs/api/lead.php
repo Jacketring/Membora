@@ -53,6 +53,8 @@ function post_remote_lead(string $url, string $body): array
             CURLOPT_HTTPHEADER => [
                 'Accept: application/json',
                 'Content-Type: application/json',
+                'Origin: https://app.web.josehurtado.dev',
+                'Referer: https://app.web.josehurtado.dev/',
             ],
         ]);
         $responseBody = curl_exec($ch);
@@ -66,7 +68,7 @@ function post_remote_lead(string $url, string $body): array
     $context = stream_context_create([
         'http' => [
             'method' => 'POST',
-            'header' => "Accept: application/json\r\nContent-Type: application/json\r\n",
+            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nOrigin: https://app.web.josehurtado.dev\r\nReferer: https://app.web.josehurtado.dev/\r\n",
             'content' => $body,
             'timeout' => 15,
         ],
