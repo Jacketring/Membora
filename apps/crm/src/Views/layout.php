@@ -18,8 +18,13 @@ $jsVersion = is_file($jsPath) ? (string) filemtime($jsPath) : '1';
 $tenantPrimaryColor = hex_color_or_default($user['tenant_primary_color'] ?? '#004bf2');
 $isPlatformAdmin = is_platform_admin($user);
 $demoRemainingSeconds = Auth::demoRemainingSeconds();
+$subscriptionAccessState = (!$isPlatformAdmin && !is_platform_support_context())
+    ? EmpresaRepository::accessStateForTenant((string) ($user['tenant_id'] ?? ''))
+    : null;
+$subscriptionBlocked = !empty($subscriptionAccessState['blocked']);
+$publicPlans = $subscriptionBlocked ? PlatformPlanRepository::publicPlans() : [];
 ?>
-<body data-tenant-accent="<?= e($tenantPrimaryColor) ?>" <?= $demoRemainingSeconds > 0 ? 'data-demo-expires-in="' . e((string) $demoRemainingSeconds) . '"' : '' ?>>
+<body data-tenant-accent="<?= e($tenantPrimaryColor) ?>" <?= $demoRemainingSeconds > 0 ? 'data-demo-expires-in="' . e((string) $demoRemainingSeconds) . '"' : '' ?> <?= $subscriptionBlocked ? 'data-subscription-blocked="true"' : '' ?>>
   <main class="app-shell">
     <aside class="sidebar">
       <div class="brand-lockup brand-lockup--sidebar">
@@ -148,6 +153,34 @@ $demoRemainingSeconds = Auth::demoRemainingSeconds();
       </div>
     </section>
   </main>
+  <?php if ($subscriptionBlocked): ?>
+    <div class="subscription-blocker" role="dialog" aria-modal="true" aria-labelledby="subscription-blocker-title">
+      <section class="subscription-blocker-card">
+        <header>
+          <span class="confirm-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2 1.8 20h20.4L12 2Zm1 15h-2v-2h2v2Zm0-4h-2V8h2v5Z"/></svg>
+          </span>
+          <div>
+            <h2 id="subscription-blocker-title"><?= e($subscriptionAccessState['title'] ?? 'Suscripcion requerida') ?></h2>
+            <p><?= e($subscriptionAccessState['message'] ?? 'Elige un plan para continuar usando Membora.') ?></p>
+          </div>
+        </header>
+        <div class="subscription-plan-grid">
+          <?php foreach (array_slice($publicPlans, 0, 4) as $plan): ?>
+            <article>
+              <h3><?= e($plan['name']) ?></h3>
+              <strong><?= e(money_amount($plan['monthly_price'])) ?><small>/mes</small></strong>
+              <?php if (!empty($plan['features'][0])): ?>
+                <p><?= e($plan['features'][0]) ?></p>
+              <?php endif; ?>
+              <a class="primary-action" href="mailto:contacto@josehurtado.dev?subject=Contratar%20<?= rawurlencode((string) $plan['name']) ?>%20Membora">Elegir plan</a>
+            </article>
+          <?php endforeach; ?>
+        </div>
+        <p class="subscription-blocker-note">Para contratar se solicitaran los datos fiscales, direccion, telefono, plan y forma de pago.</p>
+      </section>
+    </div>
+  <?php endif; ?>
   <dialog id="confirm-dialog" class="confirm-dialog">
     <form method="dialog">
       <header>

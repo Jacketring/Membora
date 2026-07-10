@@ -136,6 +136,10 @@ $clientStatusOptions = [
                   </form>
                 <?php endif; ?>
                 <?php if ($contact['type'] === 'client'): ?>
+                  <a class="support-renew-action" href="index.php?route=platform-companies&q=<?= urlencode($contact['email'] ?: $contact['company_name']) ?>">
+                    <svg viewBox="0 0 24 24"><path d="M7 7h10v2H7V7Zm0 4h10v2H7v-2Zm0 4h6v2H7v-2ZM5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg>
+                    <span>Suscripcion</span>
+                  </a>
                   <a class="support-enter-action" href="index.php?route=platform-companies&client_id=<?= urlencode($contact['id']) ?>&modal=empresa-create-modal">
                     <svg viewBox="0 0 24 24"><path d="M12 5v14m7-7H5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     <span>Empresa</span>

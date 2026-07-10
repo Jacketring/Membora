@@ -33,6 +33,8 @@ final class Actions
             'create_empresa' => self::createEmpresa(),
             'update_empresa' => self::updateEmpresa(),
             'renew_empresa_subscription' => self::renewEmpresaSubscription(),
+            'cancel_empresa_subscription' => self::cancelEmpresaSubscription(),
+            'resume_empresa_subscription' => self::resumeEmpresaSubscription(),
             'create_platform_payment' => self::createPlatformPayment(),
             'update_platform_payment' => self::updatePlatformPayment(),
             'create_platform_plan' => self::createPlatformPlan(),
@@ -257,6 +259,48 @@ final class Actions
         }
 
         flash('Renovacion registrada y proximo pago actualizado.');
+        redirect('platform-companies');
+    }
+
+    private static function cancelEmpresaSubscription(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+
+        if ($id === '') {
+            flash('No se encontro la empresa que quieres cancelar.', 'error');
+            redirect('platform-companies');
+        }
+
+        try {
+            EmpresaRepository::cancelSubscription($id);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo cancelar la suscripcion.', 'error');
+            redirect('platform-companies');
+        }
+
+        flash('Suscripcion marcada para cancelar al final del periodo.');
+        redirect('platform-companies');
+    }
+
+    private static function resumeEmpresaSubscription(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+
+        if ($id === '') {
+            flash('No se encontro la empresa que quieres reactivar.', 'error');
+            redirect('platform-companies');
+        }
+
+        try {
+            EmpresaRepository::resumeSubscription($id);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo reactivar la suscripcion.', 'error');
+            redirect('platform-companies');
+        }
+
+        flash('Suscripcion reactivada correctamente.');
         redirect('platform-companies');
     }
 

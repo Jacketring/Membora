@@ -3625,12 +3625,81 @@ body[data-density="compact"] .leads-table td { padding: 10px 12px; }
   word-break: break-word;
 }
 
+.subscription-blocker {
+  align-items: center;
+  background: rgba(2, 8, 23, 0.72);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+  z-index: 200;
+}
+.subscription-blocker-card {
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(2, 8, 23, 0.34);
+  display: grid;
+  gap: 20px;
+  max-height: calc(100vh - 48px);
+  max-width: 920px;
+  overflow: auto;
+  padding: 28px;
+  width: min(100%, 920px);
+}
+.subscription-blocker-card header {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+}
+.subscription-blocker-card h2 {
+  margin: 0 0 8px;
+}
+.subscription-blocker-card p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.subscription-plan-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.subscription-plan-grid article {
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+.subscription-plan-grid h3,
+.subscription-plan-grid strong {
+  margin: 0;
+}
+.subscription-plan-grid strong {
+  color: var(--primary);
+  font-size: 22px;
+}
+.subscription-plan-grid small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.subscription-blocker-note {
+  font-size: 13px;
+}
+body[data-theme="dark"] .subscription-blocker-card,
+body[data-theme="dark"] .subscription-plan-grid article {
+  background: var(--surface);
+  border-color: var(--outline);
+}
+
 @media (max-width: 900px) {
   .app-shell { display: block; }
   .sidebar { min-height: auto; position: static; width: 100%; }
   .workspace { margin-left: 0; width: 100%; }
   .content { padding: 24px; }
-  .lead-metrics, .dashboard-grid, .dashboard-metrics, .dashboard-layout, .platform-ops-grid, .platform-admin-grid, .platform-module-grid, .platform-dashboard-grid, .platform-plan-cards, .webhook-grid, .admin-dashboard-hero, .admin-dashboard-kpis, .admin-dashboard-actions, .admin-dashboard-tables, .admin-dashboard-bottom, .novedades-hero { grid-template-columns: 1fr; }
+  .lead-metrics, .dashboard-grid, .dashboard-metrics, .dashboard-layout, .platform-ops-grid, .platform-admin-grid, .platform-module-grid, .platform-dashboard-grid, .platform-plan-cards, .subscription-plan-grid, .webhook-grid, .admin-dashboard-hero, .admin-dashboard-kpis, .admin-dashboard-actions, .admin-dashboard-tables, .admin-dashboard-bottom, .novedades-hero { grid-template-columns: 1fr; }
   .admin-dashboard-panel-header { flex-direction: column; }
   .dashboard-hero { align-items: flex-start; flex-direction: column; gap: 18px; }
   .dashboard-hero-actions { flex-wrap: wrap; }

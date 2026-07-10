@@ -513,6 +513,7 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
   const trialPlanField = form.querySelector('[data-trial-plan-field]');
   const crmStatusSelect = form.querySelector('select[name="status"]');
   const paymentStatusSelect = form.querySelector('select[name="payment_status"]');
+  const renewalPeriodSelect = form.querySelector('select[name="renewal_period"]');
 
   if (!planSelect || !priceInput) {
     return;
@@ -557,6 +558,10 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
 
   const nextMonthPaymentDate = () => {
     const now = new Date();
+    if (renewalPeriodSelect?.value === 'ANNUAL') {
+      return formatDateInputValue(new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()));
+    }
+
     const lastDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0).getDate();
     const nextPayment = new Date(
       now.getFullYear(),
@@ -598,6 +603,13 @@ document.querySelectorAll('[data-empresa-form]').forEach((form) => {
   planSelect.addEventListener('change', () => {
     applyPlanPrice();
     syncTrialPlanFields();
+    applyNextPaymentDate();
+  });
+
+  renewalPeriodSelect?.addEventListener('change', () => {
+    if (nextPaymentInput) {
+      nextPaymentInput.dataset.autoNextPayment = 'true';
+    }
     applyNextPaymentDate();
   });
 

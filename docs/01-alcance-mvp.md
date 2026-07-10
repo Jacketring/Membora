@@ -54,6 +54,8 @@ La version final del proyecto se ha simplificado a una aplicacion PHP monolitica
 - Creacion de tenant y usuario administrador al crear una empresa CRM.
 - Estados de CRM y pago.
 - Plan de prueba configurable por dias, sin proximo pago visible solo cuando el plan seleccionado es `Prueba`.
+- Gestion central de suscripcion SaaS por empresa cliente: fecha de alta, fecha desde la que paga, fecha de acceso hasta, plan, periodicidad mensual/anual, estado de renovacion, cancelacion al final del periodo y reactivacion.
+- Bloqueo visual del CRM cliente cuando la demo o el acceso contratado han caducado, con modal para elegir plan y continuar el proceso de contratacion.
 - Planes comerciales SaaS con precio mensual, alta, rebajas y sincronizacion publica con la web comercial.
 - Pagos SaaS por empresa.
 - Web comercial: diagnostico de webhook, correo y ultimos envios.
@@ -153,7 +155,7 @@ Tablas SaaS principales:
 - `saas_plans`
 - `webhook_logs`
 
-La tabla `empresas` incluye `trial_days` para controlar la duracion de la prueba comercial. Si el plan de una empresa es `TRIAL`, el CRM oculta la fecha de proximo pago, no marca renovacion y muestra la duracion de prueba configurada.
+La tabla `empresas` incluye `trial_days` para controlar la duracion de la prueba comercial. Si el plan de una empresa es `TRIAL`, el CRM oculta la fecha de proximo pago, no marca renovacion y muestra la duracion de prueba configurada. Tambien centraliza la suscripcion SaaS con `subscription_started_at`, `paid_since`, `access_until`, `renewal_period`, `renewal_status` y `cancelled_at`, de forma que una empresa puede cancelar la renovacion y conservar acceso hasta la fecha contratada.
 
 ## 8. Recorrido recomendado de demo
 

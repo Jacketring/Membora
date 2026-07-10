@@ -2881,6 +2881,12 @@ final class EmpresaRepository
                 monthly_price DECIMAL(10,2) NOT NULL DEFAULT 0,
                 next_payment_at DATE NULL,
                 trial_days INT NOT NULL DEFAULT 30,
+                subscription_started_at DATE NULL,
+                paid_since DATE NULL,
+                access_until DATE NULL,
+                renewal_period VARCHAR(16) NOT NULL DEFAULT "MONTHLY",
+                renewal_status VARCHAR(32) NOT NULL DEFAULT "ACTIVE",
+                cancelled_at DATE NULL,
                 notes TEXT NULL,
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -2892,8 +2898,15 @@ final class EmpresaRepository
 
         self::ensureColumn('empresas', 'client_id', 'ALTER TABLE empresas ADD COLUMN client_id VARCHAR(191) NULL AFTER tenant_id');
         self::ensureColumn('empresas', 'trial_days', 'ALTER TABLE empresas ADD COLUMN trial_days INT NOT NULL DEFAULT 30 AFTER next_payment_at');
+        self::ensureColumn('empresas', 'subscription_started_at', 'ALTER TABLE empresas ADD COLUMN subscription_started_at DATE NULL AFTER trial_days');
+        self::ensureColumn('empresas', 'paid_since', 'ALTER TABLE empresas ADD COLUMN paid_since DATE NULL AFTER subscription_started_at');
+        self::ensureColumn('empresas', 'access_until', 'ALTER TABLE empresas ADD COLUMN access_until DATE NULL AFTER paid_since');
+        self::ensureColumn('empresas', 'renewal_period', 'ALTER TABLE empresas ADD COLUMN renewal_period VARCHAR(16) NOT NULL DEFAULT "MONTHLY" AFTER access_until');
+        self::ensureColumn('empresas', 'renewal_status', 'ALTER TABLE empresas ADD COLUMN renewal_status VARCHAR(32) NOT NULL DEFAULT "ACTIVE" AFTER renewal_period');
+        self::ensureColumn('empresas', 'cancelled_at', 'ALTER TABLE empresas ADD COLUMN cancelled_at DATE NULL AFTER renewal_status');
         self::syncFromTenants();
         self::markOverduePayments();
+        self::expireCancelledSubscriptions();
         self::normalizeConvertedLeadStages();
     }
 
@@ -2942,7 +2955,7 @@ final class EmpresaRepository
             'active' => self::count($pdo, 'status = "ACTIVE"'),
             'trial' => self::count($pdo, 'status = "TRIAL"'),
             'payments_pending' => self::count($pdo, 'payment_status IN ("PENDING", "OVERDUE")'),
-            'mrr' => (float) $pdo->query('SELECT COALESCE(SUM(monthly_price), 0) FROM empresas WHERE status IN ("ACTIVE", "TRIAL")')->fetchColumn(),
+            'mrr' => (float) $pdo->query('SELECT COALESCE(SUM(monthly_price), 0) FROM empresas WHERE status = "ACTIVE" AND renewal_status <> "CANCELLED"')->fetchColumn(),
         ];
     }
 
@@ -3009,8 +3022,8 @@ final class EmpresaRepository
         }
 
         $stmt = Database::connection()->prepare(
-            'INSERT INTO empresas (id, tenant_id, client_id, name, contact_email, plan, status, payment_status, monthly_price, next_payment_at, trial_days, notes, created_at, updated_at)
-             VALUES (:id, :tenant_id, :client_id, :name, :contact_email, :plan, :status, :payment_status, :monthly_price, :next_payment_at, :trial_days, :notes, NOW(), NOW())'
+            'INSERT INTO empresas (id, tenant_id, client_id, name, contact_email, plan, status, payment_status, monthly_price, next_payment_at, trial_days, subscription_started_at, paid_since, access_until, renewal_period, renewal_status, cancelled_at, notes, created_at, updated_at)
+             VALUES (:id, :tenant_id, :client_id, :name, :contact_email, :plan, :status, :payment_status, :monthly_price, :next_payment_at, :trial_days, :subscription_started_at, :paid_since, :access_until, :renewal_period, :renewal_status, :cancelled_at, :notes, NOW(), NOW())'
         );
         $stmt->execute($params + ['id' => cuid(), 'tenant_id' => $tenantId]);
 
@@ -3033,6 +3046,12 @@ final class EmpresaRepository
                  monthly_price = :monthly_price,
                  next_payment_at = :next_payment_at,
                  trial_days = :trial_days,
+                 subscription_started_at = :subscription_started_at,
+                 paid_since = :paid_since,
+                 access_until = :access_until,
+                 renewal_period = :renewal_period,
+                 renewal_status = :renewal_status,
+                 cancelled_at = :cancelled_at,
                  notes = :notes,
                  updated_at = NOW()
              WHERE id = :id'
@@ -3074,7 +3093,8 @@ final class EmpresaRepository
             throw new RuntimeException('La empresa no tiene precio mensual configurado.');
         }
 
-        $nextPaymentAt = $due->modify('+1 month')->format('Y-m-d');
+        $period = (string) ($empresa['renewal_period'] ?? 'MONTHLY');
+        $nextPaymentAt = $due->modify($period === 'ANNUAL' ? '+1 year' : '+1 month')->format('Y-m-d');
         $concept = 'Renovacion suscripcion CRM - ' . $due->format('m/Y');
         $notes = 'Renovacion creada desde Admin CRM para ' . $empresa['name'] . '.';
 
@@ -3099,6 +3119,11 @@ final class EmpresaRepository
                 'UPDATE empresas
                  SET payment_status = "PAID",
                      next_payment_at = :next_payment_at,
+                     access_until = :next_payment_at,
+                     paid_since = COALESCE(paid_since, CURDATE()),
+                     subscription_started_at = COALESCE(subscription_started_at, CURDATE()),
+                     renewal_status = "ACTIVE",
+                     cancelled_at = NULL,
                      updated_at = NOW()
                  WHERE id = :id'
             );
@@ -3115,6 +3140,104 @@ final class EmpresaRepository
 
             throw $exception;
         }
+    }
+
+    public static function cancelSubscription(string $id): void
+    {
+        self::ensureTables();
+        $empresa = self::find($id);
+        if (!$empresa) {
+            throw new RuntimeException('No se encontro la empresa.');
+        }
+
+        $accessUntil = trim((string) ($empresa['access_until'] ?? ''))
+            ?: trim((string) ($empresa['next_payment_at'] ?? ''))
+            ?: date('Y-m-d');
+
+        Database::connection()->prepare(
+            'UPDATE empresas
+             SET renewal_status = "CANCEL_AT_PERIOD_END",
+                 access_until = :access_until,
+                 cancelled_at = CURDATE(),
+                 updated_at = NOW()
+             WHERE id = :id'
+        )->execute(['id' => $id, 'access_until' => $accessUntil]);
+    }
+
+    public static function resumeSubscription(string $id): void
+    {
+        self::ensureTables();
+        $empresa = self::find($id);
+        if (!$empresa) {
+            throw new RuntimeException('No se encontro la empresa.');
+        }
+
+        $nextPaymentAt = trim((string) ($empresa['next_payment_at'] ?? ''));
+        if ($nextPaymentAt === '' || strtotime($nextPaymentAt) <= strtotime(date('Y-m-d'))) {
+            $nextPaymentAt = self::defaultNextPaymentDate((string) ($empresa['renewal_period'] ?? 'MONTHLY'));
+        }
+
+        Database::connection()->prepare(
+            'UPDATE empresas
+             SET status = CASE WHEN status = "CANCELLED" THEN "ACTIVE" ELSE status END,
+                 payment_status = CASE WHEN payment_status = "TRIAL" AND plan <> "TRIAL" THEN "PAID" ELSE payment_status END,
+                 renewal_status = "ACTIVE",
+                 next_payment_at = :next_payment_at,
+                 access_until = :next_payment_at,
+                 cancelled_at = NULL,
+                 updated_at = NOW()
+             WHERE id = :id'
+        )->execute(['id' => $id, 'next_payment_at' => $nextPaymentAt]);
+    }
+
+    public static function findByTenant(string $tenantId): ?array
+    {
+        self::ensureTables();
+        $stmt = Database::connection()->prepare('SELECT * FROM empresas WHERE tenant_id = :tenant_id LIMIT 1');
+        $stmt->execute(['tenant_id' => $tenantId]);
+        $empresa = $stmt->fetch();
+
+        return $empresa ?: null;
+    }
+
+    public static function accessStateForTenant(string $tenantId): ?array
+    {
+        $empresa = self::findByTenant($tenantId);
+        if (!$empresa) {
+            return null;
+        }
+
+        $today = new DateTimeImmutable('today');
+        $isTrial = strtoupper((string) ($empresa['plan'] ?? '')) === 'TRIAL' || (string) ($empresa['status'] ?? '') === 'TRIAL';
+        if ($isTrial) {
+            $createdAt = new DateTimeImmutable((string) ($empresa['created_at'] ?? 'now'));
+            $expiresAt = $createdAt->modify('+' . max(1, (int) ($empresa['trial_days'] ?? 30)) . ' days');
+            if ($expiresAt < $today) {
+                return [
+                    'blocked' => true,
+                    'kind' => 'trial_expired',
+                    'title' => 'Tu demo ha caducado',
+                    'message' => 'El periodo de prueba finalizo el ' . format_date_short($expiresAt->format('Y-m-d')) . '. Elige un plan para continuar usando Membora.',
+                    'expires_at' => $expiresAt->format('Y-m-d'),
+                ];
+            }
+        }
+
+        $accessUntil = trim((string) ($empresa['access_until'] ?? ''));
+        if (in_array((string) ($empresa['renewal_status'] ?? ''), ['CANCEL_AT_PERIOD_END', 'CANCELLED'], true) && $accessUntil !== '') {
+            $accessDate = new DateTimeImmutable($accessUntil);
+            if ($accessDate < $today) {
+                return [
+                    'blocked' => true,
+                    'kind' => 'access_expired',
+                    'title' => 'Tu acceso ha finalizado',
+                    'message' => 'La suscripcion estuvo activa hasta el ' . format_date_short($accessUntil) . '. Elige un plan para reactivar el CRM.',
+                    'expires_at' => $accessUntil,
+                ];
+            }
+        }
+
+        return ['blocked' => false, 'empresa' => $empresa];
     }
 
     private static function syncFromTenants(): void
@@ -3181,13 +3304,33 @@ final class EmpresaRepository
         $plan = strtoupper(trim((string) ($data['plan'] ?? 'BASIC'))) ?: 'BASIC';
         $nextPaymentAt = trim((string) ($data['next_payment_at'] ?? '')) ?: null;
         $trialDays = max(1, min(365, (int) ($data['trial_days'] ?? 30)));
+        $renewalPeriod = in_array($data['renewal_period'] ?? '', ['MONTHLY', 'ANNUAL'], true) ? $data['renewal_period'] : 'MONTHLY';
+        $renewalStatus = in_array($data['renewal_status'] ?? '', ['ACTIVE', 'CANCEL_AT_PERIOD_END', 'CANCELLED'], true) ? $data['renewal_status'] : 'ACTIVE';
+        $subscriptionStartedAt = trim((string) ($data['subscription_started_at'] ?? '')) ?: null;
+        $paidSince = trim((string) ($data['paid_since'] ?? '')) ?: null;
+        $accessUntil = trim((string) ($data['access_until'] ?? '')) ?: null;
+        $cancelledAt = trim((string) ($data['cancelled_at'] ?? '')) ?: null;
         if ($plan === 'TRIAL') {
             $status = 'TRIAL';
             $paymentStatus = 'TRIAL';
             $nextPaymentAt = null;
+            $paidSince = null;
             $price = '0';
         } elseif ($nextPaymentAt === null && $status !== 'CANCELLED' && $plan !== '') {
-            $nextPaymentAt = self::defaultNextPaymentDate();
+            $nextPaymentAt = self::defaultNextPaymentDate($renewalPeriod);
+        }
+
+        if ($subscriptionStartedAt === null) {
+            $subscriptionStartedAt = date('Y-m-d');
+        }
+        if ($plan !== 'TRIAL' && $paidSince === null && in_array($paymentStatus, ['PAID', 'PENDING', 'OVERDUE'], true)) {
+            $paidSince = date('Y-m-d');
+        }
+        if ($accessUntil === null) {
+            $accessUntil = $nextPaymentAt;
+        }
+        if ($renewalStatus === 'CANCELLED' && $cancelledAt === null) {
+            $cancelledAt = date('Y-m-d');
         }
 
         return [
@@ -3200,6 +3343,12 @@ final class EmpresaRepository
             'monthly_price' => number_format(max(0, (float) $price), 2, '.', ''),
             'next_payment_at' => $nextPaymentAt,
             'trial_days' => $trialDays,
+            'subscription_started_at' => $subscriptionStartedAt,
+            'paid_since' => $paidSince,
+            'access_until' => $accessUntil,
+            'renewal_period' => $renewalPeriod,
+            'renewal_status' => $renewalStatus,
+            'cancelled_at' => $cancelledAt,
             'notes' => trim((string) ($data['notes'] ?? '')) ?: null,
         ];
     }
@@ -3219,6 +3368,20 @@ final class EmpresaRepository
         );
     }
 
+    private static function expireCancelledSubscriptions(): void
+    {
+        Database::connection()->exec(
+            'UPDATE empresas
+             SET status = "CANCELLED",
+                 renewal_status = "CANCELLED",
+                 payment_status = "PENDING",
+                 updated_at = NOW()
+             WHERE renewal_status = "CANCEL_AT_PERIOD_END"
+               AND access_until IS NOT NULL
+               AND access_until < CURDATE()'
+        );
+    }
+
     private static function normalizeConvertedLeadStages(): void
     {
         try {
@@ -3232,9 +3395,13 @@ final class EmpresaRepository
         }
     }
 
-    private static function defaultNextPaymentDate(): string
+    private static function defaultNextPaymentDate(string $period = 'MONTHLY'): string
     {
         $today = new DateTimeImmutable('today');
+        if ($period === 'ANNUAL') {
+            return $today->modify('+1 year')->format('Y-m-d');
+        }
+
         $nextMonthStart = $today->modify('first day of next month');
         $lastDayOfNextMonth = (int) $nextMonthStart->format('t');
         $day = min((int) $today->format('j'), $lastDayOfNextMonth);

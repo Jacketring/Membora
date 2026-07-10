@@ -92,7 +92,8 @@ $planOptions = $planOptions ?? PlatformPlanRepository::options();
           <th>Estado CRM</th>
           <th>Pago</th>
           <th>Precio mensual</th>
-          <th>Proximo pago / prueba</th>
+          <th>Suscripcion</th>
+          <th>Acceso</th>
           <th>Notas</th>
           <th>Acciones</th>
         </tr>
@@ -104,11 +105,14 @@ $planOptions = $planOptions ?? PlatformPlanRepository::options();
             $paymentClass = strtolower((string) $empresa['payment_status']);
             $isTrialPlan = strtoupper((string) $empresa['plan']) === 'TRIAL';
             $nextPaymentTime = !empty($empresa['next_payment_at']) ? strtotime((string) $empresa['next_payment_at']) : false;
+            $renewalStatus = (string) ($empresa['renewal_status'] ?? 'ACTIVE');
             $canRenew = !$isTrialPlan
                 && $nextPaymentTime !== false
                 && $nextPaymentTime <= strtotime(date('Y-m-d'))
                 && in_array((string) $empresa['status'], ['ACTIVE', 'TRIAL'], true)
                 && (float) $empresa['monthly_price'] > 0;
+            $canCancel = !$isTrialPlan && $renewalStatus === 'ACTIVE' && (string) $empresa['status'] !== 'CANCELLED';
+            $canResume = in_array($renewalStatus, ['CANCEL_AT_PERIOD_END', 'CANCELLED'], true);
           ?>
           <tr class="lead-data-row clickable-row" tabindex="0" data-open-modal="empresa-edit-<?= e($empresa['id']) ?>">
             <td>
@@ -120,7 +124,14 @@ $planOptions = $planOptions ?? PlatformPlanRepository::options();
             <td><span class="status-badge status-badge--<?= e($statusClass) ?>"><?= e(empresa_status_label($empresa['status'])) ?></span></td>
             <td><span class="status-badge status-badge--<?= e($paymentClass) ?>"><?= e(empresa_payment_status_label($empresa['payment_status'])) ?></span></td>
             <td><?= e(money_amount($empresa['monthly_price'])) ?></td>
-            <td><?= e($isTrialPlan ? ('Prueba: ' . (int) ($empresa['trial_days'] ?? 30) . ' dias') : format_date_short($empresa['next_payment_at'])) ?></td>
+            <td>
+              <strong><?= e(empresa_renewal_period_label($empresa['renewal_period'] ?? 'MONTHLY')) ?></strong>
+              <span class="table-subtext"><?= e($isTrialPlan ? ('Prueba: ' . (int) ($empresa['trial_days'] ?? 30) . ' dias') : empresa_renewal_status_label($renewalStatus)) ?></span>
+            </td>
+            <td>
+              <strong><?= e($isTrialPlan ? 'Demo' : format_date_short($empresa['access_until'] ?: $empresa['next_payment_at'])) ?></strong>
+              <span class="table-subtext"><?= e($isTrialPlan ? ('Inicio ' . format_date_short($empresa['subscription_started_at'] ?: $empresa['created_at'])) : ('Proximo pago ' . format_date_short($empresa['next_payment_at']))) ?></span>
+            </td>
             <td><?= e($empresa['notes'] ? substr($empresa['notes'], 0, 60) . (strlen($empresa['notes']) > 60 ? '...' : '') : 'Sin notas') ?></td>
             <td>
               <div class="platform-row-actions">
@@ -148,12 +159,31 @@ $planOptions = $planOptions ?? PlatformPlanRepository::options();
                     </button>
                   </form>
                 <?php endif; ?>
+                <?php if ($canCancel): ?>
+                  <form method="post" data-confirm-message="La empresa mantendra acceso hasta la fecha de fin del periodo, pero no renovara automaticamente." data-confirm-action-label="Cancelar renovacion">
+                    <input type="hidden" name="action" value="cancel_empresa_subscription">
+                    <input type="hidden" name="id" value="<?= e($empresa['id']) ?>">
+                    <button class="note-delete-button" type="submit" aria-label="Cancelar suscripcion de <?= e($empresa['name']) ?>">
+                      <svg viewBox="0 0 24 24"><path d="M6 6h12v2H6V6Zm2 4h8l-1 10H9L8 10Zm3-7h2l1 2h-4l1-2Z"/></svg>
+                    </button>
+                  </form>
+                <?php endif; ?>
+                <?php if ($canResume): ?>
+                  <form method="post">
+                    <input type="hidden" name="action" value="resume_empresa_subscription">
+                    <input type="hidden" name="id" value="<?= e($empresa['id']) ?>">
+                    <button class="support-renew-action" type="submit" aria-label="Reactivar suscripcion de <?= e($empresa['name']) ?>">
+                      <svg viewBox="0 0 24 24"><path d="M12 5v14m7-7H5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                      <span>Reactivar</span>
+                    </button>
+                  </form>
+                <?php endif; ?>
               </div>
             </td>
           </tr>
         <?php endforeach; ?>
         <?php if (!$empresas): ?>
-          <tr><td colspan="9" class="empty-state">No hay empresas que coincidan con los filtros actuales.</td></tr>
+          <tr><td colspan="10" class="empty-state">No hay empresas que coincidan con los filtros actuales.</td></tr>
         <?php endif; ?>
       </tbody>
     </table>

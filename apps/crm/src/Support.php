@@ -473,6 +473,23 @@ function empresa_payment_status_label(?string $status): string
     ]);
 }
 
+function empresa_renewal_period_label(?string $period): string
+{
+    return enum_label((string) $period, [
+        'MONTHLY' => 'Mensual',
+        'ANNUAL' => 'Anual',
+    ]);
+}
+
+function empresa_renewal_status_label(?string $status): string
+{
+    return enum_label((string) $status, [
+        'ACTIVE' => 'Renovacion activa',
+        'CANCEL_AT_PERIOD_END' => 'Cancelada al final del periodo',
+        'CANCELLED' => 'Cancelada',
+    ]);
+}
+
 function platform_client_status_label(?string $status): string
 {
     return enum_label((string) $status, [
@@ -627,6 +644,8 @@ function audit_action_label(?string $action): string
         'create_empresa' => 'Creacion de empresa',
         'update_empresa' => 'Actualizacion de empresa',
         'renew_empresa_subscription' => 'Renovacion de suscripcion',
+        'cancel_empresa_subscription' => 'Cancelacion de suscripcion',
+        'resume_empresa_subscription' => 'Reactivacion de suscripcion',
         'create_platform_payment' => 'Creacion de pago CRM',
         'update_platform_payment' => 'Actualizacion de pago CRM',
         'create_platform_plan' => 'Creacion de plan CRM',
