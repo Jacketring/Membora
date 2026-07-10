@@ -413,7 +413,7 @@ function can_perform_action(string $action, ?array $user = null): bool
         'SALES_RECEPTION' => [
             'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
             'create_member', 'update_member',
-            'renew_member_subscription', 'create_payment', 'update_payment',
+            'renew_member_subscription', 'create_payment', 'update_payment', 'mark_payment_paid',
             'save_billing_integration', 'sync_billing_integration',
             'create_checkin',
             'create_reservation', 'update_reservation_status',
@@ -423,7 +423,7 @@ function can_perform_action(string $action, ?array $user = null): bool
         'RECEPTION' => [
             'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
             'create_member', 'update_member',
-            'renew_member_subscription', 'create_payment', 'update_payment',
+            'renew_member_subscription', 'create_payment', 'update_payment', 'mark_payment_paid',
             'save_billing_integration', 'sync_billing_integration',
             'create_checkin',
             'create_reservation', 'update_reservation_status',
@@ -433,7 +433,7 @@ function can_perform_action(string $action, ?array $user = null): bool
         'SALES' => [
             'create_lead', 'update_lead', 'add_lead_note', 'update_lead_note', 'delete_lead_note', 'update_lead_stage', 'convert_lead', 'mark_lead_lost',
             'create_member', 'update_member',
-            'renew_member_subscription', 'create_payment', 'update_payment',
+            'renew_member_subscription', 'create_payment', 'update_payment', 'mark_payment_paid',
             'save_billing_integration', 'sync_billing_integration',
             'create_task', 'update_task', 'update_task_status',
             'update_risk_alert_status',
@@ -514,10 +514,11 @@ function platform_lead_status_label(?string $status): string
 function platform_payment_status_label(?string $status): string
 {
     return enum_label((string) $status, [
+        'DRAFT' => 'Borrador',
         'PAID' => 'Pagado',
         'PENDING' => 'Pendiente',
         'OVERDUE' => 'Vencido',
-        'CANCELLED' => 'Cancelado',
+        'CANCELLED' => 'Anulado',
     ]);
 }
 
@@ -544,6 +545,8 @@ function payment_method_label(?string $method): string
         'CARD' => 'Tarjeta',
         'STRIPE' => 'Stripe',
         'TRANSFER' => 'Transferencia',
+        'TPV' => 'TPV',
+        'DIRECT_DEBIT' => 'Domiciliacion',
         'BIZUM' => 'Bizum',
         'OTHER' => 'Otro',
     ]);
@@ -634,6 +637,8 @@ function audit_action_label(?string $action): string
         'delete_membership_plan' => 'Eliminar membresia',
         'create_payment' => 'Creacion de pago',
         'update_payment' => 'Actualizacion de pago',
+        'mark_payment_paid' => 'Pago marcado como cobrado',
+        'generate_recurring_payments' => 'Generacion de borradores recurrentes',
         'delete_payment' => 'Eliminacion de pago',
         'create_checkin' => 'Crear check-in',
         'delete_checkin' => 'Eliminar check-in',
@@ -925,6 +930,8 @@ function membership_period_label(?string $period): string
     return enum_label((string) $period, [
         'WEEKLY' => 'Semanal',
         'MONTHLY' => 'Mensual',
+        'BIMONTHLY' => 'Bimestral',
+        'QUARTERLY' => 'Trimestral',
         'YEARLY' => 'Anual',
     ]);
 }
@@ -933,6 +940,8 @@ function membership_duration_days(?string $period): int
 {
     return match ($period) {
         'WEEKLY' => 7,
+        'BIMONTHLY' => 60,
+        'QUARTERLY' => 90,
         'YEARLY' => 365,
         default => 30,
     };
@@ -945,6 +954,8 @@ function membership_end_date(?string $startDate, ?string $period): string
 
     return match ($period) {
         'WEEKLY' => $date->modify('+7 days')->format('Y-m-d'),
+        'BIMONTHLY' => $date->modify('+2 months')->format('Y-m-d'),
+        'QUARTERLY' => $date->modify('+3 months')->format('Y-m-d'),
         'YEARLY' => $date->modify('+1 year')->format('Y-m-d'),
         default => $date->modify('+1 month')->format('Y-m-d'),
     };

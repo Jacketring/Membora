@@ -19,6 +19,10 @@
     <span>Caducan pronto</span>
     <strong><?= (int) $metrics['expiring'] ?></strong>
   </article>
+  <article class="lead-metric lead-metric--blue">
+    <span>Proxima facturacion</span>
+    <strong><?= (int) $metrics['next_billing'] ?></strong>
+  </article>
   <article class="lead-metric lead-metric--dark">
     <span>Caducadas</span>
     <strong><?= (int) $metrics['expired'] ?></strong>
@@ -131,6 +135,7 @@ $membershipStatusOptions = [
           <th scope="col">Membresia</th>
           <th scope="col">Precio</th>
           <th scope="col">Inicio</th>
+          <th scope="col">Proximo cobro</th>
           <th scope="col">Caduca</th>
         </tr>
       </thead>
@@ -142,6 +147,7 @@ $membershipStatusOptions = [
             <td><?= e($subscription['plan_name']) ?> <small class="table-subtext"><?= e(membership_period_label($subscription['billing_period'])) ?></small></td>
             <td><?= e(money_amount($subscription['price'])) ?></td>
             <td><?= e(format_date_short($subscription['starts_at'])) ?></td>
+            <td><?= e(format_date_short($subscription['next_billing_at'] ?: $subscription['starts_at'])) ?></td>
             <td>
               <span class="membership-expiry <?= strtotime($subscription['ends_at']) < strtotime(date('Y-m-d')) ? 'membership-expiry--expired' : '' ?>">
                 <?= e(format_date_short($subscription['ends_at'])) ?>
@@ -151,7 +157,7 @@ $membershipStatusOptions = [
         <?php endforeach; ?>
         <?php if (!$subscriptions): ?>
           <tr>
-            <td class="leads-empty-cell" colspan="5">Todavia no hay socios con membresia asignada.</td>
+            <td class="leads-empty-cell" colspan="6">Todavia no hay socios con membresia asignada.</td>
           </tr>
         <?php endif; ?>
       </tbody>

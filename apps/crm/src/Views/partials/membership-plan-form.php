@@ -2,6 +2,8 @@
 $periodOptions = [
   'WEEKLY' => 'Semanal',
   'MONTHLY' => 'Mensual',
+  'BIMONTHLY' => 'Bimestral',
+  'QUARTERLY' => 'Trimestral',
   'YEARLY' => 'Anual',
 ];
 $statusOptions = [

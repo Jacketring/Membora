@@ -3,7 +3,14 @@
     <h2>Pagos</h2>
     <p>Registra cobros de socios, vencimientos y pagos pendientes del gimnasio.</p>
   </div>
-  <button class="primary-action primary-action--compact" data-open-modal="payment-modal" type="button">Nuevo pago</button>
+  <div class="row-actions">
+    <form method="post">
+      <input type="hidden" name="action" value="generate_recurring_payments">
+      <input type="hidden" name="until_date" value="<?= e(date('Y-m-d')) ?>">
+      <button class="secondary-action secondary-action--compact" type="submit">Generar borradores</button>
+    </form>
+    <button class="primary-action primary-action--compact" data-open-modal="payment-modal" type="button">Nuevo pago</button>
+  </div>
 </div>
 
 <section class="lead-metrics" aria-label="Resumen de pagos">
@@ -19,19 +26,28 @@
     <span>Pagos pendientes</span>
     <strong><?= (int) $metrics['pending_count'] ?></strong>
   </article>
+  <article class="lead-metric lead-metric--blue">
+    <span>Borradores</span>
+    <strong><?= (int) $metrics['draft_count'] ?></strong>
+  </article>
   <article class="lead-metric lead-metric--dark">
     <span>Vencidos</span>
     <strong><?= (int) $metrics['overdue_count'] ?></strong>
+  </article>
+  <article class="lead-metric lead-metric--green">
+    <span>Proximos 7 dias</span>
+    <strong><?= (int) $metrics['next_due_count'] ?></strong>
   </article>
 </section>
 
 <?php
 $paymentStatusOptions = [
   '' => 'Todos',
+  'DRAFT' => 'Borradores',
   'PENDING' => 'Pendientes',
   'PAID' => 'Pagados',
   'OVERDUE' => 'Vencidos',
-  'CANCELLED' => 'Cancelados',
+  'CANCELLED' => 'Anulados',
 ];
 ?>
 
@@ -85,8 +101,10 @@ $paymentStatusOptions = [
           <th scope="col">Importe</th>
           <th scope="col">Metodo</th>
           <th scope="col">Estado</th>
+          <th scope="col">Periodo</th>
           <th scope="col">Vence</th>
           <th scope="col">Pagado</th>
+          <th scope="col">Referencia</th>
           <th scope="col">Notas</th>
           <th scope="col">Acciones</th>
         </tr>
@@ -106,14 +124,32 @@ $paymentStatusOptions = [
             <td><?= e(money_amount($payment['amount'])) ?></td>
             <td><?= e(payment_method_label($payment['payment_method'])) ?></td>
             <td><span class="status-badge status-badge--<?= e($statusClass) ?>"><?= e(platform_payment_status_label($payment['status'])) ?></span></td>
+            <td>
+              <small class="table-subtext">
+                <?= e($payment['period_start_at'] ? format_date_short($payment['period_start_at']) : '-') ?>
+                <?= $payment['period_end_at'] ? ' - ' . e(format_date_short($payment['period_end_at'])) : '' ?>
+              </small>
+            </td>
             <td><?= e(format_date_short($payment['due_at'])) ?></td>
             <td><?= e(format_date_short($payment['paid_at'])) ?></td>
+            <td><?= e($payment['reference'] ?: '-') ?></td>
             <td><?= e($payment['notes'] ? substr($payment['notes'], 0, 70) . (strlen($payment['notes']) > 70 ? '...' : '') : 'Sin notas') ?></td>
             <td>
               <div class="row-actions">
                 <button class="icon-action" data-open-modal="payment-detail-<?= e($payment['id']) ?>" type="button" title="Editar pago" aria-label="Editar pago de <?= e($memberName) ?>">
                   <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20h4.8L19.4 9.4a2.1 2.1 0 0 0 0-3L17.6 4.6a2.1 2.1 0 0 0-3 0L4 15.2V20Zm2-2v-1.95l7.25-7.25 1.95 1.95L7.95 18H6Zm10.6-8.65L14.65 7.4 16 6.05 17.95 8l-1.35 1.35Z"/></svg>
                 </button>
+                <?php if (!in_array((string) $payment['status'], ['PAID', 'CANCELLED'], true)): ?>
+                  <form method="post" data-confirm-message="Marcar este pago como cobrado?">
+                    <input type="hidden" name="action" value="mark_payment_paid">
+                    <input type="hidden" name="id" value="<?= e($payment['id']) ?>">
+                    <input type="hidden" name="paid_at" value="<?= e(date('Y-m-d')) ?>">
+                    <input type="hidden" name="payment_method" value="<?= e($payment['payment_method'] ?: 'OTHER') ?>">
+                    <button class="icon-action success-action" type="submit" title="Marcar como cobrada" aria-label="Marcar como cobrada la cuota de <?= e($memberName) ?>">
+                      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9.2 16.2 4.9 11.9 3.5 13.3l5.7 5.7L21 7.2 19.6 5.8 9.2 16.2Z"/></svg>
+                    </button>
+                  </form>
+                <?php endif; ?>
                 <a class="icon-action success-action" href="index.php?route=payment-invoice&id=<?= urlencode($payment['id']) ?>" target="_blank" rel="noopener" title="Crear factura PDF" aria-label="Crear factura PDF del pago de <?= e($memberName) ?>">
                   <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 1.5V8h4.5L14 3.5ZM8 11h8v2H8v-2Zm0 4h8v2H8v-2Zm0-8h4v2H8V7Z"/></svg>
                 </a>
@@ -130,11 +166,11 @@ $paymentStatusOptions = [
         <?php endforeach; ?>
         <?php if (!$payments): ?>
           <tr data-live-search-empty>
-            <td class="leads-empty-cell" colspan="9">No hay pagos que coincidan con los filtros actuales.</td>
+            <td class="leads-empty-cell" colspan="11">No hay pagos que coincidan con los filtros actuales.</td>
           </tr>
         <?php else: ?>
           <tr data-live-search-empty hidden>
-            <td class="leads-empty-cell" colspan="9">No hay pagos que coincidan con la busqueda actual.</td>
+            <td class="leads-empty-cell" colspan="11">No hay pagos que coincidan con la busqueda actual.</td>
           </tr>
         <?php endif; ?>
       </tbody>
@@ -149,7 +185,7 @@ $paymentStatusOptions = [
       <button data-close-modal type="button">Cerrar</button>
     </header>
     <?php require __DIR__ . '/partials/payment-form.php'; ?>
-    <button class="primary-action" type="submit">Registrar pago</button>
+    <button class="primary-action" type="submit" name="action" value="create_payment">Registrar pago</button>
   </form>
 </dialog>
 
@@ -165,7 +201,12 @@ $paymentStatusOptions = [
         <button data-close-modal type="button">Cerrar</button>
       </header>
       <?php require __DIR__ . '/partials/payment-form.php'; ?>
-      <button class="primary-action" type="submit">Guardar pago</button>
+      <div class="row-actions">
+        <?php if (!in_array((string) $payment['status'], ['PAID', 'CANCELLED'], true)): ?>
+          <button class="secondary-action" type="submit" name="action" value="mark_payment_paid">Marcar como cobrada</button>
+        <?php endif; ?>
+        <button class="primary-action" type="submit" name="action" value="update_payment">Guardar pago</button>
+      </div>
     </form>
   </dialog>
 <?php endforeach; ?>

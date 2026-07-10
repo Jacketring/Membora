@@ -66,6 +66,8 @@ final class Actions
             'delete_membership_plan' => self::deleteMembershipPlan(),
             'create_payment' => self::createPayment(),
             'update_payment' => self::updatePayment(),
+            'mark_payment_paid' => self::markPaymentPaid(),
+            'generate_recurring_payments' => self::generateRecurringPayments(),
             'delete_payment' => self::deletePayment(),
             'create_checkin' => self::createCheckin(),
             'delete_checkin' => self::deleteCheckin(),
@@ -1412,7 +1414,7 @@ final class Actions
     private static function membershipPeriodFromPost(): string
     {
         $period = post_value('billing_period', 'MONTHLY');
-        return in_array($period, ['WEEKLY', 'MONTHLY', 'YEARLY'], true) ? $period : 'MONTHLY';
+        return in_array($period, ['WEEKLY', 'MONTHLY', 'BIMONTHLY', 'QUARTERLY', 'YEARLY'], true) ? $period : 'MONTHLY';
     }
 
     private static function priceFromPost(): string
@@ -1450,6 +1452,39 @@ final class Actions
         }
 
         flash('Pago actualizado correctamente.');
+        redirect('payments');
+    }
+
+    private static function markPaymentPaid(): never
+    {
+        $id = post_value('id', '');
+        if ($id === '') {
+            flash('No se encontro el pago seleccionado.', 'error');
+            redirect('payments');
+        }
+
+        try {
+            PaymentRepository::markPaid(Auth::tenantId(), $id, $_POST);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo marcar el pago como cobrado.', 'error');
+            redirect('payments');
+        }
+
+        flash('Pago marcado como cobrado correctamente.');
+        redirect('payments');
+    }
+
+    private static function generateRecurringPayments(): never
+    {
+        try {
+            $untilDate = post_value('until_date', '') ?: date('Y-m-d');
+            $created = PaymentRepository::generateRecurringDrafts(Auth::tenantId(), $untilDate);
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudieron generar los borradores recurrentes.', 'error');
+            redirect('payments');
+        }
+
+        flash('Borradores recurrentes generados: ' . $created . '.');
         redirect('payments');
     }
 

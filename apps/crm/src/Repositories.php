@@ -1461,6 +1461,10 @@ final class PaymentRepository
         self::ensureColumn('payments', 'status', 'VARCHAR(32) NOT NULL DEFAULT "PENDING"');
         self::ensureColumn('payments', 'paid_at', 'DATE NULL');
         self::ensureColumn('payments', 'due_at', 'DATE NULL');
+        self::ensureColumn('payments', 'period_start_at', 'DATE NULL');
+        self::ensureColumn('payments', 'period_end_at', 'DATE NULL');
+        self::ensureColumn('payments', 'reference', 'VARCHAR(191) NULL');
+        self::ensureColumn('payments', 'paid_notes', 'TEXT NULL');
         self::ensureColumn('payments', 'notes', 'TEXT NULL');
         self::ensureColumn('payments', 'external_sync_status', 'VARCHAR(32) NOT NULL DEFAULT "PENDING"');
         self::ensureColumn('payments', 'external_reference', 'VARCHAR(191) NULL');
@@ -1476,9 +1480,11 @@ final class PaymentRepository
 
         return [
             'paid_month' => self::sum($pdo, $tenantId, 'status = "PAID" AND paid_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01")'),
-            'pending_amount' => self::sum($pdo, $tenantId, 'status IN ("PENDING", "OVERDUE")'),
+            'pending_amount' => self::sum($pdo, $tenantId, 'status IN ("DRAFT", "PENDING", "OVERDUE")'),
+            'draft_count' => self::count($pdo, $tenantId, 'status = "DRAFT"'),
             'pending_count' => self::count($pdo, $tenantId, 'status = "PENDING"'),
             'overdue_count' => self::count($pdo, $tenantId, 'status = "OVERDUE" OR (status = "PENDING" AND due_at IS NOT NULL AND due_at < CURDATE())'),
+            'next_due_count' => self::count($pdo, $tenantId, 'status IN ("DRAFT", "PENDING") AND due_at BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)'),
         ];
     }
 
@@ -1491,7 +1497,7 @@ final class PaymentRepository
         $where = ['payments.tenant_id = :tenant_id'];
 
         if ($query !== '') {
-            $where[] = '(members.first_name LIKE :query OR members.last_name LIKE :query OR members.email LIKE :query OR membership_plans.name LIKE :query OR payments.notes LIKE :query)';
+            $where[] = '(members.first_name LIKE :query OR members.last_name LIKE :query OR members.email LIKE :query OR membership_plans.name LIKE :query OR payments.notes LIKE :query OR payments.reference LIKE :query)';
             $params['query'] = '%' . $query . '%';
         }
 
@@ -1524,7 +1530,7 @@ final class PaymentRepository
              LEFT JOIN subscriptions ON subscriptions.id = payments.subscription_id AND subscriptions.tenant_id = payments.tenant_id
              LEFT JOIN membership_plans ON membership_plans.id = subscriptions.membership_plan_id AND membership_plans.tenant_id = payments.tenant_id
              WHERE ' . implode(' AND ', $where) . '
-             ORDER BY FIELD(payments.status, "OVERDUE", "PENDING", "PAID", "CANCELLED"), payments.due_at IS NULL, payments.due_at ASC, payments.created_at DESC
+             ORDER BY FIELD(payments.status, "OVERDUE", "PENDING", "DRAFT", "PAID", "CANCELLED"), payments.due_at IS NULL, payments.due_at ASC, payments.created_at DESC
              LIMIT ' . max(1, min($limit, 300))
         );
         $stmt->execute($params);
@@ -1537,10 +1543,14 @@ final class PaymentRepository
         self::ensureTable();
         $params = self::params($tenantId, $data);
         $stmt = Database::connection()->prepare(
-            'INSERT INTO payments (id, tenant_id, member_id, subscription_id, amount, currency, payment_method, status, paid_at, due_at, notes, created_at, updated_at)
-             VALUES (:id, :tenant_id, :member_id, :subscription_id, :amount, :currency, :payment_method, :status, :paid_at, :due_at, :notes, NOW(), NOW())'
+            'INSERT INTO payments (id, tenant_id, member_id, subscription_id, amount, currency, payment_method, status, paid_at, due_at, period_start_at, period_end_at, reference, paid_notes, notes, created_at, updated_at)
+             VALUES (:id, :tenant_id, :member_id, :subscription_id, :amount, :currency, :payment_method, :status, :paid_at, :due_at, :period_start_at, :period_end_at, :reference, :paid_notes, :notes, NOW(), NOW())'
         );
         $stmt->execute($params + ['id' => cuid()]);
+
+        if ($params['status'] === 'PAID' && $params['subscription_id'] && $params['period_end_at']) {
+            self::advanceSubscriptionBilling($tenantId, (string) $params['subscription_id'], (string) $params['period_end_at']);
+        }
     }
 
     public static function update(string $tenantId, string $id, array $data): void
@@ -1557,11 +1567,19 @@ final class PaymentRepository
                  status = :status,
                  paid_at = :paid_at,
                  due_at = :due_at,
+                 period_start_at = :period_start_at,
+                 period_end_at = :period_end_at,
+                 reference = :reference,
+                 paid_notes = :paid_notes,
                  notes = :notes,
                  updated_at = NOW()
              WHERE id = :id AND tenant_id = :tenant_id'
         );
         $stmt->execute($params);
+
+        if ($params['status'] === 'PAID' && $params['subscription_id'] && $params['period_end_at']) {
+            self::advanceSubscriptionBilling($tenantId, (string) $params['subscription_id'], (string) $params['period_end_at']);
+        }
     }
 
     public static function delete(string $tenantId, string $id): void
@@ -1569,6 +1587,147 @@ final class PaymentRepository
         self::ensureTable();
         $stmt = Database::connection()->prepare('DELETE FROM payments WHERE id = :id AND tenant_id = :tenant_id');
         $stmt->execute(['id' => $id, 'tenant_id' => $tenantId]);
+    }
+
+    public static function markPaid(string $tenantId, string $id, array $data): void
+    {
+        self::ensureTable();
+        $pdo = Database::connection();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM payments WHERE id = :id AND tenant_id = :tenant_id FOR UPDATE');
+            $stmt->execute(['id' => $id, 'tenant_id' => $tenantId]);
+            $payment = $stmt->fetch();
+            if (!$payment) {
+                throw new RuntimeException('No se encontro el pago.');
+            }
+            if ((string) $payment['status'] === 'PAID') {
+                throw new RuntimeException('Este pago ya estaba cobrado.');
+            }
+            if ((string) $payment['status'] === 'CANCELLED') {
+                throw new RuntimeException('No se puede cobrar un pago anulado.');
+            }
+
+            $method = strtoupper(trim((string) ($data['payment_method'] ?? $payment['payment_method'] ?? 'OTHER')));
+            if (!in_array($method, ['CASH', 'CARD', 'TRANSFER', 'TPV', 'DIRECT_DEBIT', 'OTHER'], true)) {
+                $method = 'OTHER';
+            }
+
+            $update = $pdo->prepare(
+                'UPDATE payments
+                 SET status = "PAID",
+                     paid_at = :paid_at,
+                     payment_method = :payment_method,
+                     reference = :reference,
+                     paid_notes = :paid_notes,
+                     updated_at = NOW()
+                 WHERE id = :id AND tenant_id = :tenant_id'
+            );
+            $update->execute([
+                'paid_at' => trim((string) ($data['paid_at'] ?? '')) ?: date('Y-m-d'),
+                'payment_method' => $method,
+                'reference' => trim((string) ($data['reference'] ?? '')) ?: null,
+                'paid_notes' => trim((string) ($data['paid_notes'] ?? '')) ?: null,
+                'id' => $id,
+                'tenant_id' => $tenantId,
+            ]);
+
+            if (!empty($payment['subscription_id']) && !empty($payment['period_end_at'])) {
+                self::advanceSubscriptionBilling($tenantId, (string) $payment['subscription_id'], (string) $payment['period_end_at']);
+            }
+
+            $pdo->commit();
+        } catch (Throwable $exception) {
+            $pdo->rollBack();
+            throw $exception;
+        }
+    }
+
+    public static function generateRecurringDrafts(string $tenantId, ?string $untilDate = null): int
+    {
+        self::ensureTable();
+        MembershipRepository::ensureTables();
+        $untilDate = $untilDate ?: date('Y-m-d');
+        $created = 0;
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare(
+            'SELECT subscriptions.*, membership_plans.price, membership_plans.billing_period, membership_plans.name AS plan_name
+             FROM subscriptions
+             INNER JOIN membership_plans ON membership_plans.id = subscriptions.membership_plan_id
+                AND membership_plans.tenant_id = subscriptions.tenant_id
+             WHERE subscriptions.tenant_id = :tenant_id
+             AND subscriptions.status = "ACTIVE"
+             AND COALESCE(subscriptions.next_billing_at, subscriptions.starts_at) <= :until_date'
+        );
+        $stmt->execute(['tenant_id' => $tenantId, 'until_date' => $untilDate]);
+
+        foreach ($stmt->fetchAll() as $subscription) {
+            $periodStart = (string) ($subscription['next_billing_at'] ?: $subscription['starts_at']);
+            if ($periodStart === '') {
+                continue;
+            }
+            $periodEnd = membership_end_date($periodStart, (string) $subscription['billing_period']);
+            if (self::paymentExistsForPeriod($tenantId, (string) $subscription['id'], $periodStart, $periodEnd)) {
+                continue;
+            }
+
+            $insert = $pdo->prepare(
+                'INSERT INTO payments (id, tenant_id, member_id, subscription_id, amount, currency, payment_method, status, paid_at, due_at, period_start_at, period_end_at, notes, created_at, updated_at)
+                 VALUES (:id, :tenant_id, :member_id, :subscription_id, :amount, "EUR", "OTHER", "DRAFT", NULL, :due_at, :period_start_at, :period_end_at, :notes, NOW(), NOW())'
+            );
+            $insert->execute([
+                'id' => cuid(),
+                'tenant_id' => $tenantId,
+                'member_id' => $subscription['member_id'],
+                'subscription_id' => $subscription['id'],
+                'amount' => number_format((float) $subscription['price'], 2, '.', ''),
+                'due_at' => $periodStart,
+                'period_start_at' => $periodStart,
+                'period_end_at' => $periodEnd,
+                'notes' => 'Borrador recurrente: ' . $subscription['plan_name'],
+            ]);
+            $created++;
+        }
+
+        return $created;
+    }
+
+    private static function paymentExistsForPeriod(string $tenantId, string $subscriptionId, string $periodStart, string $periodEnd): bool
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT COUNT(*)
+             FROM payments
+             WHERE tenant_id = :tenant_id
+             AND subscription_id = :subscription_id
+             AND period_start_at = :period_start_at
+             AND period_end_at = :period_end_at
+             AND status <> "CANCELLED"'
+        );
+        $stmt->execute([
+            'tenant_id' => $tenantId,
+            'subscription_id' => $subscriptionId,
+            'period_start_at' => $periodStart,
+            'period_end_at' => $periodEnd,
+        ]);
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private static function advanceSubscriptionBilling(string $tenantId, string $subscriptionId, string $periodEnd): void
+    {
+        $stmt = Database::connection()->prepare(
+            'UPDATE subscriptions
+             SET next_billing_at = :next_billing_at,
+                 ends_at = GREATEST(COALESCE(ends_at, :next_billing_at_for_ends), :next_billing_at_for_ends),
+                 updated_at = NOW()
+             WHERE id = :id AND tenant_id = :tenant_id'
+        );
+        $stmt->execute([
+            'next_billing_at' => $periodEnd,
+            'next_billing_at_for_ends' => $periodEnd,
+            'id' => $subscriptionId,
+            'tenant_id' => $tenantId,
+        ]);
     }
 
     public static function findWithMember(string $tenantId, string $id): ?array
@@ -1620,6 +1779,7 @@ final class PaymentRepository
                     subscriptions.member_id,
                     subscriptions.starts_at,
                     subscriptions.ends_at,
+                    subscriptions.next_billing_at,
                     members.first_name,
                     members.last_name,
                     membership_plans.name AS plan_name,
@@ -1631,7 +1791,7 @@ final class PaymentRepository
                 AND members.tenant_id = subscriptions.tenant_id
              WHERE subscriptions.tenant_id = :tenant_id
              AND subscriptions.status = "ACTIVE"
-             ORDER BY subscriptions.ends_at ASC'
+             ORDER BY COALESCE(subscriptions.next_billing_at, subscriptions.starts_at) ASC, subscriptions.ends_at ASC'
         );
         $stmt->execute(['tenant_id' => $tenantId]);
 
@@ -1658,12 +1818,12 @@ final class PaymentRepository
         }
 
         $status = strtoupper(trim((string) ($data['status'] ?? 'PENDING')));
-        if (!in_array($status, ['PAID', 'PENDING', 'OVERDUE', 'CANCELLED'], true)) {
+        if (!in_array($status, ['DRAFT', 'PAID', 'PENDING', 'OVERDUE', 'CANCELLED'], true)) {
             $status = 'PENDING';
         }
 
         $method = strtoupper(trim((string) ($data['payment_method'] ?? 'OTHER')));
-        if (!in_array($method, ['CASH', 'CARD', 'TRANSFER', 'BIZUM', 'OTHER'], true)) {
+        if (!in_array($method, ['CASH', 'CARD', 'TRANSFER', 'TPV', 'DIRECT_DEBIT', 'OTHER'], true)) {
             $method = 'OTHER';
         }
 
@@ -1683,6 +1843,10 @@ final class PaymentRepository
             'status' => $status,
             'paid_at' => $paidAt,
             'due_at' => trim((string) ($data['due_at'] ?? '')) ?: null,
+            'period_start_at' => trim((string) ($data['period_start_at'] ?? '')) ?: null,
+            'period_end_at' => trim((string) ($data['period_end_at'] ?? '')) ?: null,
+            'reference' => trim((string) ($data['reference'] ?? '')) ?: null,
+            'paid_notes' => trim((string) ($data['paid_notes'] ?? '')) ?: null,
             'notes' => trim((string) ($data['notes'] ?? '')) ?: null,
         ];
     }
@@ -5207,6 +5371,7 @@ final class MembershipRepository
                 status VARCHAR(32) NOT NULL DEFAULT "ACTIVE",
                 starts_at DATE NOT NULL,
                 ends_at DATE NOT NULL,
+                next_billing_at DATE NULL,
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 INDEX subscriptions_tenant_id_idx (tenant_id),
@@ -5222,6 +5387,7 @@ final class MembershipRepository
         self::ensureColumn('subscriptions', 'membership_plan_id', 'VARCHAR(191) NULL');
         self::ensureColumn('subscriptions', 'starts_at', 'DATE NULL');
         self::ensureColumn('subscriptions', 'ends_at', 'DATE NULL');
+        self::ensureColumn('subscriptions', 'next_billing_at', 'DATE NULL');
         self::ensureColumn('subscriptions', 'status', 'VARCHAR(32) NOT NULL DEFAULT "ACTIVE"');
     }
 
@@ -5264,6 +5430,7 @@ final class MembershipRepository
             'assigned' => self::count($pdo, 'subscriptions', $tenantId, 'status = "ACTIVE"'),
             'expiring' => self::count($pdo, 'subscriptions', $tenantId, 'status = "ACTIVE" AND ends_at BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)'),
             'expired' => self::count($pdo, 'subscriptions', $tenantId, 'status = "ACTIVE" AND ends_at < CURDATE()'),
+            'next_billing' => self::count($pdo, 'subscriptions', $tenantId, 'status = "ACTIVE" AND COALESCE(next_billing_at, starts_at) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)'),
         ];
     }
 
@@ -5286,7 +5453,7 @@ final class MembershipRepository
              INNER JOIN members ON members.id = subscriptions.member_id
              INNER JOIN membership_plans ON membership_plans.id = subscriptions.membership_plan_id
              WHERE ' . implode(' AND ', $where) . '
-             ORDER BY subscriptions.ends_at ASC
+             ORDER BY COALESCE(subscriptions.next_billing_at, subscriptions.starts_at) ASC, subscriptions.ends_at ASC
              LIMIT ' . max(1, min($limit, 300))
         );
         $stmt->execute($params);
@@ -5318,8 +5485,8 @@ final class MembershipRepository
         $endsAt = $endsAt ?: membership_end_date($startsAt, (string) $period);
 
         $stmt = $pdo->prepare(
-            'INSERT INTO subscriptions (id, tenant_id, member_id, membership_plan_id, status, starts_at, ends_at, created_at, updated_at)
-             VALUES (:id, :tenant_id, :member_id, :membership_plan_id, "ACTIVE", :starts_at, :ends_at, NOW(), NOW())'
+            'INSERT INTO subscriptions (id, tenant_id, member_id, membership_plan_id, status, starts_at, ends_at, next_billing_at, created_at, updated_at)
+             VALUES (:id, :tenant_id, :member_id, :membership_plan_id, "ACTIVE", :starts_at, :ends_at, :next_billing_at, NOW(), NOW())'
         );
         $stmt->execute([
             'id' => cuid(),
@@ -5328,6 +5495,7 @@ final class MembershipRepository
             'membership_plan_id' => $planId,
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
+            'next_billing_at' => $startsAt,
         ]);
     }
 
@@ -5387,18 +5555,20 @@ final class MembershipRepository
             $update = $pdo->prepare(
                 'UPDATE subscriptions
                  SET ends_at = :ends_at,
+                     next_billing_at = :next_billing_at,
                      updated_at = NOW()
                  WHERE id = :id AND tenant_id = :tenant_id'
             );
             $update->execute([
                 'ends_at' => $newEndsAt,
+                'next_billing_at' => $newEndsAt,
                 'id' => $subscription['id'],
                 'tenant_id' => $tenantId,
             ]);
 
             $payment = $pdo->prepare(
-                'INSERT INTO payments (id, tenant_id, member_id, subscription_id, amount, currency, payment_method, status, paid_at, due_at, notes, created_at, updated_at)
-                 VALUES (:id, :tenant_id, :member_id, :subscription_id, :amount, "EUR", "OTHER", "PAID", CURDATE(), :due_at, :notes, NOW(), NOW())'
+                'INSERT INTO payments (id, tenant_id, member_id, subscription_id, amount, currency, payment_method, status, paid_at, due_at, period_start_at, period_end_at, notes, created_at, updated_at)
+                 VALUES (:id, :tenant_id, :member_id, :subscription_id, :amount, "EUR", "OTHER", "PAID", CURDATE(), :due_at, :period_start_at, :period_end_at, :notes, NOW(), NOW())'
             );
             $payment->execute([
                 'id' => cuid(),
@@ -5407,6 +5577,8 @@ final class MembershipRepository
                 'subscription_id' => $subscription['id'],
                 'amount' => $amount,
                 'due_at' => $currentEnd->format('Y-m-d'),
+                'period_start_at' => $baseDate->format('Y-m-d'),
+                'period_end_at' => $newEndsAt,
                 'notes' => $concept . ' de ' . ($memberName ?: 'socio') . '. Nueva caducidad: ' . $newEndsAt . '.',
             ]);
 

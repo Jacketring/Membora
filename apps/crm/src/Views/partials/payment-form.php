@@ -9,25 +9,30 @@ $paymentValues = $isEditingPayment ? $payment : [
   'status' => 'PENDING',
   'due_at' => date('Y-m-d'),
   'paid_at' => '',
+  'period_start_at' => '',
+  'period_end_at' => '',
+  'reference' => '',
+  'paid_notes' => '',
   'notes' => '',
 ];
 $paymentStatusOptions = [
+  'DRAFT' => 'Borrador',
   'PENDING' => 'Pendiente',
   'PAID' => 'Pagado',
   'OVERDUE' => 'Vencido',
-  'CANCELLED' => 'Cancelado',
+  'CANCELLED' => 'Anulado',
 ];
 $paymentMethodOptions = [
-  'CARD' => 'Tarjeta',
   'CASH' => 'Efectivo',
   'TRANSFER' => 'Transferencia',
-  'BIZUM' => 'Bizum',
+  'TPV' => 'TPV',
+  'CARD' => 'Tarjeta',
+  'DIRECT_DEBIT' => 'Domiciliacion',
   'OTHER' => 'Otro',
 ];
 ?>
 
 <div class="form-grid">
-  <input type="hidden" name="action" value="<?= $isEditingPayment ? 'update_payment' : 'create_payment' ?>">
   <?php if ($isEditingPayment): ?>
     <input type="hidden" name="id" value="<?= e($paymentValues['id']) ?>">
   <?php endif; ?>
@@ -131,8 +136,28 @@ $paymentMethodOptions = [
   </label>
 
   <label class="field">
+    <span>Periodo desde</span>
+    <input name="period_start_at" type="date" value="<?= e($paymentValues['period_start_at'] ? date('Y-m-d', strtotime($paymentValues['period_start_at'])) : '') ?>">
+  </label>
+
+  <label class="field">
+    <span>Periodo hasta</span>
+    <input name="period_end_at" type="date" value="<?= e($paymentValues['period_end_at'] ? date('Y-m-d', strtotime($paymentValues['period_end_at'])) : '') ?>">
+  </label>
+
+  <label class="field">
     <span>Fecha de pago</span>
     <input name="paid_at" type="date" value="<?= e($paymentValues['paid_at'] ? date('Y-m-d', strtotime($paymentValues['paid_at'])) : '') ?>">
+  </label>
+
+  <label class="field">
+    <span>Referencia</span>
+    <input name="reference" value="<?= e((string) ($paymentValues['reference'] ?? '')) ?>" placeholder="Operacion, recibo o justificante">
+  </label>
+
+  <label class="field field--wide">
+    <span>Notas de cobro</span>
+    <textarea name="paid_notes" rows="2" placeholder="Forma de pago, observaciones internas o incidencia"><?= e((string) ($paymentValues['paid_notes'] ?? '')) ?></textarea>
   </label>
 
   <label class="field field--wide">
