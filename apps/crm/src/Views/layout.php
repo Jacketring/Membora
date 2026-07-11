@@ -56,14 +56,26 @@ $publicPlans = $subscriptionBlocked ? PlatformPlanRepository::publicPlans() : []
             'users' => 'Usuarios',
             'members' => 'Socios',
             'memberships' => 'Membresias',
-            'payments' => 'Pagos',
-            'billing' => 'Facturacion',
             'checkins' => 'Check-ins',
             'classes' => 'Clases',
             'tasks' => 'Tareas',
             'alerts' => 'Alertas',
             'audit' => 'Auditoria',
           ] as $navRoute => $navLabel): ?>
+            <?php if ($navRoute === 'checkins' && (can_access_route('payments', $user) || can_access_route('billing', $user))): ?>
+              <?php $clientBillingRoutes = ['payments', 'payment-invoice', 'billing', 'client-invoice']; ?>
+              <details class="sidebar-nav-group" <?= in_array($route, $clientBillingRoutes, true) ? 'open' : '' ?>>
+                <summary class="<?= in_array($route, $clientBillingRoutes, true) ? 'active' : '' ?>">Facturacion</summary>
+                <div class="sidebar-nav-submenu">
+                  <?php if (can_access_route('payments', $user)): ?>
+                    <a class="<?= in_array($route, ['payments', 'payment-invoice'], true) ? 'active' : '' ?>" href="index.php?route=payments">Pagos</a>
+                  <?php endif; ?>
+                  <?php if (can_access_route('billing', $user)): ?>
+                    <a class="<?= in_array($route, ['billing', 'client-invoice'], true) ? 'active' : '' ?>" href="index.php?route=billing">Facturas</a>
+                  <?php endif; ?>
+                </div>
+              </details>
+            <?php endif; ?>
             <?php if (can_access_route($navRoute, $user)): ?>
               <a class="<?= $route === $navRoute ? 'active' : '' ?>" href="index.php?route=<?= e($navRoute) ?>"><?= e($navLabel) ?></a>
             <?php endif; ?>
