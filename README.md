@@ -32,7 +32,7 @@ Pantallas disponibles:
 - Perfil de usuario.
 - Configuracion visual personal.
 - Canal de novedades con version actual del CRM e historial de cambios.
-- Panel de administracion de Membora CRM separado en resumen, contactos, empresas, pagos, planes, web comercial y logs.
+- Panel de administracion de Membora CRM separado en resumen, contactos, empresas, facturacion, planes, web comercial y logs.
 - Demo funcional desde la web publica con login automatico, contador de 20 minutos y retorno automatico a la web.
 
 Pendiente o futuro:
@@ -271,7 +271,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - Precio mensual y proximo pago para planes de pago.
 - Plan de prueba con duracion configurable por dias; solo cuando el plan es `Prueba` se oculta el proximo pago y no aparece renovacion.
 - MRR estimado.
-- Seccion `Pagos` para registrar cobros SaaS, vencimientos, pagados, pendientes y cancelados.
+- Seccion `Facturacion` para gestionar facturas SaaS, pagos asociados, vencimientos, cobros pagados, pendientes y cancelados.
 - Seccion `Planes` para definir catalogo comercial, precio mensual, setup, rebajas, limites y prestaciones sincronizadas con la web publica.
 - Seccion `Web` para revisar el estado tecnico del formulario publico y envios recientes.
 - Seccion `Logs` para filtrar actividad por empresa, accion, fecha y texto.
@@ -291,6 +291,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - `docs/08-auditoria-testing-2026-06-29.md`: auditoria tecnica y checklist manual de testing.
 - `docs/09-seguridad-y-captacion-web.md`: medidas de seguridad y estrategia webhook/base de datos.
 - `docs/10-incidencias-y-soluciones.md`: incidencias tecnicas del TFM y soluciones aplicadas.
+- `docs/13-historial-cambios-recientes.md`: resumen de cambios recientes en suscripciones, facturacion, pagos, web publica y despliegue.
 
 ## Presentacion TFM
 
