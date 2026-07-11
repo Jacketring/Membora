@@ -206,12 +206,7 @@ if ($route === 'global-search') {
 }
 
 if ($route === 'billing-export') {
-    $tenantId = Auth::tenantId();
-    $csv = BillingIntegrationRepository::exportCsv($tenantId);
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="membora-pagos-' . date('Ymd-His') . '.csv"');
-    echo $csv;
-    exit;
+    redirect('billing');
 }
 
 switch ($route) {
@@ -569,12 +564,24 @@ switch ($route) {
 
     case 'billing':
         $tenantId = Auth::tenantId();
-        render_layout('Facturacion', 'billing', [
-            'settings' => BillingIntegrationRepository::settings($tenantId),
-            'metrics' => BillingIntegrationRepository::metrics($tenantId),
-            'payments' => BillingIntegrationRepository::eligiblePayments($tenantId),
-            'logs' => BillingIntegrationRepository::logs($tenantId),
+        $empresa = EmpresaRepository::findByTenant($tenantId);
+        $empresaId = (string) ($empresa['id'] ?? '');
+        $filters = ['q' => trim((string) ($_GET['q'] ?? '')), 'status' => trim((string) ($_GET['status'] ?? ''))];
+        render_layout('Facturacion', 'platform-invoices', [
+            'clientInvoiceMode' => true, 'filters' => $filters,
+            'metrics' => PlatformInvoiceRepository::metrics('CLIENT', $empresaId),
+            'empresas' => $empresa ? [$empresa] : [], 'payments' => [],
+            'invoices' => PlatformInvoiceRepository::all($filters['q'], $filters['status'], 'CLIENT', $empresaId),
+            'nextInvoiceSeries' => PlatformInvoiceRepository::defaultSeries(),
+            'nextInvoiceNumber' => PlatformInvoiceRepository::nextInvoiceNumber(),
         ]);
+        break;
+
+    case 'client-invoice':
+        $empresa = EmpresaRepository::findByTenant(Auth::tenantId());
+        $invoice = $empresa ? PlatformInvoiceRepository::findFull(trim((string) ($_GET['id'] ?? '')), 'CLIENT', (string) $empresa['id']) : null;
+        if (!$invoice) { flash('No se encontro la factura.', 'error'); redirect('billing'); }
+        render('platform-invoice', ['invoice' => $invoice]);
         break;
 
     case 'checkins':

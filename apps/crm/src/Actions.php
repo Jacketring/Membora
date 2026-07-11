@@ -55,6 +55,10 @@ final class Actions
             'update_platform_invoice' => self::updatePlatformInvoice(),
             'issue_platform_invoice' => self::issuePlatformInvoice(),
             'add_platform_invoice_payment' => self::addPlatformInvoicePayment(),
+            'create_client_invoice' => self::createClientInvoice(),
+            'update_client_invoice' => self::updateClientInvoice(),
+            'issue_client_invoice' => self::issueClientInvoice(),
+            'add_client_invoice_payment' => self::addClientInvoicePayment(),
             'create_platform_plan' => self::createPlatformPlan(),
             'update_platform_plan' => self::updatePlatformPlan(),
             'enter_empresa_crm' => self::enterEmpresaCrm(),
@@ -590,6 +594,69 @@ final class Actions
 
         flash('Pago registrado en la factura.');
         redirect('platform-invoices');
+    }
+
+    private static function createClientInvoice(): never
+    {
+        $empresa = EmpresaRepository::findByTenant(Auth::tenantId());
+        if (!$empresa) {
+            flash('No se encontro la empresa emisora.', 'error');
+            redirect('billing');
+        }
+        try {
+            PlatformInvoiceRepository::create(array_merge($_POST, ['empresa_id' => $empresa['id'], 'invoice_scope' => 'CLIENT']));
+            flash('Factura creada correctamente.');
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo crear la factura.', 'error');
+        }
+        redirect('billing');
+    }
+
+    private static function updateClientInvoice(): never
+    {
+        $invoice = self::clientInvoiceFromPost('id');
+        try {
+            PlatformInvoiceRepository::update($invoice['id'], array_merge($_POST, ['empresa_id' => $invoice['empresa_id']]));
+            flash('Factura actualizada correctamente.');
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo actualizar la factura.', 'error');
+        }
+        redirect('billing');
+    }
+
+    private static function issueClientInvoice(): never
+    {
+        $invoice = self::clientInvoiceFromPost('id');
+        try {
+            PlatformInvoiceRepository::issue($invoice['id']);
+            flash('Factura emitida correctamente.');
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo emitir la factura.', 'error');
+        }
+        redirect('billing');
+    }
+
+    private static function addClientInvoicePayment(): never
+    {
+        $invoice = self::clientInvoiceFromPost('invoice_id');
+        try {
+            PlatformInvoiceRepository::addPayment($invoice['id'], $_POST);
+            flash('Pago registrado en la factura.');
+        } catch (Throwable $exception) {
+            flash($exception->getMessage() ?: 'No se pudo registrar el pago.', 'error');
+        }
+        redirect('billing');
+    }
+
+    private static function clientInvoiceFromPost(string $field): array
+    {
+        $empresa = EmpresaRepository::findByTenant(Auth::tenantId());
+        $invoice = $empresa ? PlatformInvoiceRepository::findWithEmpresa(post_value($field, ''), 'CLIENT', (string) $empresa['id']) : null;
+        if (!$invoice) {
+            flash('No se encontro la factura.', 'error');
+            redirect('billing');
+        }
+        return $invoice;
     }
 
     private static function createPlatformPlan(): never

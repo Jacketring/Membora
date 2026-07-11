@@ -1,5 +1,6 @@
 <?php
 $isEditingInvoice = isset($invoice) && is_array($invoice);
+$clientInvoiceMode = !empty($clientInvoiceMode);
 $invoiceItems = $isEditingInvoice ? PlatformInvoiceRepository::items((string) $invoice['id']) : [];
 $invoicePayments = $isEditingInvoice ? PlatformInvoiceRepository::payments((string) $invoice['id']) : [];
 $invoiceValues = $isEditingInvoice ? $invoice : [
@@ -71,7 +72,7 @@ $fiscalOptions = ['VAT_SUBJECT' => 'Sujeto a IVA', 'EXEMPT' => 'Exento', 'NOT_SU
 ?>
 
 <form class="empresa-form invoice-form" method="post" data-invoice-form>
-  <input type="hidden" name="action" value="<?= $isEditingInvoice ? 'update_platform_invoice' : 'create_platform_invoice' ?>">
+  <input type="hidden" name="action" value="<?= $isEditingInvoice ? ($clientInvoiceMode ? 'update_client_invoice' : 'update_platform_invoice') : ($clientInvoiceMode ? 'create_client_invoice' : 'create_platform_invoice') ?>">
   <input type="hidden" name="invoice_status" value="<?= e($invoiceValues['invoice_status'] ?? 'DRAFT') ?>">
   <?php if ($isEditingInvoice): ?>
     <input type="hidden" name="id" value="<?= e($invoiceValues['id']) ?>">
@@ -344,7 +345,7 @@ $fiscalOptions = ['VAT_SUBJECT' => 'Sujeto a IVA', 'EXEMPT' => 'Exento', 'NOT_SU
 
 <?php if ($isEditingInvoice && !$isIssued): ?>
   <form class="platform-subscription-actions" method="post" data-confirm-message="Se asignara el siguiente numero correlativo y la factura quedara bloqueada." data-confirm-action-label="Emitir factura">
-    <input type="hidden" name="action" value="issue_platform_invoice">
+    <input type="hidden" name="action" value="<?= $clientInvoiceMode ? 'issue_client_invoice' : 'issue_platform_invoice' ?>">
     <input type="hidden" name="id" value="<?= e($invoiceValues['id']) ?>">
     <button class="primary-action" type="submit">Emitir factura</button>
   </form>
@@ -361,7 +362,7 @@ $fiscalOptions = ['VAT_SUBJECT' => 'Sujeto a IVA', 'EXEMPT' => 'Exento', 'NOT_SU
     <?php if (!$invoicePayments): ?><p>Sin pagos registrados.</p><?php endif; ?>
   </div>
   <form class="empresa-form" method="post">
-    <input type="hidden" name="action" value="add_platform_invoice_payment">
+    <input type="hidden" name="action" value="<?= $clientInvoiceMode ? 'add_client_invoice_payment' : 'add_platform_invoice_payment' ?>">
     <input type="hidden" name="invoice_id" value="<?= e($invoiceValues['id']) ?>">
     <label class="field">
       <span>Fecha pago</span>

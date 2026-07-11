@@ -378,9 +378,9 @@ function can_access_route(string $route, ?array $user = null): bool
     }
 
     $routesByRole = [
-        'SALES_RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
-        'RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
-        'SALES' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'billing-export', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
+        'SALES_RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'client-invoice', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
+        'RECEPTION' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'client-invoice', 'checkins', 'classes', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
+        'SALES' => ['dashboard', 'leads', 'members', 'memberships', 'payments', 'payment-invoice', 'billing', 'client-invoice', 'tasks', 'alerts', 'profile', 'settings', 'novedades', 'global-search'],
         'TRAINER' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'novedades', 'global-search'],
         'STAFF' => ['dashboard', 'members', 'checkins', 'classes', 'tasks', 'profile', 'settings', 'novedades', 'global-search'],
     ];
@@ -415,6 +415,7 @@ function can_perform_action(string $action, ?array $user = null): bool
             'create_member', 'update_member',
             'renew_member_subscription', 'create_payment', 'update_payment', 'mark_payment_paid',
             'save_billing_integration', 'sync_billing_integration',
+            'create_client_invoice', 'update_client_invoice', 'issue_client_invoice', 'add_client_invoice_payment',
             'create_checkin',
             'create_reservation', 'update_reservation_status',
             'create_task', 'update_task', 'update_task_status',
@@ -425,6 +426,7 @@ function can_perform_action(string $action, ?array $user = null): bool
             'create_member', 'update_member',
             'renew_member_subscription', 'create_payment', 'update_payment', 'mark_payment_paid',
             'save_billing_integration', 'sync_billing_integration',
+            'create_client_invoice', 'update_client_invoice', 'issue_client_invoice', 'add_client_invoice_payment',
             'create_checkin',
             'create_reservation', 'update_reservation_status',
             'create_task', 'update_task', 'update_task_status',
@@ -435,6 +437,7 @@ function can_perform_action(string $action, ?array $user = null): bool
             'create_member', 'update_member',
             'renew_member_subscription', 'create_payment', 'update_payment', 'mark_payment_paid',
             'save_billing_integration', 'sync_billing_integration',
+            'create_client_invoice', 'update_client_invoice', 'issue_client_invoice', 'add_client_invoice_payment',
             'create_task', 'update_task', 'update_task_status',
             'update_risk_alert_status',
         ],

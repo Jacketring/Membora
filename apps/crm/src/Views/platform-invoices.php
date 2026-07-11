@@ -15,12 +15,15 @@ $statusOptions = [
     'OVERDUE' => 'Vencida',
     'REFUNDED' => 'Reembolsada',
 ];
+$clientInvoiceMode = !empty($clientInvoiceMode);
+$invoiceListRoute = $clientInvoiceMode ? 'billing' : 'platform-invoices';
+$invoiceDocumentRoute = $clientInvoiceMode ? 'client-invoice' : 'platform-invoice';
 ?>
 
 <div class="page-heading leads-heading platform-heading">
   <div>
-    <h2>Facturas CRM</h2>
-    <p>Facturas emitidas por Membora a gimnasios cliente, con serie, numero, IVA y estado de cobro.</p>
+    <h2><?= $clientInvoiceMode ? 'Facturacion' : 'Facturas CRM' ?></h2>
+    <p><?= $clientInvoiceMode ? 'Facturas del gimnasio a sus clientes, con serie, impuestos y estado de cobro.' : 'Facturas emitidas por Membora a gimnasios cliente, con serie, numero, IVA y estado de cobro.' ?></p>
   </div>
   <button class="primary-action" type="button" data-open-modal="invoice-create-modal">Nueva factura</button>
 </div>
@@ -49,7 +52,7 @@ $statusOptions = [
 </section>
 
 <form class="lead-toolbar platform-toolbar platform-toolbar--payments" method="get" action="index.php" data-auto-filter-form>
-  <input type="hidden" name="route" value="platform-invoices">
+  <input type="hidden" name="route" value="<?= e($invoiceListRoute) ?>">
   <label class="field platform-search">
     <span>Buscar</span>
     <input name="q" value="<?= e($filters['q']) ?>" placeholder="Numero, empresa, concepto o notas" data-auto-submit-input>
@@ -111,7 +114,7 @@ $statusOptions = [
             <td><span class="status-badge status-badge--<?= e($collectionStatusClass) ?>"><?= e(platform_invoice_status_label($invoice['collection_status'] ?? 'PENDING')) ?></span></td>
             <td>
               <div class="platform-row-actions">
-                <a class="support-invoice-action" href="index.php?route=platform-invoice&id=<?= urlencode($invoice['id']) ?>" target="_blank" rel="noopener" aria-label="Ver factura <?= e($displayNumber) ?>">
+                <a class="support-invoice-action" href="index.php?route=<?= e($invoiceDocumentRoute) ?>&id=<?= urlencode($invoice['id']) ?>" target="_blank" rel="noopener" aria-label="Ver factura <?= e($displayNumber) ?>">
                   <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 1.8V8h4.2L14 3.8ZM8 11h8v2H8v-2Zm0 4h8v2H8v-2Zm0 4h5v1H8v-1Z"/></svg>
                   <span><?= ($invoice['invoice_status'] ?? 'DRAFT') === 'DRAFT' ? 'Preview' : 'PDF' ?></span>
                 </a>

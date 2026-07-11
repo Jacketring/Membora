@@ -4140,6 +4140,7 @@ final class PlatformInvoiceRepository
         );
 
         foreach ([
+            'invoice_scope' => 'ALTER TABLE platform_invoices ADD COLUMN invoice_scope VARCHAR(16) NOT NULL DEFAULT "PLATFORM" AFTER empresa_id',
             'payment_id' => 'ALTER TABLE platform_invoices ADD COLUMN payment_id VARCHAR(191) NULL AFTER empresa_id',
             'invoice_type' => 'ALTER TABLE platform_invoices ADD COLUMN invoice_type VARCHAR(32) NOT NULL DEFAULT "ORDINARY" AFTER invoice_code',
             'invoice_status' => 'ALTER TABLE platform_invoices ADD COLUMN invoice_status VARCHAR(32) NOT NULL DEFAULT "DRAFT" AFTER invoice_type',
@@ -4192,36 +4193,40 @@ final class PlatformInvoiceRepository
         }
     }
 
-    public static function metrics(): array
+    public static function metrics(string $scope = 'PLATFORM', ?string $empresaId = null): array
     {
         self::ensureTable();
         $pdo = Database::connection();
 
+        $scopeWhere = 'invoice_scope = ' . $pdo->quote($scope);
+        if ($empresaId !== null) {
+            $scopeWhere .= ' AND empresa_id = ' . $pdo->quote($empresaId);
+        }
         $issuedMonth = $pdo->query(
             'SELECT COALESCE(SUM(total_amount), 0)
              FROM platform_invoices
-             WHERE issued_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01")
+             WHERE ' . $scopeWhere . ' AND issued_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01")
              AND invoice_status <> "DRAFT"'
         )->fetchColumn();
 
         $pending = $pdo->query(
             'SELECT COALESCE(SUM(total_amount), 0)
              FROM platform_invoices
-             WHERE collection_status IN ("PENDING", "PARTIAL", "OVERDUE")'
+             WHERE ' . $scopeWhere . ' AND collection_status IN ("PENDING", "PARTIAL", "OVERDUE")'
         )->fetchColumn();
 
         $paidMonth = $pdo->query(
             'SELECT COALESCE(SUM(total_amount), 0)
              FROM platform_invoices
-             WHERE collection_status = "PAID"
+             WHERE ' . $scopeWhere . ' AND collection_status = "PAID"
              AND issued_at >= DATE_FORMAT(CURDATE(), "%Y-%m-01")'
         )->fetchColumn();
 
         $overdue = $pdo->query(
             'SELECT COUNT(*)
              FROM platform_invoices
-             WHERE collection_status = "OVERDUE"
-             OR (collection_status IN ("PENDING", "PARTIAL") AND due_at IS NOT NULL AND due_at < CURDATE())'
+             WHERE ' . $scopeWhere . ' AND (collection_status = "OVERDUE"
+             OR (collection_status IN ("PENDING", "PARTIAL") AND due_at IS NOT NULL AND due_at < CURDATE()))'
         )->fetchColumn();
 
         return [
@@ -4232,13 +4237,17 @@ final class PlatformInvoiceRepository
         ];
     }
 
-    public static function all(string $query = '', string $status = ''): array
+    public static function all(string $query = '', string $status = '', string $scope = 'PLATFORM', ?string $empresaId = null): array
     {
         self::ensureTable();
         EmpresaRepository::ensureTables();
 
-        $params = [];
-        $where = ['1 = 1'];
+        $params = ['scope' => $scope];
+        $where = ['i.invoice_scope = :scope'];
+        if ($empresaId !== null) {
+            $where[] = 'i.empresa_id = :empresa_id';
+            $params['empresa_id'] = $empresaId;
+        }
         if ($query !== '') {
             $where[] = '(i.invoice_code LIKE :query OR i.concept LIKE :query OR i.notes LIKE :query OR i.customer_name LIKE :query OR i.customer_tax_id LIKE :query OR e.name LIKE :query OR e.contact_email LIKE :query)';
             $params['query'] = '%' . $query . '%';
@@ -4261,7 +4270,7 @@ final class PlatformInvoiceRepository
         return $stmt->fetchAll();
     }
 
-    public static function findWithEmpresa(string $id): ?array
+    public static function findWithEmpresa(string $id, ?string $scope = null, ?string $empresaId = null): ?array
     {
         self::ensureTable();
         EmpresaRepository::ensureTables();
@@ -4270,18 +4279,21 @@ final class PlatformInvoiceRepository
             'SELECT i.*, e.name AS empresa_name, e.contact_email, e.plan
              FROM platform_invoices i
              INNER JOIN empresas e ON e.id = i.empresa_id
-             WHERE i.id = :id
+             WHERE i.id = :id' . ($scope !== null ? ' AND i.invoice_scope = :scope' : '') . ($empresaId !== null ? ' AND i.empresa_id = :empresa_id' : '') . '
              LIMIT 1'
         );
-        $stmt->execute(['id' => $id]);
+        $params = ['id' => $id];
+        if ($scope !== null) $params['scope'] = $scope;
+        if ($empresaId !== null) $params['empresa_id'] = $empresaId;
+        $stmt->execute($params);
         $invoice = $stmt->fetch();
 
         return $invoice ?: null;
     }
 
-    public static function findFull(string $id): ?array
+    public static function findFull(string $id, ?string $scope = null, ?string $empresaId = null): ?array
     {
-        $invoice = self::findWithEmpresa($id);
+        $invoice = self::findWithEmpresa($id, $scope, $empresaId);
         if (!$invoice) {
             return null;
         }
@@ -4317,6 +4329,10 @@ final class PlatformInvoiceRepository
             );
             $stmt->execute(self::legacyInvoiceParams($params) + ['id' => $id]);
             self::updateExtendedInvoice($id, $params);
+            $pdo->prepare('UPDATE platform_invoices SET invoice_scope = :scope WHERE id = :id')->execute([
+                'scope' => ($data['invoice_scope'] ?? '') === 'CLIENT' ? 'CLIENT' : 'PLATFORM',
+                'id' => $id,
+            ]);
             self::replaceItems($id, $params['items']);
             self::replacePayments($id, $params['payments']);
             self::refreshPaymentTotals($id);
