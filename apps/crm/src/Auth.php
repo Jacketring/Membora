@@ -2,6 +2,12 @@
 
 final class Auth
 {
+    private static bool $lastAttemptRateLimited = false;
+
+    public static function lastAttemptWasRateLimited(): bool
+    {
+        return self::$lastAttemptRateLimited;
+    }
     public static function user(): ?array
     {
         return $_SESSION['user'] ?? null;
@@ -36,6 +42,14 @@ final class Auth
     public static function attempt(string $email, string $password): bool
     {
         $pdo = Database::connection();
+        self::$lastAttemptRateLimited = false;
+        self::ensureLoginAttemptsTable($pdo);
+        $ip = substr((string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 0, 64);
+        $emailKey = hash('sha256', strtolower(trim($email)));
+        if (self::tooManyLoginAttempts($pdo, $ip, $emailKey)) {
+            self::$lastAttemptRateLimited = true;
+            return false;
+        }
         UserRepository::ensureAvatarColumn();
         TenantRepository::ensureSettingsColumns();
         EmpresaRepository::ensureTables();
@@ -52,8 +66,11 @@ final class Auth
         $user = $stmt->fetch();
 
         if (!$user || $user['status'] !== 'ACTIVE' || !password_verify($password, $user['password_hash'])) {
+            self::recordFailedLogin($pdo, $ip, $emailKey);
             return false;
         }
+
+        self::clearLoginAttempts($pdo, $ip, $emailKey);
 
         session_regenerate_id(true);
 
@@ -63,10 +80,7 @@ final class Auth
             $user['tenant_name'] = 'Membora CRM';
             $user['tenant_primary_color'] = '#004bf2';
         } elseif (!$user['tenant_id']) {
-            $tenant = self::fallbackTenant();
-            $user['tenant_id'] = $tenant['id'] ?? null;
-            $user['tenant_name'] = $tenant['name'] ?? 'Membora CRM';
-            $user['tenant_primary_color'] = $tenant['primary_color'] ?? '#004bf2';
+            return false;
         }
 
         $_SESSION['user'] = [
@@ -90,7 +104,8 @@ final class Auth
     {
         if ($type === 'admin') {
             DemoRepository::prepareAdminDemo();
-            $success = self::attempt(EmpresaRepository::PLATFORM_ADMIN_EMAIL, EmpresaRepository::PLATFORM_ADMIN_PASSWORD);
+            $password = (string) (getenv('PLATFORM_ADMIN_PASSWORD') ?: '');
+            $success = $password !== '' && self::attempt(EmpresaRepository::PLATFORM_ADMIN_EMAIL, $password);
             if ($success) {
                 self::markDemoSession('admin');
             }
@@ -197,15 +212,7 @@ final class Auth
 
     private static function fallbackTenantId(): ?string
     {
-        $tenant = self::fallbackTenant();
-
-        if ($tenant && isset($_SESSION['user'])) {
-            $_SESSION['user']['tenant_id'] = $tenant['id'];
-            $_SESSION['user']['tenant_name'] = $tenant['name'];
-            $_SESSION['user']['tenant_primary_color'] = $tenant['primary_color'] ?? '#004bf2';
-        }
-
-        return $tenant['id'] ?? null;
+        return null;
     }
 
     private static function fallbackTenant(): ?array
@@ -215,6 +222,37 @@ final class Auth
         $tenant = $stmt->fetch();
 
         return $tenant ?: null;
+    }
+
+    private static function ensureLoginAttemptsTable(PDO $pdo): void
+    {
+        $pdo->exec('CREATE TABLE IF NOT EXISTS login_attempts (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            ip_address VARCHAR(64) NOT NULL,
+            email_hash CHAR(64) NOT NULL,
+            attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX login_attempts_ip_time_idx (ip_address, attempted_at),
+            INDEX login_attempts_email_time_idx (email_hash, attempted_at)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    }
+
+    private static function tooManyLoginAttempts(PDO $pdo, string $ip, string $emailHash): bool
+    {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM login_attempts WHERE attempted_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) AND (ip_address = :ip OR email_hash = :email_hash)');
+        $stmt->execute(['ip' => $ip, 'email_hash' => $emailHash]);
+        return (int) $stmt->fetchColumn() >= 5;
+    }
+
+    private static function recordFailedLogin(PDO $pdo, string $ip, string $emailHash): void
+    {
+        $pdo->prepare('INSERT INTO login_attempts (ip_address, email_hash, attempted_at) VALUES (:ip, :email_hash, NOW())')
+            ->execute(['ip' => $ip, 'email_hash' => $emailHash]);
+    }
+
+    private static function clearLoginAttempts(PDO $pdo, string $ip, string $emailHash): void
+    {
+        $pdo->prepare('DELETE FROM login_attempts WHERE ip_address = :ip OR email_hash = :email_hash')
+            ->execute(['ip' => $ip, 'email_hash' => $emailHash]);
     }
 
     private static function markDemoSession(string $type): void

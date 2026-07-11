@@ -11,6 +11,10 @@ final class Actions
         enforce_internal_post_security();
 
         $action = post_value('action', '');
+        if ($action !== 'demo_login' && !verify_csrf()) {
+            flash('Solicitud bloqueada por seguridad. Recarga la pagina e intentalo de nuevo.', 'error');
+            redirect($_GET['return'] ?? ($_GET['route'] ?? 'dashboard'));
+        }
         if (!can_perform_action($action)) {
             flash('No tienes permisos para realizar esta accion.', 'error');
             redirect($_GET['return'] ?? ($_GET['route'] ?? 'dashboard'));
@@ -135,7 +139,7 @@ final class Actions
             redirect('login');
         }
 
-        flash('Credenciales incorrectas.', 'error');
+        flash(Auth::lastAttemptWasRateLimited() ? 'Demasiados intentos, prueba mas tarde.' : 'Credenciales incorrectas.', 'error');
         redirect('login');
     }
 
@@ -165,12 +169,13 @@ final class Actions
     private static function updateProfile(): never
     {
         UserRepository::ensureAvatarColumn();
-        $tenantId = Auth::tenantId();
         $user = Auth::requireUser();
+        $tenantId = is_platform_admin($user) ? null : Auth::tenantId();
         $userId = $user['id'];
         $name = post_value('name', '');
         $email = strtolower(post_value('email', ''));
         $password = post_value('password', '');
+        $currentPassword = post_value('current_password', '');
         $uploadedAvatar = self::uploadedImagePath('avatar', 'users', 'No se pudo subir la imagen de perfil.');
         $removeAvatar = post_value('remove_avatar') === '1';
         $currentAvatar = (string) (($user['avatar_path'] ?? '') ?: '');
@@ -191,6 +196,16 @@ final class Actions
             redirect($_GET['return'] ?? 'dashboard');
         }
 
+        if ($password !== '') {
+            $passwordStmt = Database::connection()->prepare('SELECT password_hash FROM users WHERE id = :id LIMIT 1');
+            $passwordStmt->execute(['id' => $userId]);
+            $currentHash = $passwordStmt->fetchColumn();
+            if (!is_string($currentHash) || $currentPassword === '' || !password_verify($currentPassword, $currentHash)) {
+                flash('La contrasena actual no es correcta.', 'error');
+                redirect($_GET['return'] ?? 'dashboard');
+            }
+        }
+
         if (UserRepository::emailExists($tenantId, $email, $userId)) {
             flash('Ya existe otro usuario con ese email.', 'error');
             redirect($_GET['return'] ?? 'dashboard');
@@ -201,8 +216,12 @@ final class Actions
             'email' => $email,
             'avatar_path' => $avatarPath,
             'id' => $userId,
-            'tenant_id' => $tenantId,
         ];
+        $tenantScopeSql = '';
+        if ($tenantId !== null) {
+            $tenantScopeSql = ' AND tenant_id = :tenant_id';
+            $params['tenant_id'] = $tenantId;
+        }
         $passwordSql = '';
 
         if ($password !== '') {
@@ -216,7 +235,7 @@ final class Actions
                  email = :email' . $passwordSql . ',
                  avatar_path = :avatar_path,
                  updated_at = NOW()
-             WHERE id = :id AND tenant_id = :tenant_id'
+             WHERE id = :id' . $tenantScopeSql
         );
         $stmt->execute($params);
 
@@ -241,10 +260,16 @@ final class Actions
             redirect('platform-companies');
         }
 
+        if (strlen((string) post_value('admin_password', '')) < 8) {
+            flash('Indica una contrasena de al menos 8 caracteres para el administrador.', 'error');
+            redirect('platform-companies');
+        }
+
         try {
             EmpresaRepository::create($_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo crear la empresa.', 'error');
+            log_server_error($exception, 'create_empresa');
+            flash('No se pudo crear la empresa.', 'error');
             redirect('platform-companies');
         }
 
@@ -280,7 +305,8 @@ final class Actions
         try {
             EmpresaRepository::updateSubscription($id, $_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo actualizar la suscripcion.', 'error');
+            log_server_error($exception, 'subscription');
+            flash('No se pudo actualizar la suscripcion.', 'error');
             redirect('platform-contacts');
         }
 
@@ -302,7 +328,8 @@ final class Actions
         try {
             EmpresaRepository::renewSubscription($id);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo renovar la suscripcion.', 'error');
+            log_server_error($exception, 'subscription');
+            flash('No se pudo renovar la suscripcion.', 'error');
             redirect($returnRoute);
         }
 
@@ -324,7 +351,8 @@ final class Actions
         try {
             EmpresaRepository::cancelSubscription($id);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo cancelar la suscripcion.', 'error');
+            log_server_error($exception, 'subscription');
+            flash('No se pudo cancelar la suscripcion.', 'error');
             redirect($returnRoute);
         }
 
@@ -346,7 +374,8 @@ final class Actions
         try {
             EmpresaRepository::resumeSubscription($id);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo reactivar la suscripcion.', 'error');
+            log_server_error($exception, 'subscription');
+            flash('No se pudo reactivar la suscripcion.', 'error');
             redirect($returnRoute);
         }
 
@@ -369,7 +398,8 @@ final class Actions
             $url = StripeBillingService::createCheckoutSession($id);
         } catch (Throwable $exception) {
             StripeBillingRepository::recordEmpresaError($id, $exception->getMessage());
-            flash($exception->getMessage() ?: 'No se pudo crear la sesion de Stripe Checkout.', 'error');
+            log_server_error($exception, 'stripe');
+            flash('No se pudo crear la sesion de Stripe Checkout.', 'error');
             redirect($returnRoute);
         }
 
@@ -392,7 +422,8 @@ final class Actions
             StripeBillingService::cancelAtPeriodEnd($id);
         } catch (Throwable $exception) {
             StripeBillingRepository::recordEmpresaError($id, $exception->getMessage());
-            flash($exception->getMessage() ?: 'No se pudo cancelar la suscripcion en Stripe.', 'error');
+            log_server_error($exception, 'stripe');
+            flash('No se pudo cancelar la suscripcion en Stripe.', 'error');
             redirect($returnRoute);
         }
 
@@ -415,7 +446,8 @@ final class Actions
             try {
                 PlatformLeadRepository::convertToClient($id);
             } catch (Throwable $exception) {
-                flash($exception->getMessage() ?: 'No se pudo convertir el contacto en cliente.', 'error');
+                log_server_error($exception, 'platform_client');
+                flash('No se pudo convertir el contacto en cliente.', 'error');
                 redirect('platform-contacts');
             }
 
@@ -440,7 +472,8 @@ final class Actions
         try {
             $clientId = PlatformLeadRepository::convertToClient($id);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo convertir el contacto en cliente.', 'error');
+            log_server_error($exception, 'platform_client');
+            flash('No se pudo convertir el contacto en cliente.', 'error');
             redirect('platform-contacts');
         }
 
@@ -573,7 +606,8 @@ final class Actions
         try {
             PlatformInvoiceRepository::create($_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo crear la factura.', 'error');
+            log_server_error($exception, 'invoice');
+            flash('No se pudo crear la factura.', 'error');
             redirect('platform-invoices');
         }
 
@@ -594,7 +628,8 @@ final class Actions
         try {
             PlatformInvoiceRepository::update($id, $_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo actualizar la factura.', 'error');
+            log_server_error($exception, 'invoice');
+            flash('No se pudo actualizar la factura.', 'error');
             redirect('platform-invoices');
         }
 
@@ -615,7 +650,8 @@ final class Actions
         try {
             PlatformInvoiceRepository::issue($id);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo emitir la factura.', 'error');
+            log_server_error($exception, 'invoice');
+            flash('No se pudo emitir la factura.', 'error');
             redirect('platform-invoices');
         }
 
@@ -636,7 +672,8 @@ final class Actions
         try {
             PlatformInvoiceRepository::addPayment($id, $_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo registrar el pago.', 'error');
+            log_server_error($exception, 'payment');
+            flash('No se pudo registrar el pago.', 'error');
             redirect('platform-invoices');
         }
 
@@ -655,7 +692,8 @@ final class Actions
             PlatformInvoiceRepository::create(array_merge($_POST, ['empresa_id' => $empresa['id'], 'invoice_scope' => 'CLIENT']));
             flash('Factura creada correctamente.');
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo crear la factura.', 'error');
+            log_server_error($exception, 'invoice');
+            flash('No se pudo crear la factura.', 'error');
         }
         redirect('billing');
     }
@@ -667,7 +705,8 @@ final class Actions
             PlatformInvoiceRepository::update($invoice['id'], array_merge($_POST, ['empresa_id' => $invoice['empresa_id']]));
             flash('Factura actualizada correctamente.');
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo actualizar la factura.', 'error');
+            log_server_error($exception, 'invoice');
+            flash('No se pudo actualizar la factura.', 'error');
         }
         redirect('billing');
     }
@@ -679,7 +718,8 @@ final class Actions
             PlatformInvoiceRepository::issue($invoice['id']);
             flash('Factura emitida correctamente.');
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo emitir la factura.', 'error');
+            log_server_error($exception, 'invoice');
+            flash('No se pudo emitir la factura.', 'error');
         }
         redirect('billing');
     }
@@ -691,7 +731,8 @@ final class Actions
             PlatformInvoiceRepository::addPayment($invoice['id'], $_POST);
             flash('Pago registrado en la factura.');
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo registrar el pago.', 'error');
+            log_server_error($exception, 'payment');
+            flash('No se pudo registrar el pago.', 'error');
         }
         redirect('billing');
     }
@@ -787,7 +828,7 @@ final class Actions
             redirect('users');
         }
 
-        if (!UserRepository::roleExists($roleId)) {
+        if (!UserRepository::assignableRoleExists($roleId) || (!is_platform_admin(Auth::user()) && UserRepository::isPlatformRole($roleId))) {
             flash('Selecciona un rol valido.', 'error');
             redirect('users');
         }
@@ -840,7 +881,7 @@ final class Actions
             redirect('users');
         }
 
-        if (!UserRepository::roleExists($roleId)) {
+        if (!UserRepository::assignableRoleExists($roleId) || (!is_platform_admin(Auth::user()) && UserRepository::isPlatformRole($roleId))) {
             flash('Selecciona un rol valido.', 'error');
             redirect('users');
         }
@@ -1369,7 +1410,8 @@ final class Actions
         try {
             MembershipRepository::renewMemberSubscription(Auth::tenantId(), $memberId);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo renovar la membresia.', 'error');
+            log_server_error($exception, 'membership');
+            flash('No se pudo renovar la membresia.', 'error');
             redirect('members');
         }
 
@@ -1556,7 +1598,8 @@ final class Actions
         try {
             PaymentRepository::create(Auth::tenantId(), $_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo registrar el pago.', 'error');
+            log_server_error($exception, 'payment');
+            flash('No se pudo registrar el pago.', 'error');
             redirect('payments');
         }
 
@@ -1575,7 +1618,8 @@ final class Actions
         try {
             PaymentRepository::update(Auth::tenantId(), $id, $_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo actualizar el pago.', 'error');
+            log_server_error($exception, 'payment');
+            flash('No se pudo actualizar el pago.', 'error');
             redirect('payments');
         }
 
@@ -1594,7 +1638,8 @@ final class Actions
         try {
             PaymentRepository::markPaid(Auth::tenantId(), $id, $_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo marcar el pago como cobrado.', 'error');
+            log_server_error($exception, 'payment');
+            flash('No se pudo marcar el pago como cobrado.', 'error');
             redirect('payments');
         }
 
@@ -1608,7 +1653,8 @@ final class Actions
             $untilDate = post_value('until_date', '') ?: date('Y-m-d');
             $created = PaymentRepository::generateRecurringDrafts(Auth::tenantId(), $untilDate);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudieron generar los borradores recurrentes.', 'error');
+            log_server_error($exception, 'payment');
+            flash('No se pudieron generar los borradores recurrentes.', 'error');
             redirect('payments');
         }
 
@@ -1634,7 +1680,8 @@ final class Actions
         try {
             CheckinRepository::create(Auth::tenantId(), $_POST);
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo registrar el check-in.', 'error');
+            log_server_error($exception, 'checkin');
+            flash('No se pudo registrar el check-in.', 'error');
             redirect('checkins');
         }
 
@@ -1686,7 +1733,8 @@ final class Actions
             $result = BillingIntegrationRepository::sync(Auth::tenantId());
             flash('Sincronizacion completada: ' . (int) $result['count'] . ' pagos enviados por ' . money_amount($result['total']) . '.');
         } catch (Throwable $exception) {
-            flash($exception->getMessage(), 'error');
+            log_server_error($exception, 'class_session');
+            flash('No se pudo completar la operacion.', 'error');
         }
 
         redirect('billing');
@@ -1833,7 +1881,8 @@ final class Actions
             ReservationRepository::create($tenantId, $memberId, $sessionId);
             flash('Reserva creada correctamente.');
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo crear la reserva.', 'error');
+            log_server_error($exception, 'reservation');
+            flash('No se pudo crear la reserva.', 'error');
         }
 
         self::redirectAfterReservationAction($sessionId);
@@ -1860,7 +1909,8 @@ final class Actions
                 default => 'Reserva actualizada correctamente.',
             });
         } catch (Throwable $exception) {
-            flash($exception->getMessage() ?: 'No se pudo actualizar la reserva.', 'error');
+            log_server_error($exception, 'reservation');
+            flash('No se pudo actualizar la reserva.', 'error');
         }
 
         self::redirectAfterReservationAction($sessionId);

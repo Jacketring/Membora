@@ -15,6 +15,7 @@ out/
 # Almacenamiento en tiempo de ejecucion (se conservan las carpetas via .gitkeep)
 apps/crm/public/uploads/*
 !apps/crm/public/uploads/.gitkeep
+!apps/crm/public/uploads/.htaccess
 shared/storage/*
 !shared/storage/.gitkeep
 

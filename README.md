@@ -227,10 +227,13 @@ Administrador de la plataforma Membora:
 
 ```text
 Email: admin@membora.crm
-Password: MemboraAdmin2026!
+Password: definida mediante `PLATFORM_ADMIN_PASSWORD` en `.env` durante el despliegue.
 ```
 
 Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
+
+Las correcciones de seguridad y los requisitos de despliegue se detallan en
+[`docs/17-endurecimiento-seguridad-2026-07-11.md`](docs/17-endurecimiento-seguridad-2026-07-11.md).
 
 ## Funcionalidades actuales
 

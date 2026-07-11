@@ -30,6 +30,8 @@ foreach ($envPaths as $envPath) {
 
 return [
     'app_name' => getenv('APP_NAME') ?: 'Membora CRM',
+    'app_key' => getenv('APP_KEY') ?: '',
+    'platform_admin_password' => getenv('PLATFORM_ADMIN_PASSWORD') ?: '',
     'database_url' => getenv('DATABASE_URL') ?: '',
     'database' => [
         'host' => getenv('DB_HOST') ?: 'localhost',

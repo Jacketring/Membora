@@ -1,7 +1,6 @@
 <?php
 $flash = flash();
 $platformAdminEmail = EmpresaRepository::PLATFORM_ADMIN_EMAIL;
-$platformAdminPassword = EmpresaRepository::PLATFORM_ADMIN_PASSWORD;
 ?>
 <!doctype html>
 <html lang="es">
@@ -35,11 +34,11 @@ $platformAdminPassword = EmpresaRepository::PLATFORM_ADMIN_PASSWORD;
         <?php endif; ?>
         <label class="field">
           <span>Email</span>
-          <div class="input-shell"><input name="email" type="email" required value="<?= e($platformAdminEmail) ?>" data-login-email></div>
+          <div class="input-shell"><input name="email" type="email" required value="" data-login-email autocomplete="username"></div>
         </label>
         <label class="field">
           <span>Contrasena</span>
-          <div class="input-shell"><input name="password" type="password" required value="<?= e($platformAdminPassword) ?>" data-login-password></div>
+          <div class="input-shell"><input name="password" type="password" required value="" data-login-password autocomplete="current-password"></div>
         </label>
         <button class="primary-action" type="submit">Iniciar sesion</button>
         <div class="demo-login-actions" aria-label="Accesos demo">

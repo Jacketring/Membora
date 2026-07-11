@@ -2283,6 +2283,7 @@ final class UserRepository
         $stmt = Database::connection()->query(
             'SELECT id, `key` AS role_key
              FROM roles
+             WHERE `key` NOT IN ("SUPER_ADMIN", "SUPERADMIN")
              ORDER BY CASE `key`
                 WHEN "SUPER_ADMIN" THEN 1
                 WHEN "SUPERADMIN" THEN 1
@@ -2308,6 +2309,20 @@ final class UserRepository
         return (int) $stmt->fetchColumn() > 0;
     }
 
+    public static function assignableRoleExists(string $roleId): bool
+    {
+        $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM roles WHERE id = :id AND `key` NOT IN ("SUPER_ADMIN", "SUPERADMIN")');
+        $stmt->execute(['id' => $roleId]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    public static function isPlatformRole(string $roleId): bool
+    {
+        $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM roles WHERE id = :id AND `key` IN ("SUPER_ADMIN", "SUPERADMIN")');
+        $stmt->execute(['id' => $roleId]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public static function metrics(string $tenantId): array
     {
         $pdo = Database::connection();
@@ -2320,7 +2335,7 @@ final class UserRepository
         ];
     }
 
-    public static function emailExists(string $tenantId, string $email, ?string $exceptId = null): bool
+    public static function emailExists(?string $tenantId, string $email, ?string $exceptId = null): bool
     {
         $params = ['email' => $email];
         $where = 'email = :email';
@@ -3029,7 +3044,6 @@ final class PlatformLeadRepository
 final class EmpresaRepository
 {
     public const PLATFORM_ADMIN_EMAIL = 'admin@membora.crm';
-    public const PLATFORM_ADMIN_PASSWORD = 'MemboraAdmin2026!';
 
     public static function ensureTables(): void
     {
@@ -3095,7 +3109,7 @@ final class EmpresaRepository
             'role_id' => $roleId,
             'name' => 'Administrador Membora',
             'email' => self::PLATFORM_ADMIN_EMAIL,
-            'password_hash' => password_hash(self::PLATFORM_ADMIN_PASSWORD, PASSWORD_BCRYPT),
+            'password_hash' => password_hash(self::initialPlatformAdminPassword(), PASSWORD_BCRYPT),
             'status' => 'ACTIVE',
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
@@ -3110,6 +3124,21 @@ final class EmpresaRepository
              VALUES (' . implode(', ', $placeholders) . ')'
         );
         $insert->execute($params);
+    }
+
+    public static function initialPlatformAdminPassword(): string
+    {
+        $configured = trim((string) (getenv('PLATFORM_ADMIN_PASSWORD') ?: ''));
+        if ($configured !== '') {
+            if (strlen($configured) < 12) {
+                throw new RuntimeException('PLATFORM_ADMIN_PASSWORD debe tener al menos 12 caracteres.');
+            }
+            return $configured;
+        }
+
+        $generated = bin2hex(random_bytes(12));
+        error_log('[Membora CRM] Contrasena inicial unica del administrador de plataforma: ' . $generated);
+        return $generated;
     }
 
     public static function metrics(): array
@@ -3694,7 +3723,7 @@ final class EmpresaRepository
 
         $adminEmail = strtolower(trim((string) ($data['admin_email'] ?? '')));
         $adminName = trim((string) ($data['admin_name'] ?? '')) ?: ($client['contact_name'] ?? 'Administrador');
-        $adminPassword = trim((string) ($data['admin_password'] ?? '')) ?: 'MemboraDemo2026!';
+        $adminPassword = trim((string) ($data['admin_password'] ?? ''));
         if ($adminEmail === '' && $client) {
             $adminEmail = strtolower((string) $client['email']);
         }
@@ -5800,6 +5829,7 @@ final class WebhookIntegrationRepository
                 id VARCHAR(191) NOT NULL PRIMARY KEY,
                 tenant_id VARCHAR(191) NOT NULL,
                 token_hash VARCHAR(255) NOT NULL,
+                token_lookup CHAR(64) NULL,
                 token_preview VARCHAR(32) NOT NULL,
                 token_encrypted TEXT NULL,
                 is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -5807,6 +5837,7 @@ final class WebhookIntegrationRepository
                 updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 regenerated_at DATETIME NULL,
                 UNIQUE KEY webhook_settings_tenant_unique (tenant_id),
+                UNIQUE KEY webhook_settings_token_lookup_unique (token_lookup),
                 INDEX webhook_settings_active_idx (is_active)
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
         );
@@ -5829,6 +5860,7 @@ final class WebhookIntegrationRepository
         );
 
         self::ensureColumn('webhook_settings', 'token_encrypted', 'ALTER TABLE webhook_settings ADD COLUMN token_encrypted TEXT NULL AFTER token_preview');
+        self::ensureColumn('webhook_settings', 'token_lookup', 'ALTER TABLE webhook_settings ADD COLUMN token_lookup CHAR(64) NULL AFTER token_hash, ADD UNIQUE INDEX webhook_settings_token_lookup_unique (token_lookup)');
     }
 
     public static function settings(string $tenantId): array
@@ -5840,6 +5872,11 @@ final class WebhookIntegrationRepository
 
         if ($settings) {
             $settings['token'] = self::decryptToken((string) ($settings['token_encrypted'] ?? '')) ?: null;
+            if (empty($settings['token_lookup']) && is_string($settings['token'])) {
+                $settings['token_lookup'] = hash('sha256', $settings['token']);
+                $lookup = Database::connection()->prepare('UPDATE webhook_settings SET token_lookup = :token_lookup WHERE tenant_id = :tenant_id');
+                $lookup->execute(['token_lookup' => $settings['token_lookup'], 'tenant_id' => $tenantId]);
+            }
             return $settings;
         }
 
@@ -5848,19 +5885,21 @@ final class WebhookIntegrationRepository
             'id' => cuid(),
             'tenant_id' => $tenantId,
             'token_hash' => password_hash($token, PASSWORD_BCRYPT),
+            'token_lookup' => hash('sha256', $token),
             'token_preview' => self::tokenPreview($token),
             'token_encrypted' => self::encryptToken($token),
             'is_active' => 1,
         ];
 
         $insert = Database::connection()->prepare(
-            'INSERT INTO webhook_settings (id, tenant_id, token_hash, token_preview, token_encrypted, is_active, created_at, updated_at, regenerated_at)
-             VALUES (:id, :tenant_id, :token_hash, :token_preview, :token_encrypted, 1, NOW(), NOW(), NOW())'
+            'INSERT INTO webhook_settings (id, tenant_id, token_hash, token_lookup, token_preview, token_encrypted, is_active, created_at, updated_at, regenerated_at)
+             VALUES (:id, :tenant_id, :token_hash, :token_lookup, :token_preview, :token_encrypted, 1, NOW(), NOW(), NOW())'
         );
         $insert->execute([
             'id' => $settings['id'],
             'tenant_id' => $settings['tenant_id'],
             'token_hash' => $settings['token_hash'],
+            'token_lookup' => $settings['token_lookup'],
             'token_preview' => $settings['token_preview'],
             'token_encrypted' => $settings['token_encrypted'],
         ]);
@@ -5878,6 +5917,7 @@ final class WebhookIntegrationRepository
         $stmt = Database::connection()->prepare(
             'UPDATE webhook_settings
              SET token_hash = :token_hash,
+                 token_lookup = :token_lookup,
                  token_preview = :token_preview,
                  token_encrypted = :token_encrypted,
                  regenerated_at = NOW(),
@@ -5886,6 +5926,7 @@ final class WebhookIntegrationRepository
         );
         $stmt->execute([
             'token_hash' => password_hash($token, PASSWORD_BCRYPT),
+            'token_lookup' => hash('sha256', $token),
             'token_preview' => self::tokenPreview($token),
             'token_encrypted' => self::encryptToken($token),
             'tenant_id' => $tenantId,
@@ -5924,6 +5965,10 @@ final class WebhookIntegrationRepository
         $ip = substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64);
         $userAgent = substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 500);
         $tenantId = null;
+
+        if (self::isPlatformRateLimited($ip)) {
+            return self::jsonResult(false, 'Demasiados envios. Intentalo mas tarde.');
+        }
 
         if ($token !== '') {
             $settings = self::settingsByToken($token);
@@ -6033,14 +6078,10 @@ final class WebhookIntegrationRepository
 
     private static function settingsByToken(string $token): ?array
     {
-        $stmt = Database::connection()->query('SELECT * FROM webhook_settings');
-        foreach ($stmt->fetchAll() as $settings) {
-            if (password_verify($token, (string) $settings['token_hash'])) {
-                return $settings;
-            }
-        }
-
-        return null;
+        $stmt = Database::connection()->prepare('SELECT * FROM webhook_settings WHERE token_lookup = :token_lookup LIMIT 1');
+        $stmt->execute(['token_lookup' => hash('sha256', $token)]);
+        $settings = $stmt->fetch();
+        return $settings && password_verify($token, (string) $settings['token_hash']) ? $settings : null;
     }
 
     private static function isAllowedWebsiteOrigin(): bool
@@ -6223,8 +6264,7 @@ final class WebhookIntegrationRepository
         $stmt = Database::connection()->prepare(
             'SELECT COUNT(*)
              FROM webhook_logs
-             WHERE tenant_id IS NULL
-             AND ip_address = :ip_address
+             WHERE ip_address = :ip_address
              AND created_at >= DATE_SUB(NOW(), INTERVAL 10 MINUTE)'
         );
         $stmt->execute(['ip_address' => $ip]);
@@ -6290,14 +6330,17 @@ final class WebhookIntegrationRepository
 
     private static function encryptionKey(): string
     {
-        $seed = (getenv('APP_KEY') ?: '') . '|' . (getenv('DB_PASSWORD') ?: '') . '|' . (getenv('DATABASE_URL') ?: '');
-        return hash('sha256', $seed ?: 'membora-crm-local-key', true);
+        $seed = trim((string) (getenv('APP_KEY') ?: ''));
+        if ($seed === '') {
+            throw new RuntimeException('APP_KEY es obligatoria para cifrar tokens webhook.');
+        }
+        return hash('sha256', $seed, true);
     }
 
     private static function encryptToken(string $token): ?string
     {
         if (!function_exists('openssl_encrypt')) {
-            return base64_encode($token);
+            throw new RuntimeException('OpenSSL es obligatorio para cifrar tokens webhook.');
         }
 
         $iv = random_bytes(16);

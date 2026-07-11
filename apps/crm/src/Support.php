@@ -15,6 +15,7 @@ function send_security_headers(bool $isSecureRequest = false): void
     header('X-Frame-Options: DENY');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
+    header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'");
 
     if ($isSecureRequest) {
         header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
@@ -523,6 +524,40 @@ function platform_payment_status_label(?string $status): string
         'OVERDUE' => 'Vencido',
         'CANCELLED' => 'Anulado',
     ]);
+}
+
+function csrf_token(): string
+{
+    if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_field(): string
+{
+    return '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
+}
+
+function verify_csrf(): bool
+{
+    $stored = $_SESSION['csrf_token'] ?? null;
+    $submitted = post_value('csrf_token');
+    return is_string($stored) && is_string($submitted) && hash_equals($stored, $submitted);
+}
+
+function inject_csrf_fields(string $html): string
+{
+    return preg_replace_callback(
+        '/<form\b(?=[^>]*\bmethod\s*=\s*(["\'])?post\1)[^>]*>/i',
+        static fn (array $match): string => $match[0] . csrf_field(),
+        $html
+    ) ?? $html;
+}
+
+function log_server_error(Throwable $exception, string $context): void
+{
+    error_log('[Membora CRM][' . $context . '] ' . $exception::class . ': ' . $exception->getMessage());
 }
 
 function platform_invoice_status_label(?string $status): string

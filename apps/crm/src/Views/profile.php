@@ -49,6 +49,10 @@ $initial = strtoupper(substr((string) ($user['name'] ?? 'U'), 0, 1));
             <input name="email" required type="email" value="<?= e($user['email']) ?>" autocomplete="email">
           </label>
           <label class="field field--wide">
+            <span>Contrasena actual</span>
+            <input name="current_password" type="password" autocomplete="current-password" placeholder="Obligatoria para cambiarla">
+          </label>
+          <label class="field field--wide">
             <span>Nueva contrasena</span>
             <input name="password" type="password" minlength="8" autocomplete="new-password" placeholder="Mantener contrasena actual">
           </label>

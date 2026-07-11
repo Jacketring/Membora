@@ -158,7 +158,7 @@ foreach (($clients ?? []) as $clientOption) {
     </label>
     <label class="field">
       <span>Contrasena inicial</span>
-      <input name="admin_password" type="text" value="MemboraDemo2026!" placeholder="Minimo 8 caracteres">
+      <input name="admin_password" type="password" value="" minlength="8" required placeholder="Minimo 8 caracteres" autocomplete="new-password">
     </label>
   <?php endif; ?>
 

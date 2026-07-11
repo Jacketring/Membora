@@ -29,6 +29,7 @@ session_set_cookie_params([
 send_security_headers($isSecureRequest);
 
 session_start();
+ob_start('inject_csrf_fields');
 
 require __DIR__ . '/Database.php';
 require __DIR__ . '/Auth.php';

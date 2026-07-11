@@ -218,7 +218,7 @@ Administrador de plataforma:
 
 ```text
 Email: admin@membora.crm
-Password: MemboraAdmin2026!
+Password: definida mediante `PLATFORM_ADMIN_PASSWORD` en `.env` durante el despliegue.
 ```
 
 ## 6. Tablas auxiliares creadas por PHP
