@@ -49,6 +49,8 @@ final class Actions
             'renew_empresa_subscription' => self::renewEmpresaSubscription(),
             'cancel_empresa_subscription' => self::cancelEmpresaSubscription(),
             'resume_empresa_subscription' => self::resumeEmpresaSubscription(),
+            'create_empresa_stripe_checkout' => self::createEmpresaStripeCheckout(),
+            'cancel_empresa_stripe_subscription' => self::cancelEmpresaStripeSubscription(),
             'create_platform_payment' => self::createPlatformPayment(),
             'update_platform_payment' => self::updatePlatformPayment(),
             'create_platform_invoice' => self::createPlatformInvoice(),
@@ -349,6 +351,52 @@ final class Actions
         }
 
         flash('Suscripcion reactivada correctamente.');
+        redirect($returnRoute);
+    }
+
+    private static function createEmpresaStripeCheckout(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+        $returnRoute = post_value('return', 'platform-contacts');
+
+        if ($id === '') {
+            flash('No se encontro la empresa para iniciar Stripe Checkout.', 'error');
+            redirect($returnRoute);
+        }
+
+        try {
+            $url = StripeBillingService::createCheckoutSession($id);
+        } catch (Throwable $exception) {
+            StripeBillingRepository::recordEmpresaError($id, $exception->getMessage());
+            flash($exception->getMessage() ?: 'No se pudo crear la sesion de Stripe Checkout.', 'error');
+            redirect($returnRoute);
+        }
+
+        header('Location: ' . $url);
+        exit;
+    }
+
+    private static function cancelEmpresaStripeSubscription(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+        $returnRoute = post_value('return', 'platform-contacts');
+
+        if ($id === '') {
+            flash('No se encontro la empresa para cancelar Stripe.', 'error');
+            redirect($returnRoute);
+        }
+
+        try {
+            StripeBillingService::cancelAtPeriodEnd($id);
+        } catch (Throwable $exception) {
+            StripeBillingRepository::recordEmpresaError($id, $exception->getMessage());
+            flash($exception->getMessage() ?: 'No se pudo cancelar la suscripcion en Stripe.', 'error');
+            redirect($returnRoute);
+        }
+
+        flash('Cancelacion enviada a Stripe. El acceso se conserva hasta el final del periodo.');
         redirect($returnRoute);
     }
 

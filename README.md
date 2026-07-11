@@ -292,6 +292,7 @@ Este usuario se crea automaticamente desde la aplicacion PHP si no existe.
 - `docs/09-seguridad-y-captacion-web.md`: medidas de seguridad y estrategia webhook/base de datos.
 - `docs/10-incidencias-y-soluciones.md`: incidencias tecnicas del TFM y soluciones aplicadas.
 - `docs/13-historial-cambios-recientes.md`: resumen de cambios recientes en suscripciones, facturacion, pagos, web publica y despliegue.
+- `docs/16-stripe-billing-saas.md`: integracion Stripe Billing para cobros SaaS de Membora a gimnasios.
 
 ## Presentacion TFM
 

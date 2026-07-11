@@ -90,6 +90,38 @@ if ($isWebhookLeadRequest) {
     exit;
 }
 
+$isStripeWebhookRequest = $requestPath === '/stripe/webhook' || ($_GET['action'] ?? '') === 'stripe_webhook';
+if ($isStripeWebhookRequest) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Content-Type: application/json; charset=utf-8', true, 405);
+        echo json_encode(['success' => false, 'message' => 'Metodo no permitido'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $payload = file_get_contents('php://input') ?: '';
+    $signature = (string) ($_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '');
+
+    try {
+        $result = StripeBillingService::handleWebhook($payload, $signature);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => true] + $result, JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $exception) {
+        header('Content-Type: application/json; charset=utf-8', true, 400);
+        echo json_encode(['success' => false, 'message' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
+    exit;
+}
+
+if ($requestPath === '/stripe/checkout/success') {
+    flash('Checkout completado. El acceso se activara cuando Stripe confirme el pago por webhook.');
+    redirect('platform-contacts');
+}
+
+if ($requestPath === '/stripe/checkout/cancel') {
+    flash('Checkout cancelado. No se ha activado ningun acceso ni se ha registrado ningun cobro.', 'error');
+    redirect('platform-contacts');
+}
+
 $postAction = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['action'] ?? '') : '';
 if (!in_array($postAction, ['login', 'demo_login'], true)) {
     Auth::enforceDemoExpiry();
@@ -327,6 +359,9 @@ switch ($route) {
             'metrics' => PlatformInvoiceRepository::metrics(),
             'empresas' => EmpresaRepository::all(),
             'payments' => PlatformPaymentRepository::all(),
+            'stripeEnabled' => StripeBillingConfig::enabled(),
+            'stripeWebhookUrl' => StripeBillingConfig::webhookUrl(),
+            'stripeEvents' => StripeBillingRepository::stripeDiagnostics(),
             'nextInvoiceSeries' => PlatformInvoiceRepository::defaultSeries(),
             'nextInvoiceNumber' => PlatformInvoiceRepository::nextInvoiceNumber(),
             'invoices' => PlatformInvoiceRepository::all($filters['q'], $filters['status']),

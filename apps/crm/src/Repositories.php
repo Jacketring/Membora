@@ -4980,6 +4980,8 @@ final class PlatformPlanRepository
 
         self::ensureColumn('discount_price', 'ALTER TABLE saas_plans ADD COLUMN discount_price DECIMAL(10,2) NULL AFTER setup_price');
         self::ensureColumn('discount_label', 'ALTER TABLE saas_plans ADD COLUMN discount_label VARCHAR(120) NULL AFTER discount_price');
+        self::ensureColumn('stripe_monthly_price_id', 'ALTER TABLE saas_plans ADD COLUMN stripe_monthly_price_id VARCHAR(191) NULL AFTER discount_label');
+        self::ensureColumn('stripe_annual_price_id', 'ALTER TABLE saas_plans ADD COLUMN stripe_annual_price_id VARCHAR(191) NULL AFTER stripe_monthly_price_id');
         self::seedDefaults();
     }
 
@@ -5052,8 +5054,8 @@ final class PlatformPlanRepository
     {
         self::ensureTable();
         $stmt = Database::connection()->prepare(
-            'INSERT INTO saas_plans (id, code, name, monthly_price, setup_price, discount_price, discount_label, max_users, max_members, status, features, created_at, updated_at)
-             VALUES (:id, :code, :name, :monthly_price, :setup_price, :discount_price, :discount_label, :max_users, :max_members, :status, :features, NOW(), NOW())'
+            'INSERT INTO saas_plans (id, code, name, monthly_price, setup_price, discount_price, discount_label, stripe_monthly_price_id, stripe_annual_price_id, max_users, max_members, status, features, created_at, updated_at)
+             VALUES (:id, :code, :name, :monthly_price, :setup_price, :discount_price, :discount_label, :stripe_monthly_price_id, :stripe_annual_price_id, :max_users, :max_members, :status, :features, NOW(), NOW())'
         );
         $stmt->execute(self::planParams($data) + ['id' => cuid()]);
     }
@@ -5069,6 +5071,8 @@ final class PlatformPlanRepository
                  setup_price = :setup_price,
                  discount_price = :discount_price,
                  discount_label = :discount_label,
+                 stripe_monthly_price_id = :stripe_monthly_price_id,
+                 stripe_annual_price_id = :stripe_annual_price_id,
                  max_users = :max_users,
                  max_members = :max_members,
                  status = :status,
@@ -5137,6 +5141,8 @@ final class PlatformPlanRepository
             'setup_price' => number_format(max(0, (float) $setupPrice), 2, '.', ''),
             'discount_price' => $discount !== null ? number_format($discount, 2, '.', '') : null,
             'discount_label' => trim((string) ($data['discount_label'] ?? '')) ?: null,
+            'stripe_monthly_price_id' => trim((string) ($data['stripe_monthly_price_id'] ?? '')) ?: null,
+            'stripe_annual_price_id' => trim((string) ($data['stripe_annual_price_id'] ?? '')) ?: null,
             'max_users' => trim((string) ($data['max_users'] ?? '')) !== '' ? max(0, (int) $data['max_users']) : null,
             'max_members' => trim((string) ($data['max_members'] ?? '')) !== '' ? max(0, (int) $data['max_members']) : null,
             'status' => $status,

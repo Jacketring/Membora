@@ -672,6 +672,8 @@ function audit_action_label(?string $action): string
         'renew_empresa_subscription' => 'Renovacion de suscripcion',
         'cancel_empresa_subscription' => 'Cancelacion de suscripcion',
         'resume_empresa_subscription' => 'Reactivacion de suscripcion',
+        'create_empresa_stripe_checkout' => 'Inicio de Stripe Checkout',
+        'cancel_empresa_stripe_subscription' => 'Cancelacion de Stripe al final del periodo',
         'create_platform_payment' => 'Creacion de pago CRM',
         'update_platform_payment' => 'Actualizacion de pago CRM',
         'create_platform_invoice' => 'Creacion de factura CRM',

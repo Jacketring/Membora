@@ -1,0 +1,9 @@
+{
+  "name": "membora/crm",
+  "description": "Membora CRM PHP application",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "stripe/stripe-php": "^16.0"
+  }
+}

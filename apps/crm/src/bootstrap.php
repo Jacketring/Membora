@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 require __DIR__ . '/Support.php';
 
+$composerAutoload = __DIR__ . '/../vendor/autoload.php';
+if (is_file($composerAutoload)) {
+    require $composerAutoload;
+}
+
 $isSecureRequest = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
 
@@ -29,4 +34,5 @@ require __DIR__ . '/Database.php';
 require __DIR__ . '/Auth.php';
 require __DIR__ . '/Mailer.php';
 require __DIR__ . '/Repositories.php';
+require __DIR__ . '/StripeBilling.php';
 require __DIR__ . '/Actions.php';
