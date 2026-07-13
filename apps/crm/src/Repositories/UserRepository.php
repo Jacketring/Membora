@@ -140,6 +140,55 @@ final class UserRepository
         return $roleId === false ? null : (string) $roleId;
     }
 
+    public static function platformFind(string $userId): ?array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT users.id, users.name, users.email, users.status, users.last_login_at,
+                    users.created_at, roles.`key` AS role_key
+             FROM users
+             INNER JOIN roles ON roles.id = users.role_id
+             WHERE users.id = :id AND roles.`key` IN ("SUPER_ADMIN", "SUPERADMIN")
+             LIMIT 1'
+        );
+        $stmt->execute(['id' => $userId]);
+        $user = $stmt->fetch();
+
+        return $user ?: null;
+    }
+
+    public static function updatePlatform(string $userId, string $name, string $email, string $status, ?string $passwordHash): void
+    {
+        $params = [
+            'id' => $userId,
+            'name' => $name,
+            'email' => $email,
+            'status' => $status,
+        ];
+        $passwordSql = '';
+        if ($passwordHash !== null) {
+            $passwordSql = ', password_hash = :password_hash';
+            $params['password_hash'] = $passwordHash;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'UPDATE users
+             SET name = :name, email = :email, status = :status' . $passwordSql . ', updated_at = NOW()
+             WHERE id = :id
+               AND role_id IN (SELECT id FROM roles WHERE `key` IN ("SUPER_ADMIN", "SUPERADMIN"))'
+        );
+        $stmt->execute($params);
+    }
+
+    public static function deletePlatform(string $userId): void
+    {
+        $stmt = Database::connection()->prepare(
+            'DELETE FROM users
+             WHERE id = :id
+               AND role_id IN (SELECT id FROM roles WHERE `key` IN ("SUPER_ADMIN", "SUPERADMIN"))'
+        );
+        $stmt->execute(['id' => $userId]);
+    }
+
     public static function roleExists(string $roleId): bool
     {
         $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM roles WHERE id = :id');

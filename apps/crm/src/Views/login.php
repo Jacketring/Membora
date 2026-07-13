@@ -61,15 +61,15 @@ $demoEnabled = DemoAccessPolicy::isEnabled((string) getenv('APP_ENV'));
         <?php endif; ?>
       </form>
       <?php if ($demoEnabled): ?>
-      <form id="demo-client-login" method="post" hidden>
-        <input type="hidden" name="action" value="demo_login">
-        <input type="hidden" name="demo_type" value="client">
-      </form>
+        <form id="demo-client-login" method="post" hidden>
+          <input type="hidden" name="action" value="demo_login">
+          <input type="hidden" name="demo_type" value="client">
+        </form>
+        <form id="demo-admin-login" method="post" hidden>
+          <input type="hidden" name="action" value="demo_login">
+          <input type="hidden" name="demo_type" value="admin">
+        </form>
       <?php endif; ?>
-      <form id="demo-admin-login" method="post" hidden>
-        <input type="hidden" name="action" value="demo_login">
-        <input type="hidden" name="demo_type" value="admin">
-      </form>
     </section>
   </main>
 </body>

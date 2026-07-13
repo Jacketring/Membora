@@ -74,10 +74,14 @@ final class ComprehensiveSupportTest extends TestCase
         }
         self::assertTrue(can_perform_action('platform_create_plan', $platform));
         self::assertTrue(can_perform_action('create_platform_user', $platform));
+        self::assertTrue(can_perform_action('update_platform_user', $platform));
+        self::assertTrue(can_perform_action('delete_platform_user', $platform));
         self::assertFalse(can_perform_action('create_member', $platform));
         self::assertTrue(can_perform_action('create_member', $gym));
         self::assertFalse(can_perform_action('platform_create_plan', $gym));
         self::assertFalse(can_perform_action('create_platform_user', $gym));
+        self::assertFalse(can_perform_action('update_platform_user', $gym));
+        self::assertFalse(can_perform_action('delete_platform_user', $gym));
         self::assertTrue(can_perform_action('create_payment', ['role' => 'RECEPTION']));
         self::assertFalse(can_perform_action('delete_user', ['role' => 'RECEPTION']));
         self::assertTrue(can_perform_action('create_lead', ['role' => 'SALES']));

@@ -53,4 +53,24 @@ final class SecurityPolicyTest extends TestCase
         self::assertFalse(DemoAccessPolicy::isEnabled('production'));
         self::assertFalse(DemoAccessPolicy::isEnabled(''));
     }
+
+    public function testProductionLoginDoesNotRenderHiddenDemoForms(): void
+    {
+        $previousEnvironment = getenv('APP_ENV');
+        putenv('APP_ENV=production');
+
+        ob_start();
+        require dirname(__DIR__, 2) . '/src/Views/login.php';
+        $html = (string) ob_get_clean();
+
+        if ($previousEnvironment === false) {
+            putenv('APP_ENV');
+        } else {
+            putenv('APP_ENV=' . $previousEnvironment);
+        }
+
+        self::assertStringNotContainsString('action" value="demo_login', $html);
+        self::assertStringNotContainsString('id="demo-admin-login"', $html);
+        self::assertStringNotContainsString('id="demo-client-login"', $html);
+    }
 }

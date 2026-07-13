@@ -730,6 +730,8 @@ function audit_action_label(?string $action): string
         'create_platform_plan' => 'Creación de plan CRM',
         'update_platform_plan' => 'Actualizacion de plan CRM',
         'create_platform_user' => 'Creación de usuario administrador',
+        'update_platform_user' => 'Actualización de usuario administrador',
+        'delete_platform_user' => 'Eliminación de usuario administrador',
         'enter_empresa_crm' => 'Entrada en soporte',
         'exit_empresa_crm' => 'Salida de soporte',
     ];

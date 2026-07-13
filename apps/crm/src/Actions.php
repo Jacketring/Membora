@@ -70,6 +70,8 @@ final class Actions
             'enter_empresa_crm' => self::enterEmpresaCrm(),
             'exit_empresa_crm' => self::exitEmpresaCrm(),
             'create_platform_user' => self::createPlatformUser(),
+            'update_platform_user' => self::updatePlatformUser(),
+            'delete_platform_user' => self::deletePlatformUser(),
             'create_user' => self::createUser(),
             'update_user' => self::updateUser(),
             'create_lead' => self::createLead(),
@@ -147,7 +149,6 @@ final class Actions
     private static function demoLogin(): never
     {
         if (!DemoAccessPolicy::isEnabled((string) getenv('APP_ENV'))) {
-            flash('La demo no está disponible en este entorno.', 'error');
             redirect('login');
         }
 
@@ -857,6 +858,100 @@ final class Actions
         ]);
 
         flash('Administrador creado correctamente.');
+        redirect('platform-users');
+    }
+
+    private static function updatePlatformUser(): never
+    {
+        self::requirePlatformAdmin();
+
+        $userId = post_value('id', '');
+        $name = trim(post_value('name', ''));
+        $email = strtolower(trim(post_value('email', '')));
+        $password = post_value('password', '');
+        $status = self::userStatusFromPost();
+        $target = UserRepository::platformFind($userId);
+
+        if (!$target) {
+            flash('No se encontró el administrador.', 'error');
+            redirect('platform-users');
+        }
+        if ($name === '' || $email === '') {
+            flash('Indica nombre y email.', 'error');
+            redirect('platform-users');
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('El email del administrador no es válido.', 'error');
+            redirect('platform-users');
+        }
+        if ($password !== '' && strlen($password) < 12) {
+            flash('La nueva contraseña debe tener al menos 12 caracteres.', 'error');
+            redirect('platform-users');
+        }
+        if (UserRepository::emailExists(null, $email, $userId)) {
+            flash('Ya existe otro usuario con ese email.', 'error');
+            redirect('platform-users');
+        }
+
+        $currentUserId = (string) (Auth::user()['id'] ?? '');
+        if ($userId === $currentUserId && $status !== 'ACTIVE') {
+            flash('No puedes desactivar tu propia cuenta.', 'error');
+            redirect('platform-users');
+        }
+
+        $metrics = UserRepository::platformMetrics();
+        if ($target['status'] === 'ACTIVE' && $status === 'INACTIVE' && $metrics['active'] <= 1) {
+            flash('Debe quedar al menos un superadministrador activo.', 'error');
+            redirect('platform-users');
+        }
+
+        UserRepository::updatePlatform(
+            $userId,
+            $name,
+            $email,
+            $status,
+            $password !== '' ? password_hash($password, PASSWORD_BCRYPT) : null
+        );
+
+        if ($userId === $currentUserId) {
+            $_SESSION['user']['name'] = $name;
+            $_SESSION['user']['email'] = $email;
+        }
+
+        flash('Administrador actualizado correctamente.');
+        redirect('platform-users');
+    }
+
+    private static function deletePlatformUser(): never
+    {
+        self::requirePlatformAdmin();
+
+        $userId = post_value('id', '');
+        $target = UserRepository::platformFind($userId);
+        if (!$target) {
+            flash('No se encontró el administrador.', 'error');
+            redirect('platform-users');
+        }
+        if ($userId === (string) (Auth::user()['id'] ?? '')) {
+            flash('No puedes eliminar tu propia cuenta.', 'error');
+            redirect('platform-users');
+        }
+
+        $metrics = UserRepository::platformMetrics();
+        if ($metrics['total'] <= 1 || ($target['status'] === 'ACTIVE' && $metrics['active'] <= 1)) {
+            flash('Debe quedar al menos un superadministrador activo.', 'error');
+            redirect('platform-users');
+        }
+
+        try {
+            UserRepository::deletePlatform($userId);
+        } catch (Throwable $exception) {
+            log_server_error($exception, 'delete_platform_user');
+            flash('No se pudo eliminar el administrador porque tiene actividad relacionada.', 'error');
+            redirect('platform-users');
+        }
+
+        flash('Administrador eliminado correctamente.');
         redirect('platform-users');
     }
 
