@@ -77,6 +77,69 @@ final class UserRepository
         return $stmt->fetchAll();
     }
 
+    public static function platformAll(string $query = '', string $status = ''): array
+    {
+        self::ensureAvatarColumn();
+        $params = [];
+        $where = ['roles.`key` IN ("SUPER_ADMIN", "SUPERADMIN")'];
+
+        if ($query !== '') {
+            $where[] = '(users.name LIKE :query OR users.email LIKE :query)';
+            $params['query'] = '%' . $query . '%';
+        }
+
+        if ($status !== '') {
+            $where[] = 'users.status = :status';
+            $params['status'] = $status;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'SELECT users.id, users.name, users.email, users.status, users.created_at,
+                    users.last_login_at, roles.`key` AS role_key
+             FROM users
+             INNER JOIN roles ON roles.id = users.role_id
+             WHERE ' . implode(' AND ', $where) . '
+             ORDER BY users.status ASC, users.name ASC'
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    public static function platformMetrics(): array
+    {
+        $stmt = Database::connection()->query(
+            'SELECT COUNT(*) AS total,
+                    SUM(CASE WHEN users.status = "ACTIVE" THEN 1 ELSE 0 END) AS active,
+                    SUM(CASE WHEN users.status = "INACTIVE" THEN 1 ELSE 0 END) AS inactive,
+                    SUM(CASE WHEN users.last_login_at IS NOT NULL THEN 1 ELSE 0 END) AS with_login
+             FROM users
+             INNER JOIN roles ON roles.id = users.role_id
+             WHERE roles.`key` IN ("SUPER_ADMIN", "SUPERADMIN")'
+        );
+        $metrics = $stmt->fetch() ?: [];
+
+        return [
+            'active' => (int) ($metrics['active'] ?? 0),
+            'inactive' => (int) ($metrics['inactive'] ?? 0),
+            'with_login' => (int) ($metrics['with_login'] ?? 0),
+            'total' => (int) ($metrics['total'] ?? 0),
+        ];
+    }
+
+    public static function platformRoleId(): ?string
+    {
+        $stmt = Database::connection()->query(
+            'SELECT id FROM roles
+             WHERE `key` IN ("SUPER_ADMIN", "SUPERADMIN")
+             ORDER BY CASE `key` WHEN "SUPER_ADMIN" THEN 1 ELSE 2 END
+             LIMIT 1'
+        );
+        $roleId = $stmt->fetchColumn();
+
+        return $roleId === false ? null : (string) $roleId;
+    }
+
     public static function roleExists(string $roleId): bool
     {
         $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM roles WHERE id = :id');

@@ -312,6 +312,22 @@ switch ($route) {
         ]);
         break;
 
+    case 'platform-users':
+        if (!is_platform_admin($currentUser)) {
+            redirect('dashboard');
+        }
+
+        $filters = [
+            'q' => trim((string) ($_GET['q'] ?? '')),
+            'status' => trim((string) ($_GET['status'] ?? '')),
+        ];
+        render_layout('Usuarios Admin', 'platform-users', [
+            'filters' => $filters,
+            'metrics' => UserRepository::platformMetrics(),
+            'users' => UserRepository::platformAll($filters['q'], $filters['status']),
+        ]);
+        break;
+
     case 'platform-payments':
         if (!is_platform_admin($currentUser)) {
             redirect('dashboard');

@@ -729,6 +729,7 @@ function audit_action_label(?string $action): string
         'add_platform_invoice_payment' => 'Pago parcial de factura CRM',
         'create_platform_plan' => 'Creación de plan CRM',
         'update_platform_plan' => 'Actualizacion de plan CRM',
+        'create_platform_user' => 'Creación de usuario administrador',
         'enter_empresa_crm' => 'Entrada en soporte',
         'exit_empresa_crm' => 'Salida de soporte',
     ];
@@ -803,6 +804,7 @@ function audit_area_label(?string $route): string
         'platform-invoices' => 'Facturas CRM',
         'platform-invoice' => 'Factura CRM',
         'platform-plans' => 'Planes CRM',
+        'platform-users' => 'Usuarios Admin',
         'platform-web' => 'Web comercial',
         'dashboard' => 'Panel',
         'profile' => 'Perfil',

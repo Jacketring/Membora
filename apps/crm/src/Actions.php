@@ -69,6 +69,7 @@ final class Actions
             'update_platform_plan' => self::updatePlatformPlan(),
             'enter_empresa_crm' => self::enterEmpresaCrm(),
             'exit_empresa_crm' => self::exitEmpresaCrm(),
+            'create_platform_user' => self::createPlatformUser(),
             'create_user' => self::createUser(),
             'update_user' => self::updateUser(),
             'create_lead' => self::createLead(),
@@ -808,6 +809,55 @@ final class Actions
             flash('Solo un superadmin de Membora puede acceder a esta sección.', 'error');
             redirect('dashboard');
         }
+    }
+
+    private static function createPlatformUser(): never
+    {
+        self::requirePlatformAdmin();
+
+        $name = trim(post_value('name', ''));
+        $email = strtolower(trim(post_value('email', '')));
+        $password = post_value('password', '');
+        $status = self::userStatusFromPost();
+
+        if ($name === '' || $email === '' || $password === '') {
+            flash('Indica nombre, email y contraseña.', 'error');
+            redirect('platform-users');
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('El email del administrador no es válido.', 'error');
+            redirect('platform-users');
+        }
+        if (strlen($password) < 12) {
+            flash('La contraseña debe tener al menos 12 caracteres.', 'error');
+            redirect('platform-users');
+        }
+        if (UserRepository::emailExists(null, $email)) {
+            flash('Ya existe un usuario con ese email.', 'error');
+            redirect('platform-users');
+        }
+
+        $roleId = UserRepository::platformRoleId();
+        if ($roleId === null) {
+            flash('No existe el rol de superadministrador en la base de datos.', 'error');
+            redirect('platform-users');
+        }
+
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO users (id, tenant_id, role_id, name, email, password_hash, status, created_at, updated_at)
+             VALUES (:id, NULL, :role_id, :name, :email, :password_hash, :status, NOW(), NOW())'
+        );
+        $stmt->execute([
+            'id' => cuid(),
+            'role_id' => $roleId,
+            'name' => $name,
+            'email' => $email,
+            'password_hash' => password_hash($password, PASSWORD_BCRYPT),
+            'status' => $status,
+        ]);
+
+        flash('Administrador creado correctamente.');
+        redirect('platform-users');
     }
 
     private static function createUser(): never
