@@ -20,7 +20,6 @@ $demoEnabled = DemoAccessPolicy::isEnabled((string) getenv('APP_ENV'));
       <div class="brand-lockup brand-lockup--login">
         <img class="brand-logo brand-logo--login" src="assets/membora-logo.svg" alt="Membora CRM">
         <div>
-          <h1>Membora CRM</h1>
           <p>Portal de gestión fitness</p>
         </div>
       </div>
