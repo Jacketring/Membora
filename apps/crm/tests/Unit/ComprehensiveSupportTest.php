@@ -133,8 +133,13 @@ final class ComprehensiveSupportTest extends TestCase
     public function testRequestOriginRules(): void
     {
         self::assertTrue(request_origin_allowed());
-        $_SERVER = ['HTTP_HOST' => 'localhost:8000', 'HTTP_ORIGIN' => 'http://localhost:8000'];
+        $_SERVER = [
+            'HTTP_HOST' => 'localhost:8000',
+            'HTTP_ORIGIN' => 'http://localhost:8000',
+            'SCRIPT_NAME' => '/app/index.php',
+        ];
         self::assertTrue(request_origin_allowed());
+        self::assertSame('http://localhost:8000/app', app_base_url());
         $_SERVER['HTTP_ORIGIN'] = 'https://evil.example';
         self::assertFalse(request_origin_allowed());
     }

@@ -24,7 +24,7 @@ El objetivo es comprobar que:
 URL objetivo:
 
 ```text
-https://app.crm.josehurtado.dev
+https://membora.es/app/
 ```
 
 Stack:
@@ -58,7 +58,7 @@ Pasos:
 
 1. Entrar en Plesk.
 2. Revisar configuracion de hosting.
-3. Confirmar que la raiz del documento apunta a `apps/crm/public`.
+3. Confirmar que la raiz del documento apunta a `httpdocs` y que el CRM abre en `/app/`.
 
 Resultado esperado:
 
@@ -94,7 +94,7 @@ Resultado esperado:
 
 Pasos:
 
-1. Abrir `https://app.web.josehurtado.dev`.
+1. Abrir `https://membora.es/`.
 2. Pulsar un enlace de demo.
 3. Confirmar que se inicia sesion automaticamente en el CRM con datos de prueba.
 4. Verificar que aparece un contador de 20 minutos en la parte superior.

@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-$remoteUrl = 'https://app.crm.josehurtado.dev/webhook/lead';
+require __DIR__ . '/_origin.php';
+
+$webOrigin = membora_public_origin();
+$remoteUrl = $webOrigin . '/app/webhook/lead';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -39,7 +42,7 @@ if ($body === false) {
     exit;
 }
 
-function post_remote_lead(string $url, string $body): array
+function post_remote_lead(string $url, string $body, string $origin): array
 {
     if (function_exists('curl_init')) {
         $ch = curl_init($url);
@@ -53,8 +56,8 @@ function post_remote_lead(string $url, string $body): array
             CURLOPT_HTTPHEADER => [
                 'Accept: application/json',
                 'Content-Type: application/json',
-                'Origin: https://app.web.josehurtado.dev',
-                'Referer: https://app.web.josehurtado.dev/',
+                'Origin: ' . $origin,
+                'Referer: ' . $origin . '/',
             ],
         ]);
         $responseBody = curl_exec($ch);
@@ -68,7 +71,7 @@ function post_remote_lead(string $url, string $body): array
     $context = stream_context_create([
         'http' => [
             'method' => 'POST',
-            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nOrigin: https://app.web.josehurtado.dev\r\nReferer: https://app.web.josehurtado.dev/\r\n",
+            'header' => "Accept: application/json\r\nContent-Type: application/json\r\nOrigin: {$origin}\r\nReferer: {$origin}/\r\n",
             'content' => $body,
             'timeout' => 15,
         ],
@@ -85,7 +88,7 @@ function post_remote_lead(string $url, string $body): array
     return [$status, is_string($responseBody) ? $responseBody : '', ''];
 }
 
-[$status, $responseBody, $error] = post_remote_lead($remoteUrl, $body);
+[$status, $responseBody, $error] = post_remote_lead($remoteUrl, $body, $webOrigin);
 $responsePayload = json_decode($responseBody, true);
 
 if ($status < 200 || $status >= 300 || !is_array($responsePayload) || empty($responsePayload['success'])) {

@@ -1,8 +1,8 @@
 # Membora CRM PHP
 
-Aplicacion PHP monolitica para ejecutar Membora CRM en un unico subdominio, sin Next.js, NestJS ni procesos Node en produccion.
+Aplicacion PHP monolitica para ejecutar Membora CRM en `/app/` dentro del mismo dominio que la web publica, sin Next.js, NestJS ni procesos Node en produccion.
 
-La web comercial publica no vive dentro de esta app; esta separada en `httpdocs/` (raiz del repo) para desplegarla en otro subdominio.
+La web comercial vive en `httpdocs/` y expone el CRM mediante `httpdocs/app/index.php`, manteniendo el codigo privado en `apps/crm`.
 
 ## Requisitos
 
@@ -10,7 +10,7 @@ La web comercial publica no vive dentro de esta app; esta separada en `httpdocs/
 - Extension PDO MySQL activada.
 - MariaDB/MySQL existente.
 - Apache con `mod_rewrite` activado.
-- Document root apuntando a `apps/crm/public`.
+- Document root unico apuntando a `httpdocs`.
 
 ## Configuracion
 
@@ -21,8 +21,8 @@ Configuracion recomendada:
 ```env
 APP_NAME="Membora CRM"
 APP_ENV="production"
-APP_URL="https://app.crm.josehurtado.dev"
-WEB_APP_URL="https://app.web.josehurtado.dev"
+APP_URL="https://membora.es/app"
+WEB_APP_URL="https://membora.es,https://www.membora.es"
 APP_STRICT_POST_ORIGIN="false"
 DB_HOST="localhost"
 DB_PORT="3306"
@@ -50,15 +50,15 @@ DATABASE_URL="mysql://usuario:password@localhost:3306/membora_crm"
 ## Despliegue en Plesk
 
 1. Subir o actualizar el repositorio desde GitHub.
-2. Configurar el subdominio para que el document root apunte a:
+2. Configurar el dominio `membora.es` para que el document root apunte a:
 
 ```text
-apps/crm/public
+httpdocs
 ```
 
 3. Crear `apps/crm/.env` en el servidor con la conexion real a MariaDB.
 4. Verificar que PHP usa una version 8.2 o superior.
-5. Abrir el subdominio.
+5. Abrir `https://membora.es/app/`.
 
 No hace falta ejecutar `npm install`, `npm run build`, `prisma generate` ni reiniciar una app Node para esta version PHP.
 
@@ -133,7 +133,7 @@ Los enlaces de demo de la web publica envian un `POST` al login demo del CRM. La
 El formulario de `httpdocs` envia al webhook:
 
 ```text
-/webhook/lead
+/app/webhook/lead
 ```
 
 El webhook acepta `POST` con JSON, `application/x-www-form-urlencoded` o `multipart/form-data`.

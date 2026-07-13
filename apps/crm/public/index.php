@@ -7,7 +7,7 @@ function public_allowed_origins(): array
 {
     $origins = [];
     foreach ([
-        getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev',
+        getenv('WEB_APP_URL') ?: 'https://membora.es',
         getenv('APP_WEB_URL') ?: '',
         'https://membora.es',
         'https://www.membora.es',

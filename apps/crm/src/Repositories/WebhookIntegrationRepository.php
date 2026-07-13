@@ -271,10 +271,15 @@ final class WebhookIntegrationRepository
     {
         $origin = rtrim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''), '/');
         $referer = rtrim((string) ($_SERVER['HTTP_REFERER'] ?? ''), '/');
-        $allowed = array_filter([
-            rtrim((string) (getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev'), '/'),
-            rtrim((string) (getenv('APP_WEB_URL') ?: ''), '/'),
-        ]);
+        $allowed = [];
+        foreach ([getenv('WEB_APP_URL') ?: 'https://membora.es', getenv('APP_WEB_URL') ?: ''] as $origins) {
+            foreach (explode(',', (string) $origins) as $allowedOrigin) {
+                $allowedOrigin = rtrim(trim($allowedOrigin), '/');
+                if ($allowedOrigin !== '') {
+                    $allowed[] = $allowedOrigin;
+                }
+            }
+        }
 
         foreach ($allowed as $allowedOrigin) {
             if ($origin === $allowedOrigin || str_starts_with($referer, $allowedOrigin . '/')) {

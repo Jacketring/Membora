@@ -58,7 +58,7 @@ Crear en Stripe un producto/precio para cada plan y pegar los IDs `price_...` en
 Endpoint exacto:
 
 ```text
-https://app.crm.josehurtado.dev/stripe/webhook
+https://membora.es/app/stripe/webhook
 ```
 
 Si `APP_URL` cambia, la URL sera:

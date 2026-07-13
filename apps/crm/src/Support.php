@@ -27,9 +27,13 @@ function request_origin_allowed(): bool
     $origin = rtrim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''), '/');
     $referer = rtrim((string) ($_SERVER['HTTP_REFERER'] ?? ''), '/');
     $current = rtrim(app_base_url(), '/');
+    $parts = parse_url($current);
+    $currentOrigin = isset($parts['scheme'], $parts['host'])
+        ? $parts['scheme'] . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '')
+        : $current;
 
     if ($origin !== '') {
-        return hash_equals($current, $origin);
+        return hash_equals($currentOrigin, $origin);
     }
 
     if ($referer !== '') {
@@ -62,7 +66,7 @@ function demo_origin_allowed(): bool
     }
     $origin = rtrim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''), '/');
     $referer = rtrim((string) ($_SERVER['HTTP_REFERER'] ?? ''), '/');
-    $allowedWeb = rtrim((string) (getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev'), '/');
+    $allowedWeb = rtrim(trim(explode(',', (string) (getenv('WEB_APP_URL') ?: 'https://membora.es'))[0]), '/');
 
     if ($origin !== '') {
         return hash_equals($allowedWeb, $origin);
@@ -88,9 +92,12 @@ function app_base_url(): string
         return rtrim($configured, '/');
     }
 
-    $host = $_SERVER['HTTP_HOST'] ?? 'app.crm.josehurtado.dev';
+    $host = $_SERVER['HTTP_HOST'] ?? 'membora.es';
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
-    return ($https ? 'https://' : 'http://') . $host;
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $appPath = '/' . trim((string) (getenv('MEMBORA_APP_PATH') ?: '/app'), '/');
+    $basePath = $scriptName === $appPath || str_starts_with($scriptName, $appPath . '/') ? $appPath : '';
+    return ($https ? 'https://' : 'http://') . $host . $basePath;
 }
 
 function post_value(string $key, ?string $default = null): ?string

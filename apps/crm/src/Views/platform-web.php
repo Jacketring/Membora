@@ -2,7 +2,7 @@
 $logs = $logs ?? [];
 $mailDiagnostics = $mailDiagnostics ?? [];
 $webhookUrl = $webhookUrl ?? app_base_url() . '/webhook/lead';
-$webUrl = $webUrl ?? 'https://app.web.josehurtado.dev';
+$webUrl = $webUrl ?? 'https://membora.es';
 ?>
 
 <div class="page-heading leads-heading platform-heading">

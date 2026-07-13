@@ -150,8 +150,8 @@ El formulario publico incluye:
 Flujo operativo actual:
 
 ```text
-app.web.josehurtado.dev
-  -> POST https://app.crm.josehurtado.dev/webhook/lead
+membora.es
+  -> POST https://membora.es/app/webhook/lead
   -> validacion de origen WEB_APP_URL
   -> honeypot/rate limit
   -> insercion en platform_leads
@@ -176,8 +176,8 @@ Puntos a vigilar:
 Configuracion esperada:
 
 ```env
-APP_URL="https://app.crm.josehurtado.dev"
-WEB_APP_URL="https://app.web.josehurtado.dev"
+APP_URL="https://membora.es/app"
+WEB_APP_URL="https://membora.es,https://www.membora.es"
 ```
 
 ## Alternativa documentada: insercion directa en base de datos
@@ -187,7 +187,7 @@ Esta alternativa se recomienda si se quiere simplificar Plesk y evitar CORS/webh
 Flujo propuesto:
 
 ```text
-app.web.josehurtado.dev/contact.php
+membora.es/contact.php
   -> valida formulario en servidor
   -> conecta a la misma MariaDB
   -> inserta en platform_leads

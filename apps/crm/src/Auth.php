@@ -150,7 +150,8 @@ final class Auth
 
     public static function demoReturnUrl(): string
     {
-        return rtrim((string) (getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev'), '/') . '/';
+        $webUrls = explode(',', (string) (getenv('WEB_APP_URL') ?: 'https://membora.es'));
+        return rtrim(trim($webUrls[0]), '/') . '/';
     }
 
     public static function logout(): void

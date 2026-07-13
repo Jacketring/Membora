@@ -108,14 +108,14 @@ No se usa en produccion:
 CRM:
 
 ```text
-https://app.crm.josehurtado.dev
-Document root: apps/crm/public
+https://membora.es/app/
+Document root unico: httpdocs (CRM publicado en /app/)
 ```
 
 Web comercial:
 
 ```text
-https://app.web.josehurtado.dev
+https://membora.es/
 Document root: httpdocs
 ```
 

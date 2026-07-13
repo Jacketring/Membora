@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-$remoteUrl = 'https://app.crm.josehurtado.dev/api/plans';
+require __DIR__ . '/_origin.php';
+
+$remoteUrl = membora_public_origin() . '/app/api/plans';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');

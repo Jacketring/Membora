@@ -1,7 +1,7 @@
 const MEMBORA_WEBHOOK_URL = window.MEMBORA_WEBHOOK_URL || 'api/lead.php';
-const MEMBORA_DEMO_LOGIN_URL = 'https://app.crm.josehurtado.dev/index.php?route=login';
+const MEMBORA_DEMO_LOGIN_URL = '/app/index.php?route=login';
 const MEMBORA_PUBLIC_PLANS_URL = window.MEMBORA_PUBLIC_PLANS_URL || 'api/plans.php';
-const MEMBORA_REMOTE_PUBLIC_PLANS_URL = 'https://app.crm.josehurtado.dev/api/plans';
+const MEMBORA_REMOTE_PUBLIC_PLANS_URL = '/app/api/plans';
 
 function startDemoLogin(type = 'client') {
   const form = document.createElement('form');

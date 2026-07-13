@@ -162,8 +162,8 @@ Respuesta JSON:
 Variables principales:
 
 ```env
-APP_URL="https://app.crm.josehurtado.dev"
-WEB_APP_URL="https://app.web.josehurtado.dev"
+APP_URL="https://membora.es/app"
+WEB_APP_URL="https://membora.es,https://www.membora.es"
 APP_STRICT_POST_ORIGIN="false"
 DB_HOST="localhost"
 DB_PORT="3306"

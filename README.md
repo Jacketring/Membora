@@ -33,9 +33,10 @@ E2E_BASE_URL="https://staging.example.test" E2E_EMAIL="gym-admin@example.test" E
 
 ```text
 Aplicacion PHP funcional para entrega MVP.
-Despliegue: https://app.crm.josehurtado.dev
+Web publica: https://membora.es/
+CRM: https://membora.es/app/
 Produccion sin Node.js, sin npm install y sin npm run build.
-Web comercial externa: https://app.web.josehurtado.dev
+Un unico dominio y un unico document root en Plesk.
 ```
 
 Pantallas disponibles:
@@ -76,8 +77,8 @@ https://github.com/Jacketring/Membora-CRM.git
 - MariaDB.
 - PDO.
 - HTML, CSS y JavaScript de navegador.
-- Apache/Plesk con document root en `apps/crm/public`.
-- Web comercial estatica en `httpdocs`.
+- Apache/Plesk con un unico document root en `httpdocs`.
+- Web comercial en `/` y CRM en `/app/`, bajo el mismo dominio.
 - Sin Node.js en produccion.
 - Sin `npm install`.
 - Sin `npm run build`.
@@ -98,14 +99,18 @@ La base de datos mantiene separacion por `tenant_id` para datos de gimnasios. La
 
 ## Estructura
 
-La estructura mapea directamente sobre Plesk: cada subdominio apunta su document
-root a una carpeta `public/` (o a `httpdocs/`), y el codigo de aplicacion,
-la configuracion sensible y el almacenamiento comun quedan fuera del webroot.
+La estructura mapea directamente sobre un unico dominio en Plesk. El document
+root apunta a `httpdocs`; la entrada segura `httpdocs/app/index.php` carga el CRM
+desde `apps/crm`, mientras el codigo, la configuracion sensible y el almacenamiento
+comun permanecen fuera del webroot.
 
 ```text
 membora-crm/                     # raiz del repo = raiz de la suscripcion Plesk
-|-- httpdocs/                    # WEB PUBLICA (marketing)  <- docroot de la web publica
+|-- httpdocs/                    # DOCROOT UNICO: https://membora.es/
 |   |-- assets/
+|   |-- app/                     # https://membora.es/app/
+|   |   |-- .htaccess
+|   |   |-- index.php            # puente seguro hacia apps/crm/public
 |   |-- .htaccess
 |   |-- index.html
 |   |-- aviso-legal.html
@@ -113,8 +118,8 @@ membora-crm/                     # raiz del repo = raiz de la suscripcion Plesk
 |   |-- cookies.html
 |   |-- demo.html
 |-- apps/
-|   |-- crm/                     # aplicacion CRM (PHP)
-|   |   |-- public/              # <- docroot subdominio app.crm
+|   |-- crm/                     # aplicacion CRM privada (PHP)
+|   |   |-- public/              # recursos servidos de forma controlada por /app/
 |   |   |   |-- assets/
 |   |   |   |-- uploads/         # fotos de socios/usuarios (servidas como estaticas)
 |   |   |   |-- .htaccess
@@ -142,10 +147,10 @@ membora-crm/                     # raiz del repo = raiz de la suscripcion Plesk
 
 Mapeo de despliegue en Plesk:
 
-| Parte | Document root |
-| --- | --- |
-| Web publica (`app.web.josehurtado.dev`) | `.../httpdocs` |
-| CRM (`app.crm.josehurtado.dev`) | `.../apps/crm/public` |
+| URL | Contenido | Document root |
+| --- | --- | --- |
+| `https://membora.es/` | Web publica | `.../httpdocs` |
+| `https://membora.es/app/` | CRM | Mismo `httpdocs`, mediante `httpdocs/app/index.php` |
 
 ## Configuracion
 
@@ -156,8 +161,8 @@ Opcion recomendada en Plesk, especialmente si la contrasena tiene caracteres esp
 ```env
 APP_NAME="Membora CRM"
 APP_ENV="production"
-APP_URL="https://app.crm.josehurtado.dev"
-WEB_APP_URL="https://app.web.josehurtado.dev,https://membora.es,https://www.membora.es"
+APP_URL="https://membora.es/app"
+WEB_APP_URL="https://membora.es,https://www.membora.es"
 APP_STRICT_POST_ORIGIN="false"
 DB_HOST="localhost"
 DB_PORT="3306"
@@ -186,36 +191,26 @@ DATABASE_URL="mysql://usuario:password@localhost:3306/nombre_base_datos"
 
 ## Despliegue en Plesk
 
-### CRM
-
 1. Clonar el repositorio desde GitHub.
-2. Configurar `app.crm.josehurtado.dev` como hosting PHP.
+2. Configurar `membora.es` como hosting PHP.
 3. Usar PHP 8.2 o superior.
 4. Activar `pdo_mysql`.
 5. Configurar la raiz del documento apuntando a:
 
 ```text
-apps/crm/public
+httpdocs
 ```
 
 Si Plesk ha clonado el repositorio dentro de otra carpeta, la ruta debe acabar igualmente en:
 
 ```text
-.../apps/crm/public
+.../membora-crm/httpdocs
 ```
 
 6. Crear `apps/crm/.env` con los datos reales de MariaDB.
-7. Abrir el subdominio.
+7. Abrir `https://membora.es/` para la web y `https://membora.es/app/` para el CRM.
 
 No hay que ejecutar comandos Node, compilar frontend ni reiniciar una app Node.
-
-### Web comercial
-
-Configurar `app.web.josehurtado.dev` como sitio web separado y apuntar la raiz del documento a:
-
-```text
-httpdocs
-```
 
 No hay que editar tokens en la web. El formulario envia al webhook del CRM y las solicitudes aparecen en `Admin CRM > Contactos`.
 Si `MAIL_ENABLED` esta activo y el SMTP esta configurado, la persona que rellena el formulario recibe un email HTML de confirmacion indicando que el equipo revisara su solicitud y contactara en 24-48 horas. Los fallos de correo quedan visibles en `Admin CRM > Web`.
@@ -223,7 +218,9 @@ La seccion `Admin CRM > Web` incluye una prueba de correo para enviar un email t
 La web publica incluye enlaces a textos legales basicos: aviso legal, privacidad y cookies.
 Los enlaces de demo de la web publica no abren una maqueta estatica: inician una sesion demo real del CRM durante 20 minutos. Al finalizar el contador, el CRM cierra la sesion y devuelve al usuario a `WEB_APP_URL`.
 
-En el `.env` del CRM debe existir `WEB_APP_URL="https://app.web.josehurtado.dev"` para permitir el envio del formulario y la carga publica de planes entre subdominios. Si la web publica responde en varios dominios, se pueden indicar separados por comas, por ejemplo `WEB_APP_URL="https://app.web.josehurtado.dev,https://www.tudominio.com"`.
+En el `.env` del CRM debe existir `APP_URL="https://membora.es/app"` y
+`WEB_APP_URL="https://membora.es,https://www.membora.es"`. Todo el flujo funciona
+bajo el mismo dominio; la segunda variante permite que la web responda tambien con `www`.
 
 ## Credenciales de prueba
 

@@ -1,14 +1,15 @@
 # Web publica de Membora CRM
 
-Web comercial estatica para desplegar en un subdominio separado del CRM, por ejemplo:
+Web comercial y CRM desplegados bajo un unico dominio:
 
 ```text
-app.web.josehurtado.dev
+https://membora.es/       -> web publica
+https://membora.es/app/   -> CRM
 ```
 
 ## Despliegue en Plesk
 
-Configura el subdominio como hosting estatico/PHP normal y apunta la raiz del documento a:
+Configura `membora.es` como hosting PHP normal y apunta la raiz del documento a:
 
 ```text
 httpdocs
@@ -21,7 +22,7 @@ No necesita Node.js, npm ni build.
 La web no mantiene una demo estatica separada. Los enlaces de demo envian al CRM real y abren una sesion temporal con datos de prueba:
 
 ```text
-https://app.web.josehurtado.dev/demo.html
+https://membora.es/demo.html
 ```
 
 `demo.html` actua como puente de entrada. Envia al login demo del CRM, inicia una sesion de 20 minutos, muestra un contador dentro de la aplicacion y al finalizar cierra sesion y devuelve al usuario a la web publica.
@@ -31,7 +32,7 @@ https://app.web.josehurtado.dev/demo.html
 El formulario envia leads al webhook del CRM:
 
 ```text
-https://app.crm.josehurtado.dev/webhook/lead
+https://membora.es/app/webhook/lead
 ```
 
 No hay que configurar tokens en esta web. El CRM acepta envios desde el dominio definido en `WEB_APP_URL` y crea las solicitudes en `Admin CRM > Leads`, donde el administrador puede gestionarlas o convertirlas en clientes.
@@ -40,5 +41,6 @@ El correo de confirmacion al visitante no se configura en esta web, sino en el `
 En produccion revisa que el `.env` del CRM tenga:
 
 ```env
-WEB_APP_URL="https://app.web.josehurtado.dev"
+APP_URL="https://membora.es/app"
+WEB_APP_URL="https://membora.es,https://www.membora.es"
 ```

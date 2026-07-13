@@ -9,7 +9,7 @@ Membora CRM se encuentra actualmente como una aplicacion PHP monolitica desplega
 La aplicacion funciona en un unico subdominio:
 
 ```text
-https://app.crm.josehurtado.dev
+https://membora.es/app/
 ```
 
 ## 2. Stack actual
@@ -252,7 +252,7 @@ Tambien puede anadir columnas auxiliares para imagenes y configuracion visual si
 ## 7. Flujo de despliegue recomendado
 
 1. Pull desde GitHub en Plesk.
-2. Confirmar que el document root apunta a `apps/crm/public`.
+2. Confirmar que el document root apunta a `httpdocs` y que `/app/` carga el CRM.
 3. Confirmar que `apps/crm/.env` tiene las credenciales reales.
 4. Abrir el subdominio.
 5. Iniciar sesion con un usuario demo o con el admin de plataforma.

@@ -19,8 +19,8 @@ Workspace local: C:\Users\Jose.Versens\Documents\membora-crm
 PHP CLI local: 8.2.12
 App CRM local: http://127.0.0.1:8092
 Web publica local: http://127.0.0.1:8091
-Produccion CRM: https://app.crm.josehurtado.dev
-Produccion web: https://app.web.josehurtado.dev
+Produccion CRM: https://membora.es/app/
+Produccion web: https://membora.es/
 ```
 
 Limitacion de la prueba local:
@@ -119,7 +119,7 @@ Detalle:
 `httpdocs/assets/site.js` apunta directamente a:
 
 ```text
-https://app.crm.josehurtado.dev/webhook/lead
+https://membora.es/app/webhook/lead
 ```
 
 Esto es correcto para produccion, pero dificulta probar el formulario contra un CRM local o staging sin editar el archivo.
@@ -150,7 +150,7 @@ El webhook sin token valida el origen contra `WEB_APP_URL`.
 Debe estar exactamente como:
 
 ```env
-WEB_APP_URL="https://app.web.josehurtado.dev"
+WEB_APP_URL="https://membora.es,https://www.membora.es"
 ```
 
 Si se usa otra variante, por ejemplo con `www`, otro subdominio, HTTP o barra final mal configurada, el formulario puede rechazarse como origen no permitido.
@@ -305,9 +305,9 @@ Se corrigio anteriormente que crear empresa editaba la primera. Debe revalidarse
 
 ### Despliegue
 
-- [ ] `app.crm.josehurtado.dev` abre login.
-- [ ] `app.web.josehurtado.dev` abre web publica.
-- [ ] Document root CRM apunta a `apps/crm/public`.
+- [ ] `membora.es/app/` abre login.
+- [ ] `membora.es/` abre web publica.
+- [ ] El unico document root apunta a `httpdocs` y `/app/` abre el CRM.
 - [ ] Document root web apunta a `httpdocs`.
 - [ ] `apps/crm/.env` tiene DB real.
 - [ ] `apps/crm/.env` tiene SMTP real.

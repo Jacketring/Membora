@@ -45,7 +45,7 @@ Solucion aplicada:
 
 Resultado:
 
-El despliegue queda reducido a configurar el document root en `apps/crm/public`, subir `.env` y abrir la URL.
+El despliegue queda reducido a configurar el document root en `httpdocs`, subir `.env` y abrir `/app/` para acceder al CRM.
 
 Prevencion:
 

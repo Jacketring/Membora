@@ -42,13 +42,13 @@ Estado:
 Despliegue objetivo:
 
 ```text
-https://app.crm.josehurtado.dev
+https://membora.es/app/
 ```
 
 Estado:
 
 - [x] Despliegue PHP en Plesk definido.
-- [x] Document root: `apps/crm/public`.
+- [x] Document root unico: `httpdocs`; CRM disponible en `/app/`.
 - [x] Base de datos MariaDB.
 - [x] Produccion sin Node.js.
 - [x] Produccion sin build frontend.

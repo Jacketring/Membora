@@ -216,7 +216,8 @@ final class Mailer
     {
         $safeName = e($name);
         $safeCompany = $company !== '' ? e($company) : 'tu centro';
-        $webUrl = e((string) (getenv('WEB_APP_URL') ?: 'https://app.web.josehurtado.dev'));
+        $webUrls = explode(',', (string) (getenv('WEB_APP_URL') ?: 'https://membora.es'));
+        $webUrl = e(rtrim(trim($webUrls[0]), '/'));
         $emailLogo = self::emailLogoHtml(48);
 
         return <<<HTML
