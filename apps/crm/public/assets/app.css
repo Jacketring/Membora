@@ -766,6 +766,12 @@ a.global-search-result:hover {
   font-size: 14px;
   margin-top: 2px;
 }
+.demo-session-actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+}
 .demo-session-banner time {
   background: #7c2d12;
   border-radius: 999px;
@@ -776,6 +782,22 @@ a.global-search-result:hover {
   min-width: 86px;
   padding: 9px 14px;
   text-align: center;
+}
+.demo-exit-action {
+  background: #fff;
+  border: 1px solid #c2410c;
+  border-radius: 10px;
+  color: #9a3412;
+  font-size: 14px;
+  font-weight: 850;
+  padding: 9px 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.demo-exit-action:hover,
+.demo-exit-action:focus-visible {
+  background: #ffedd5;
+  color: #7c2d12;
 }
 
 .lead-metrics {
@@ -3476,6 +3498,15 @@ body[data-theme="dark"] .demo-session-banner time {
   background: #fed7aa;
   color: #7c2d12;
 }
+body[data-theme="dark"] .demo-exit-action {
+  background: rgba(124, 45, 18, 0.24);
+  border-color: #fdba74;
+  color: #fed7aa;
+}
+body[data-theme="dark"] .demo-exit-action:hover,
+body[data-theme="dark"] .demo-exit-action:focus-visible {
+  background: rgba(194, 65, 12, 0.34);
+}
 body[data-theme="dark"] .topbar {
   background: rgba(15, 28, 46, 0.92);
 }
@@ -3849,6 +3880,8 @@ body[data-theme="dark"] .subscription-plan-grid article {
   .sidebar { min-height: auto; position: static; width: 100%; }
   .workspace { margin-left: 0; width: 100%; }
   .content { padding: 24px; }
+  .demo-session-banner { align-items: flex-start; flex-direction: column; }
+  .demo-session-actions { justify-content: space-between; width: 100%; }
   .invoice-modal .empresa-form {
     grid-template-columns: 1fr;
   }

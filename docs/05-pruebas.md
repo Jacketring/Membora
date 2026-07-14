@@ -98,14 +98,16 @@ Pasos:
 2. Pulsar un enlace de demo.
 3. Confirmar que se inicia sesion automaticamente en el CRM con datos de prueba.
 4. Verificar que aparece un contador de 20 minutos en la parte superior.
-5. Forzar o esperar el fin de la sesion temporal.
-6. Repetir cerrando sesion y cerrando la pestana de la demo.
+5. Pulsar `Salir de la demo` junto al contador y comprobar que vuelve a Membora.
+6. Forzar o esperar el fin de la sesion temporal.
+7. Repetir cerrando sesion y cerrando la pestana de la demo.
 
 Resultado esperado:
 
 - La demo no abre una version estatica separada.
 - El CRM muestra una sesion funcional con datos demo.
 - Cada acceso utiliza un usuario temporal diferente.
+- El boton de salida cierra la sesion, elimina el usuario temporal y vuelve a la web publica.
 - El usuario temporal se elimina al cerrar sesion, cerrar la pestana o superar los 20 minutos.
 - Al finalizar el contador, se cierra la sesion y se vuelve a la web publica.
 

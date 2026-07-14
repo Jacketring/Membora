@@ -148,12 +148,15 @@ $publicPlans = $subscriptionBlocked ? PlatformPlanRepository::publicPlans() : []
           <div class="notice <?= $flash['type'] === 'error' ? 'notice-error' : 'notice-success' ?>" role="<?= $flash['type'] === 'error' ? 'alert' : 'status' ?>"><?= e($flash['message']) ?></div>
         <?php endif; ?>
         <?php if ($demoRemainingSeconds > 0): ?>
-          <div class="demo-session-banner" role="status">
+          <div class="demo-session-banner" role="region" aria-label="Sesión demo temporal">
             <div>
               <strong>Demo temporal</strong>
-              <span>Esta sesión de prueba se cerrará automaticamente.</span>
+              <span>Esta sesión de prueba se cerrará automáticamente.</span>
             </div>
-            <time data-demo-countdown datetime="PT<?= (int) $demoRemainingSeconds ?>S">20:00</time>
+            <div class="demo-session-actions">
+              <time data-demo-countdown datetime="PT<?= (int) $demoRemainingSeconds ?>S">20:00</time>
+              <a class="demo-exit-action" href="index.php?route=demo-expired">Salir de la demo</a>
+            </div>
           </div>
         <?php endif; ?>
         <?php if (is_platform_support_context()): ?>
