@@ -4,26 +4,93 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#004bf2">
-  <meta name="description" content="Membora es un ERP para gimnasios con CRM integrado, gestión de socios, membresías, clases, pagos y metricas.">
-  <title>Membora - ERP para gimnasios</title>
+  <meta name="description" content="Software para gimnasios con CRM, socios, membresías, clases, reservas, check-ins y pagos. Prueba Membora durante 14 días o abre la demo.">
+  <title>Software para gimnasios con CRM integrado | Membora</title>
+  <link rel="canonical" href="https://membora.es/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:site_name" content="Membora">
+  <meta property="og:title" content="Software para gimnasios con CRM integrado | Membora">
+  <meta property="og:description" content="Centraliza leads, socios, membresías, clases, reservas, check-ins y pagos en una sola plataforma.">
+  <meta property="og:url" content="https://membora.es/">
+  <meta property="og:image" content="https://membora.es/assets/og-image.png">
+  <meta property="og:image:alt" content="Panel de Membora para gestionar un gimnasio desde ordenador y móvil">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Software para gimnasios con CRM integrado | Membora">
+  <meta name="twitter:description" content="Ventas, socios, cuotas, clases y pagos en un único software de gestión.">
+  <meta name="twitter:image" content="https://membora.es/assets/og-image.png">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/membora-logo-icono.svg">
   <link rel="stylesheet" href="assets/site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://membora.es/#organization",
+        "name": "Membora",
+        "url": "https://membora.es/",
+        "logo": "https://membora.es/assets/membora-logo.svg",
+        "email": "contacto@josehurtado.dev"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://membora.es/#software",
+        "name": "Membora",
+        "url": "https://membora.es/",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Software de gestión para gimnasios con CRM integrado, socios, membresías, clases, reservas, check-ins y pagos.",
+        "publisher": {"@id": "https://membora.es/#organization"},
+        "offers": {
+          "@type": "AggregateOffer",
+          "priceCurrency": "EUR",
+          "lowPrice": "39",
+          "offerCount": "3"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://membora.es/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Qué es Membora?",
+            "acceptedAnswer": {"@type": "Answer", "text": "Membora es un software de gestión para gimnasios y centros deportivos con CRM, socios, membresías, clases, reservas, check-ins, tareas y pagos."}
+          },
+          {
+            "@type": "Question",
+            "name": "¿Puedo probar Membora antes de contratarlo?",
+            "acceptedAnswer": {"@type": "Answer", "text": "Sí. Puedes abrir una demo guiada de 20 minutos o solicitar una prueba gratuita de 14 días para tu propio centro."}
+          },
+          {
+            "@type": "Question",
+            "name": "¿Los datos de cada gimnasio están separados?",
+            "acceptedAnswer": {"@type": "Answer", "text": "Sí. Membora utiliza una arquitectura multiempresa y separa la información de cada centro mediante su tenant."}
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
+  <a class="skip-link" href="#inicio">Saltar al contenido</a>
   <header class="site-header">
     <a class="brand" href="#inicio" aria-label="Membora">
-      <img class="brand-logo" src="assets/membora-logo.svg" alt="Membora">
+      <img class="brand-logo" src="assets/membora-logo.svg" alt="Membora" width="230" height="34">
       <span>
-        <small>ERP para gimnasios</small>
+        <small>Software para gimnasios</small>
       </span>
     </a>
-    <nav aria-label="Navegacion principal">
+    <nav aria-label="Navegación principal">
       <a href="#producto">Producto</a>
       <div class="nav-feature-menu" data-client-feature-menu>
-        <button class="nav-feature-toggle" type="button" data-client-feature-toggle aria-expanded="false">
+        <button class="nav-feature-toggle" type="button" data-client-feature-toggle aria-expanded="false" aria-controls="client-feature-panel">
           Funcionalidades
         </button>
-        <div class="nav-feature-panel" data-client-feature-panel hidden>
+        <div class="nav-feature-panel" id="client-feature-panel" data-client-feature-panel hidden>
           <label for="client-feature-select">Ver funcionalidad</label>
           <select id="client-feature-select" data-client-feature-select>
             <option value="dashboard">Dashboard</option>
@@ -43,18 +110,18 @@
             <p data-client-feature-description>Resumen diario del gimnasio con socios activos, conversión, reservas, tareas pendientes y pagos recientes.</p>
             <ul data-client-feature-list>
               <li>KPIs principales del centro.</li>
-              <li>Actividad reciente y proximas acciones.</li>
-              <li>Acceso rapido a modulos clave.</li>
+              <li>Actividad reciente y próximas acciones.</li>
+              <li>Acceso rápido a módulos clave.</li>
             </ul>
           </article>
         </div>
       </div>
       <a href="#capturas">Capturas</a>
-      <a href="#modulos">Modulos</a>
-      <a href="#opiniones">Opiniones</a>
+      <a href="#modulos">Módulos</a>
+      <a href="#ventajas">Ventajas</a>
       <a href="#planes">Planes</a>
-      <a class="panel-link" href="/app/index.php?route=login" data-demo-login="client">Acceder al panel</a>
-      <a class="nav-cta" href="#contacto">Solicitar demo</a>
+      <a class="panel-link" href="/app/index.php?route=login">Entrar</a>
+      <a class="nav-cta" href="#prueba-gratis">Empezar gratis</a>
     </nav>
   </header>
 
@@ -62,15 +129,16 @@
     <section class="hero">
       <div class="hero-media" aria-hidden="true"></div>
       <div class="hero-content">
-        <h1>Membora es el ERP para gimnasios que une ventas, socios y operación diaria</h1>
-        <p class="hero-copy">Centraliza leads, socios, membresías, cuotas, clases, reservas, check-ins y metricas en una sola plataforma con CRM integrado.</p>
+        <span class="eyebrow">CRM y gestión en una sola plataforma</span>
+        <h1>Software para gimnasios que une ventas, socios y operación diaria</h1>
+        <p class="hero-copy">Centraliza leads, socios, membresías, cuotas, clases, reservas, check-ins y métricas en una sola plataforma con CRM integrado.</p>
         <div class="hero-actions">
-          <a class="primary-link" href="#contacto">Solicitar demo</a>
-          <a class="secondary-link" href="#modulos">Ver modulos</a>
-          <a class="dark-link" href="/app/index.php?route=login" data-demo-login="client">Acceder al panel</a>
+          <a class="primary-link" href="#prueba-gratis">Probar gratis 14 días</a>
+          <a class="secondary-link" href="/app/index.php?route=login" data-demo-login="client">Ver demo 20 minutos</a>
+          <a class="dark-link" href="/app/index.php?route=login">Entrar</a>
         </div>
       </div>
-      <aside class="hero-panel" aria-label="Pantalla simulada del panel cliente de Membora">
+      <aside class="hero-panel" aria-label="Vista del panel cliente de Membora con datos de demostración">
         <div class="product-shot">
           <div class="product-browser">
             <div class="browser-bar">
@@ -79,7 +147,7 @@
             </div>
             <div class="product-app">
               <nav class="product-sidebar" aria-hidden="true">
-                <strong><img src="assets/membora-logo-icono.svg" alt=""> Membora</strong>
+                <strong><img src="assets/membora-logo-icono.svg" alt="" width="20" height="16"> Membora</strong>
                 <span class="active">Dashboard</span>
                 <span>Leads</span>
                 <span>Socios</span>
@@ -114,7 +182,7 @@
             <span class="phone-avatar">MT</span>
             <p>Mensual activa</p>
             <dl>
-              <div><dt>Ultimo acceso</dt><dd>Hoy 09:20</dd></div>
+              <div><dt>Último acceso</dt><dd>Hoy 09:20</dd></div>
               <div><dt>Cuota</dt><dd>39,00 EUR</dd></div>
               <div><dt>Estado</dt><dd>Al día</dd></div>
             </dl>
@@ -129,19 +197,19 @@
         <span>Cada centro trabaja con sus datos, usuarios y permisos.</span>
       </article>
       <article>
-        <strong>Responsive y rapido</strong>
-        <span>Funciona desde recepción, direccion o cualquier portatil.</span>
+        <strong>Responsive y rápido</strong>
+        <span>Funciona desde recepción, dirección o cualquier portátil.</span>
       </article>
       <article>
-        <strong>Soporte y personalizacion</strong>
-        <span>Preparado para adaptar planes, colores, empresas y procesos.</span>
+        <strong>Soporte y personalización</strong>
+        <span>Planes, colores y procesos adaptables a cada centro.</span>
       </article>
     </section>
 
     <section class="section pain-section">
       <div class="split-copy">
         <h2>Deja de gestionar tu gimnasio con Excel, notas sueltas y mensajes perdidos</h2>
-        <p>Membora centraliza tus leads, socios, clases y pagos para que recepción, comerciales, entrenadores y direccion tengan una unica fuente de información.</p>
+        <p>Membora centraliza tus leads, socios, clases y pagos para que recepción, comerciales, entrenadores y dirección tengan una única fuente de información.</p>
       </div>
       <div class="pain-list" aria-label="Problemas que resuelve">
         <article><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>Leads sin seguimiento comercial claro.</span></article>
@@ -152,18 +220,18 @@
 
     <section class="section product-section" id="producto">
       <div class="section-heading">
-        <h2>Un ERP para pequenos y medianos gimnasios, con CRM integrado</h2>
-        <p>Disenado para centros que necesitan una herramienta profesional para vender, administrar socios y controlar la operación diaria sin la complejidad de una suite enorme.</p>
+        <h2>Software de gestión para gimnasios pequeños y medianos</h2>
+        <p>Diseñado para centros que necesitan una herramienta profesional para vender, administrar socios y controlar la operación diaria sin la complejidad de una suite enorme.</p>
       </div>
       <div class="product-grid">
         <article class="feature-card feature-card--wide">
           <span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m13 2-9 14h8l-1 6 9-14h-8z"/></svg></span>
-          <h3>Captacion y seguimiento de leads</h3>
+          <h3>Captación y seguimiento de leads</h3>
           <p>Gestiona nuevos leads, contactados, pruebas agendadas, altas propuestas, convertidos y perdidos desde una misma tabla.</p>
         </article>
         <article class="feature-card">
           <span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span>
-          <h3>Metricas del gimnasio</h3>
+          <h3>Métricas del gimnasio</h3>
           <p>KPIs de socios, conversión, tareas pendientes y atención requerida.</p>
         </article>
         <article class="feature-card">
@@ -181,8 +249,8 @@
 
     <section class="section screenshots-section" id="capturas">
       <div class="section-heading">
-        <h2>Pantallas simuladas para entender rapido como trabaja Membora</h2>
-        <p>Mockups con datos ficticios de dashboard, contactos, socios, membresías, pagos y calendario para visualizar el flujo completo del centro.</p>
+        <h2>Así se ve Membora en el trabajo diario</h2>
+        <p>Una vista del dashboard, contactos, socios, membresías, pagos y calendario usando datos de demostración seguros.</p>
       </div>
       <div class="screenshot-grid">
         <article class="screen-card screen-card--large">
@@ -216,14 +284,14 @@
         </article>
         <article class="screen-card">
           <div class="screen-top"><b>Membresías</b><span>Planes y caducidad</span></div>
-          <div class="price-mini"><b>Basica mensual</b><strong>39 EUR</strong><span>Caduca automaticamente</span></div>
+          <div class="price-mini"><b>Básica mensual</b><strong>39 EUR</strong><span>Caduca automáticamente</span></div>
         </article>
         <article class="screen-card">
           <div class="screen-top"><b>Pagos</b><span>Cuotas registradas</span></div>
           <div class="screen-table">
             <span>Mensualidad julio</span><em>Pagado</em>
             <span>Plan trimestral</span><em>Pendiente</em>
-            <span>Matricula</span><em>Pagado</em>
+            <span>Matrícula</span><em>Pagado</em>
           </div>
         </article>
         <article class="screen-card">
@@ -247,76 +315,51 @@
         <article><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5.5" y="6.5" width="13" height="12" rx="2"/><path d="M8.5 5v4"/><path d="M15.5 5v4"/><path d="M5.5 10.5h13"/></svg></span><strong>Clases y reservas</strong><span>Organiza horarios, reservas, aforo y asistencia de cada sesión.</span></article>
         <article><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 12.5 10.5 16.5 18 8.5"/></svg></span><strong>Check-ins</strong><span>Entrada rápida de socios al centro y control de actividad.</span></article>
         <article><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M14.5 8.8h-2.7a3.2 3.2 0 0 0 0 6.4h2.7"/><path d="M8.8 11h5.7"/><path d="M8.8 13h5.7"/></svg></span><strong>Pagos registrados</strong><span>Registra pagos manuales, controla deudas y revisa próximos cobros.</span></article>
-        <article><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5.5 17.5 8v4.4c0 3.3-2.1 5.4-5.5 6.1-3.4-.7-5.5-2.8-5.5-6.1V8z"/><path d="M9.4 12.2 11.1 14l3.6-4"/></svg></span><strong>Panel de administración</strong><span>Gestiona empresas cliente, planes, permisos y soporte desde un area separada.</span></article>
-        <article><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 17.5h11"/><path d="M6.5 17.5v-11"/><path d="M8.5 14.5 11 12l2.4 1.8 3.7-5"/></svg></span><strong>Metricas del gimnasio</strong><span>Dashboard claro para tomar decisiones sin revisar varias hojas.</span></article>
+        <article><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5.5 17.5 8v4.4c0 3.3-2.1 5.4-5.5 6.1-3.4-.7-5.5-2.8-5.5-6.1V8z"/><path d="M9.4 12.2 11.1 14l3.6-4"/></svg></span><strong>Panel de administración</strong><span>Gestiona empresas cliente, planes, permisos y soporte desde un área separada.</span></article>
+        <article><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 17.5h11"/><path d="M6.5 17.5v-11"/><path d="M8.5 14.5 11 12l2.4 1.8 3.7-5"/></svg></span><strong>Métricas del gimnasio</strong><span>Dashboard claro para tomar decisiones sin revisar varias hojas.</span></article>
       </div>
       <div class="center-action">
-        <a class="primary-link" href="#contacto">Solicitar demo</a>
+        <a class="primary-link" href="#prueba-gratis">Probar gratis</a>
         <a class="outline-link" href="/app/index.php?route=login" data-demo-login="client">Ver Membora</a>
       </div>
     </section>
 
-    <section class="section trust-section">
+    <section class="section trust-section" id="ventajas">
       <div class="section-heading">
-        <h2>Preparado como plataforma de gestión para centros fitness</h2>
+        <h2>Una plataforma de gestión preparada para centros fitness</h2>
       </div>
       <div class="trust-grid">
-        <article><strong>Datos por centro</strong><span>Separacion multiempresa mediante tenant.</span></article>
+        <article><strong>Datos por centro</strong><span>Separación multiempresa mediante tenant.</span></article>
         <article><strong>Panel privado</strong><span>Acceso con usuarios internos y roles.</span></article>
-        <article><strong>Diseno responsive</strong><span>Preparado para escritorio, portatil y tablet.</span></article>
+        <article><strong>Diseño responsive</strong><span>Uso cómodo desde escritorio, portátil y tablet.</span></article>
         <article><strong>Soporte de plataforma</strong><span>Panel de administración para ayudar a empresas cliente.</span></article>
       </div>
     </section>
 
-    <section class="section reviews-section" id="opiniones">
+    <section class="section reviews-section" id="comprobar">
       <div class="section-heading">
-        <h2>Una sección preparada para mostrar resenas y confianza pública</h2>
-        <p>Formato listo para enlazar con la ficha real de Google Business Profile cuando el proyecto se publique comercialmente.</p>
+        <h2>Lo que puedes comprobar en la demo</h2>
+        <p>Recorre un flujo completo y verifica por ti mismo cómo se conectan las áreas del gimnasio.</p>
       </div>
       <div class="reviews-layout">
-        <article class="rating-summary" aria-label="Resumen de valoraciones">
-          <div class="google-badge">
-            <span>G</span>
-            <strong>Google Reviews</strong>
-          </div>
-          <strong class="rating-score">4,9</strong>
-          <div class="stars" aria-label="Cinco estrellas">★★★★★</div>
-          <p>Valoracion media preparada para sustituirse por datos reales de la ficha de empresa.</p>
-          <a class="outline-link" href="/app/index.php?route=login" data-demo-login="client">Solicitar una demo</a>
+        <article class="rating-summary" aria-label="Acceso a la demostración">
+          <span class="eyebrow">Producto verificable</span>
+          <h3>20 minutos para explorar Membora</h3>
+          <p>Accede con datos de prueba, navega por los módulos y vuelve a la web cuando quieras.</p>
+          <a class="outline-link" href="/app/index.php?route=login" data-demo-login="client">Abrir demo</a>
         </article>
-        <div class="review-cards" aria-label="Resenas destacadas">
+        <div class="review-cards" aria-label="Flujos disponibles en la demo">
           <article>
-            <div class="review-head">
-              <span class="review-avatar">NF</span>
-              <div>
-                <strong>NexoFit Studio</strong>
-                <small>Centro boutique</small>
-              </div>
-            </div>
-            <div class="stars" aria-label="Cinco estrellas">★★★★★</div>
-            <p>“Nos ayuda a tener leads, socios, clases y tareas en un unico sitio. El equipo de recepción trabaja mucho mas ordenado.”</p>
+            <strong>Del lead al socio</strong>
+            <p>Crea un contacto, actualiza su seguimiento y conviértelo en socio sin duplicar información.</p>
           </article>
           <article>
-            <div class="review-head">
-              <span class="review-avatar review-avatar--green">BT</span>
-              <div>
-                <strong>Box Training Club</strong>
-                <small>Entrenamiento funcional</small>
-              </div>
-            </div>
-            <div class="stars" aria-label="Cinco estrellas">★★★★★</div>
-            <p>“El calendario y las reservas son faciles de explicar al equipo. Las alertas permiten detectar pagos y tareas atrasadas.”</p>
+            <strong>Clases y asistencia</strong>
+            <p>Reserva una clase y comprueba cómo se registra automáticamente su check-in.</p>
           </article>
           <article>
-            <div class="review-head">
-              <span class="review-avatar review-avatar--orange">GY</span>
-              <div>
-                <strong>Gym Yard</strong>
-                <small>Gimnasio independiente</small>
-              </div>
-            </div>
-            <div class="stars" aria-label="Cinco estrellas">★★★★★</div>
-            <p>“La demo deja claro el flujo completo: lead, socio, membresía, reserva, pago y seguimiento comercial.”</p>
+            <strong>Cuotas y seguimiento</strong>
+            <p>Consulta membresías, pagos, tareas y alertas desde las fichas operativas del centro.</p>
           </article>
         </div>
       </div>
@@ -324,41 +367,79 @@
 
     <section class="section pricing-section" id="planes">
       <div class="section-heading">
-        <h2>Planes adaptados al tamano de tu gimnasio</h2>
-        <p>Solicita una demo y te recomendamos la opcion que mejor encaje con tu centro.</p>
+        <h2>Planes adaptados al tamaño de tu gimnasio</h2>
+        <p>Compara funcionalidades y elige la opción que mejor encaje con tu centro. Precios sin IVA.</p>
       </div>
       <div class="pricing-grid" data-pricing-grid>
         <article>
-          <h3>Basico</h3>
+          <h3>Básico</h3>
           <p>Para empezar a centralizar leads, socios y tareas.</p>
           <strong>Desde 39 EUR/mes</strong>
+          <ul><li>Leads, socios y membresías</li><li>Pagos y facturación</li><li>2 usuarios del equipo</li><li>Alertas y tareas básicas</li><li>Soporte por email</li></ul>
+          <a class="plan-action" href="#prueba-gratis">Empezar</a>
         </article>
         <article class="highlight-plan">
           <h3>Profesional</h3>
           <p>Para centros que necesitan clases, reservas, membresías y equipo.</p>
           <strong>Desde 69 EUR/mes</strong>
+          <ul><li>Todo lo incluido en Básico</li><li>Clases, reservas y check-ins</li><li>8 usuarios del equipo</li><li>Alertas y tareas completas</li><li>Soporte prioritario</li></ul>
+          <a class="plan-action" href="#prueba-gratis">Probar gratis 14 días</a>
         </article>
         <article>
           <h3>Premium</h3>
-          <p>Para soporte, personalizacion y gestión avanzada de la plataforma.</p>
+          <p>Para soporte, personalización y gestión avanzada de la plataforma.</p>
           <strong>A medida</strong>
+          <ul><li>Todo lo incluido en Profesional</li><li>Usuarios ilimitados</li><li>Personalización avanzada</li><li>Soporte dedicado</li><li>Implantación acompañada</li></ul>
+          <a class="plan-action" href="#contacto">Contactar</a>
         </article>
+      </div>
+      <p class="pricing-note">Consulta la modalidad anual y sus condiciones comerciales con el equipo de Membora.</p>
+    </section>
+
+    <section class="section trial-section" id="prueba-gratis">
+      <div class="section-heading">
+        <span>Tu propio espacio de trabajo</span>
+        <h2>Prueba Membora gratis durante 14 días</h2>
+        <p>Crea el espacio de tu gimnasio, configura tu contraseña desde el correo y explora el CRM con tus propios datos. Sin tarjeta.</p>
+      </div>
+      <form class="trial-form" data-trial-form>
+        <div class="form-alert" data-trial-alert role="status" aria-live="polite" hidden></div>
+        <label><span>Tu nombre</span><input name="nombre" autocomplete="name" required maxlength="160"></label>
+        <label><span>Gimnasio / centro</span><input name="empresa" autocomplete="organization" required maxlength="191"></label>
+        <label class="field-wide"><span>Email de acceso</span><input name="email" type="email" autocomplete="email" required maxlength="191"></label>
+        <label class="check field-wide"><input name="acepta_rgpd" value="1" type="checkbox" required><span>Acepto la <a href="privacidad.html">política de privacidad</a> y la creación de mi cuenta de prueba.</span></label>
+        <input class="honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="submit-button" type="submit">Crear prueba gratuita</button>
+      </form>
+    </section>
+
+    <section class="section faq-section" id="preguntas">
+      <div class="section-heading">
+        <span>Preguntas frecuentes</span>
+        <h2>Todo lo necesario para empezar con Membora</h2>
+      </div>
+      <div class="faq-list">
+        <details><summary>¿Qué es Membora?</summary><p>Es un software de gestión para gimnasios y centros deportivos con CRM, socios, membresías, clases, reservas, check-ins, tareas y pagos.</p></details>
+        <details><summary>¿La demo y la prueba gratuita son lo mismo?</summary><p>No. La demo dura 20 minutos y utiliza datos de demostración. La prueba gratuita crea un espacio propio para tu centro durante 14 días.</p></details>
+        <details><summary>¿Necesito una tarjeta para probarlo?</summary><p>No. El alta de prueba no solicita datos de pago.</p></details>
+        <details><summary>¿Puedo acceder desde el móvil?</summary><p>Sí. El panel es responsive y funciona desde navegadores actuales en ordenador, tableta y móvil.</p></details>
+        <details><summary>¿Los datos de cada gimnasio están separados?</summary><p>Sí. La arquitectura multiempresa mantiene cada centro asociado a su propio tenant y aplica permisos por rol.</p></details>
       </div>
     </section>
 
     <section class="section contact-section" id="contacto">
       <div class="contact-copy">
         <h2>Solicita una demo de Membora</h2>
-        <p>Este formulario es para que podamos contactar contigo. Si solo quieres mirar el producto, abre la demo temporal del panel.</p>
+        <p>Cuéntanos qué necesita tu centro. Te responderemos en un plazo aproximado de 24 a 48 horas.</p>
         <div class="contact-note">
-          <strong>Formulario conectado a Membora</strong>
-          <span>Tu solicitud queda registrada como lead para poder hacer seguimiento comercial.</span>
+          <strong>Tus datos están protegidos</strong>
+          <span>Solo los usaremos para atender tu solicitud de acuerdo con nuestra política de privacidad.</span>
         </div>
         <a class="demo-inline-link" href="/app/index.php?route=login" data-demo-login="client">Abrir demo durante 20 minutos</a>
       </div>
 
       <form class="lead-form" data-lead-form>
-        <div class="form-alert" data-form-alert hidden></div>
+        <div class="form-alert" data-form-alert role="status" aria-live="polite" hidden></div>
         <label>
           <span>Nombre</span>
           <input name="nombre" autocomplete="given-name" required placeholder="Tu nombre">
@@ -373,7 +454,7 @@
         </label>
         <label>
           <span>Teléfono</span>
-          <input name="teléfono" inputmode="tel" autocomplete="tel" placeholder="+34 600 000 000">
+          <input name="telefono" inputmode="tel" autocomplete="tel" placeholder="+34 600 000 000">
         </label>
         <label class="field-wide">
           <span>Mensaje</span>
@@ -391,25 +472,26 @@
 
   <footer class="site-footer">
     <div class="footer-brand">
-      <img class="footer-logo" src="assets/membora-logo.svg" alt="Membora">
-      <span>ERP para gimnasios y centros fitness con CRM integrado, socios, membresías, clases, pagos y metricas.</span>
+      <img class="footer-logo" src="assets/membora-logo.svg" alt="Membora" width="230" height="34">
+      <span>Software para gimnasios y centros fitness con CRM integrado, socios, membresías, clases, pagos y métricas.</span>
     </div>
     <nav class="footer-links" aria-label="Enlaces de pie de página">
       <a href="#inicio">Inicio</a>
       <a href="#modulos">Funcionalidades</a>
       <a href="#planes">Planes</a>
+      <a href="#preguntas">Preguntas frecuentes</a>
       <a href="#contacto">Contacto</a>
       <a href="aviso-legal.html">Aviso legal</a>
       <a href="privacidad.html">Privacidad</a>
       <a href="cookies.html">Cookies</a>
     </nav>
     <div class="footer-meta">
-      <span>ERP para gimnasios y centros fitness</span>
+      <span>Software para gimnasios y centros fitness</span>
       <span>Contacto: contacto@josehurtado.dev</span>
       <span>(c) 2026 Membora</span>
     </div>
   </footer>
 
-  <script src="assets/site.js?v=20260710-web-proxies"></script>
+  <script src="assets/site.js?v=20260714-seo-trial"></script>
 </body>
 </html>

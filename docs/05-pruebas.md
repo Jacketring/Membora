@@ -111,6 +111,24 @@ Resultado esperado:
 - El usuario temporal se elimina al cerrar sesion, cerrar la pestana o superar los 20 minutos.
 - Al finalizar el contador, se cierra la sesion y se vuelve a la web publica.
 
+### PD-05 Prueba de 14 dias con verificacion por correo
+
+Pasos:
+
+1. Abrir `https://membora.es/#prueba-gratis`.
+2. Completar el formulario y aceptar la politica de privacidad.
+3. Abrir el enlace de verificacion recibido por correo.
+4. Definir la contrasena desde la pantalla segura de recuperacion.
+5. Iniciar sesion con la nueva cuenta.
+
+Resultado esperado:
+
+- El formulario no revela si un correo ya estaba registrado.
+- Sin verificar el correo no se crea ninguna empresa ni usuario del CRM.
+- El enlace solo se puede usar una vez y caduca al cabo de una hora.
+- Tras verificarlo se crea un tenant aislado con 14 dias de prueba.
+- La contrasena nunca se envia por correo y la establece el propio usuario.
+
 ## 4. Pruebas funcionales de gimnasio
 
 ### PF-01 Login administrador

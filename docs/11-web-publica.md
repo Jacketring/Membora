@@ -27,6 +27,12 @@ https://membora.es/demo.html
 
 `demo.html` actua como puente de entrada. Envia al login demo del CRM, inicia una sesion de 20 minutos, muestra un contador dentro de la aplicacion y al finalizar cierra sesion y devuelve al usuario a la web publica.
 
+## Prueba gratuita de 14 dias
+
+El formulario `Empieza gratis` no comparte los datos de la demo. Envia la solicitud a `api/trial.php`, que actua como proxy hacia `/app/api/trial`. El CRM verifica el email con un enlace de un solo uso y solo despues crea el tenant y su administrador en estado `TRIAL`. La persona configura su propia contrasena antes de entrar.
+
+El flujo incluye honeypot, validacion de origen y limites por IP y email. Requiere SMTP activo porque no se provisionan cuentas sin verificar el correo.
+
 ## Conexion con el CRM
 
 El formulario envia leads al webhook del CRM:

@@ -60,6 +60,49 @@ if ($isPublicPlansRequest) {
     exit;
 }
 
+$isTrialRegistrationRequest = $requestPath === '/api/trial' || ($_GET['action'] ?? '') === 'trial_registration';
+if ($isTrialRegistrationRequest) {
+    allow_public_origin();
+    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(public_request_origin_allowed() ? 204 : 403);
+        exit;
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (!public_request_origin_allowed()) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Origen no permitido'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
+    $payload = $_POST;
+    if (str_contains($contentType, 'application/json')) {
+        $decoded = json_decode(file_get_contents('php://input') ?: '', true);
+        $payload = is_array($decoded) ? $decoded : [];
+    }
+
+    try {
+        $result = TrialRegistrationRepository::request($payload);
+        http_response_code(!empty($result['success']) ? 200 : 422);
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $exception) {
+        log_server_error($exception, 'trial_registration');
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'No se pudo crear la prueba. Inténtalo más tarde.'], JSON_UNESCAPED_UNICODE);
+    }
+    exit;
+}
+
 $isWebhookLeadRequest = $requestPath === '/webhook/lead' || ($_GET['action'] ?? '') === 'webhook_lead';
 if ($isWebhookLeadRequest) {
     allow_public_origin();
@@ -138,6 +181,26 @@ Actions::handle();
 
 $route = $_GET['route'] ?? 'dashboard';
 
+if ($route === 'activate-trial') {
+    try {
+        $resetToken = TrialRegistrationRepository::activate(trim((string) ($_GET['token'] ?? '')));
+        header('Location: index.php?route=reset-password&token=' . urlencode($resetToken));
+    } catch (Throwable $exception) {
+        log_server_error($exception, 'trial_activation');
+        $safeMessages = [
+            'El enlace de activación no es válido.',
+            'El enlace de activación ha caducado o ya se ha utilizado.',
+            'Esta prueba ya se está activando.',
+        ];
+        $message = in_array($exception->getMessage(), $safeMessages, true)
+            ? $exception->getMessage()
+            : 'No se pudo activar la prueba. Contacta con el equipo de Membora.';
+        flash($message, 'error');
+        header('Location: index.php?route=login');
+    }
+    exit;
+}
+
 if ($route === 'demo-expired') {
     Auth::logout();
     header('Location: ' . Auth::demoReturnUrl());
@@ -199,6 +262,20 @@ if (!is_platform_admin($currentUser) && !is_platform_support_context()) {
         ]);
         exit;
     }
+}
+
+function public_request_origin_allowed(): bool
+{
+    $origin = rtrim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''), '/');
+    $referer = rtrim((string) ($_SERVER['HTTP_REFERER'] ?? ''), '/');
+    foreach (public_allowed_origins() as $allowedOrigin) {
+        if (($origin !== '' && hash_equals($allowedOrigin, $origin))
+            || ($referer !== '' && (hash_equals($allowedOrigin, $referer) || str_starts_with($referer, $allowedOrigin . '/')))) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 if ($route === 'global-search') {

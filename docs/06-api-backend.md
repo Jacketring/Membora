@@ -18,6 +18,7 @@ Rutas publicas o especiales:
 
 - `?route=login`: formulario de login.
 - `/webhook/lead`: endpoint publico para solicitudes desde la web comercial.
+- `/api/trial`: alta publica de prueba con verificacion por email.
 - `?action=webhook_lead`: alias compatible del webhook.
 
 Rutas de gimnasio:
@@ -146,6 +147,10 @@ Respuesta JSON:
 ```
 
 ## 5. Seguridad de backend
+
+### Alta de prueba self-service
+
+`POST /api/trial` acepta nombre, empresa, email, consentimiento y honeypot. Valida el origen contra `WEB_APP_URL`, limita solicitudes por IP y email y envia un enlace de activacion valido durante una hora. La activacion crea un tenant con plan `TRIAL` de 14 dias y redirige al formulario para definir contrasena. Nunca devuelve ni envia una contrasena en claro.
 
 - Sesiones PHP con cookies `HttpOnly`, `SameSite=Lax` y `Secure` si hay HTTPS.
 - Regeneracion de ID de sesion tras login.

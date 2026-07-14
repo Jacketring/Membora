@@ -63,6 +63,7 @@ Estas tablas pertenecen a un gimnasio concreto y deben consultarse siempre con `
 - `checkins`: entradas/asistencias manuales de socios.
 - `audit_logs`: registro de acciones internas con datos sanitizados.
 - `demo_users`: usuarios temporales de demo, token de limpieza y fecha de caducidad.
+- `trial_registrations`: solicitudes de prueba, token de verificacion, rate limit, estado y fecha de activacion.
 
 Columnas auxiliares que PHP puede anadir:
 
@@ -224,6 +225,7 @@ Automatismos principales:
 - Anade columnas de sincronizacion externa a `payments`.
 - Anade `empresas.trial_days` para pruebas comerciales configurables.
 - Crea `webhook_settings` y `webhook_logs` para integraciones y diagnostico.
+- Crea `trial_registrations` para altas self-service verificadas por email antes de provisionar el tenant.
 - Anade columnas auxiliares de imagen, color, planes, clases y suscripciones si faltan.
 
 Requisito operativo:

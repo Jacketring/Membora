@@ -60,6 +60,7 @@ Pantallas disponibles:
 - Canal de novedades con version actual del CRM e historial de cambios.
 - Panel de administracion de Membora CRM separado en resumen, contactos, empresas, facturacion, planes, web comercial y logs.
 - Demo funcional desde la web publica con usuario temporal unico, contador de 20 minutos, limpieza al cerrar o caducar y retorno automatico a la web.
+- Alta self-service con verificacion por email, tenant propio y prueba gratuita de 14 dias sin tarjeta.
 
 Pendiente o futuro:
 
@@ -218,6 +219,8 @@ La seccion `Admin CRM > Web` incluye una prueba de correo para enviar un email t
 La web publica incluye enlaces a textos legales basicos: aviso legal, privacidad y cookies.
 Los enlaces de demo de la web publica no abren una maqueta estatica: crean un usuario temporal unico e inician una sesion real del CRM durante 20 minutos sin depender del nombre exacto de `APP_ENV`. El acceso publico solo habilita la demo cliente; la demo de administrador queda limitada al entorno interno `demo`. El usuario se elimina al cerrar sesion, al caducar o tras la senal de cierre de pestana; la limpieza por caducidad actua tambien como respaldo. Al finalizar, el CRM devuelve al usuario a `WEB_APP_URL`.
 
+La web tambien ofrece una prueba gratuita self-service de 14 dias. El alta requiere verificar el email mediante un enlace de un solo uso; despues crea un tenant `TRIAL`, su administrador y redirige al formulario seguro para definir la contrasena. Las solicitudes aplican validacion de origen, honeypot y limites por IP y email.
+
 En el `.env` del CRM debe existir `APP_URL="https://membora.es/app"` y
 `WEB_APP_URL="https://membora.es,https://www.membora.es"`. Todo el flujo funciona
 bajo el mismo dominio; la segunda variante permite que la web responda tambien con `www`.
@@ -318,6 +321,7 @@ Las correcciones de seguridad y los requisitos de despliegue se detallan en
 - `docs/10-incidencias-y-soluciones.md`: incidencias tecnicas del TFM y soluciones aplicadas.
 - `docs/13-historial-cambios-recientes.md`: resumen de cambios recientes en suscripciones, facturacion, pagos, web publica y despliegue.
 - `docs/16-stripe-billing-saas.md`: integracion Stripe Billing para cobros SaaS de Membora a gimnasios.
+- `docs/18-auditoria-web-seo-accesibilidad-2026-07-14.md`: cierre verificable de la auditoria de contenido, SEO, accesibilidad y prueba publica.
 
 ## Presentacion TFM
 

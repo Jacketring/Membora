@@ -66,6 +66,7 @@ No hace falta ejecutar `npm install`, `npm run build`, `prisma generate` ni rein
 
 - Login.
 - Login demo automatico con usuario temporal unico y caducidad de 20 minutos.
+- Alta publica de prueba durante 14 dias con verificacion de email y creacion automatica de tenant y administrador.
 - Dashboard del gimnasio.
 - Leads.
 - Socios.
@@ -129,6 +130,8 @@ Esto permite desplegar cambios incrementales en Plesk sin ejecutar migraciones N
 La captacion web se revisa desde el panel de administradores de Membora CRM, no desde cada gimnasio cliente.
 
 Los enlaces de demo de la web publica envian un `POST` al login demo del CRM. La demo cliente publica no depende del nombre exacto de `APP_ENV`, mientras que la demo de administrador solo se habilita con `APP_ENV=demo`. Cada acceso crea un usuario temporal con credenciales aleatorias, dura 20 minutos, muestra un contador y elimina ese usuario al cerrar sesion, caducar o cerrar la pestana. Al terminar devuelve al usuario a `WEB_APP_URL`.
+
+El formulario `Empieza gratis` envia a `/app/api/trial`. El servidor verifica origen, honeypot y rate limit, envia un enlace de activacion de una hora y, tras confirmar el email, crea un tenant con plan `TRIAL` durante 14 dias. La persona define su contrasena mediante el flujo seguro de recuperacion; no se envian contrasenas por correo.
 
 El formulario de `httpdocs` envia al webhook:
 

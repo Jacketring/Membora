@@ -2,6 +2,13 @@ const MEMBORA_WEBHOOK_URL = window.MEMBORA_WEBHOOK_URL || 'api/lead.php';
 const MEMBORA_DEMO_LOGIN_URL = '/app/index.php?route=login';
 const MEMBORA_PUBLIC_PLANS_URL = window.MEMBORA_PUBLIC_PLANS_URL || 'api/plans.php';
 const MEMBORA_REMOTE_PUBLIC_PLANS_URL = '/app/api/plans';
+const MEMBORA_TRIAL_URL = window.MEMBORA_TRIAL_URL || 'api/trial.php';
+
+const DEFAULT_PLAN_FEATURES = [
+  ['Leads, socios y membresías', 'Pagos y facturación', '2 usuarios del equipo', 'Alertas y tareas básicas', 'Soporte por email'],
+  ['Todo lo incluido en Básico', 'Clases, reservas y check-ins', '8 usuarios del equipo', 'Alertas y tareas completas', 'Soporte prioritario'],
+  ['Todo lo incluido en Profesional', 'Usuarios ilimitados', 'Personalización avanzada', 'Soporte dedicado', 'Implantación acompañada'],
+];
 
 function startDemoLogin(type = 'client') {
   const form = document.createElement('form');
@@ -55,8 +62,9 @@ function renderPlanCard(plan, index) {
   title.textContent = plan.name || 'Plan Membora';
 
   const description = document.createElement('p');
-  const features = Array.isArray(plan.features) ? plan.features.filter(Boolean) : [];
-  description.textContent = features[0] || 'Plan comercial de Membora.';
+  const remoteFeatures = Array.isArray(plan.features) ? plan.features.filter(Boolean) : [];
+  const features = remoteFeatures.length > 1 ? remoteFeatures.slice(1) : (DEFAULT_PLAN_FEATURES[index] || []);
+  description.textContent = remoteFeatures[0] || 'Plan comercial de Membora.';
 
   const price = document.createElement('strong');
   if (plan.original_monthly_price) {
@@ -76,15 +84,21 @@ function renderPlanCard(plan, index) {
     article.appendChild(badge);
   }
 
-  if (features.length > 1) {
+  if (features.length > 0) {
     const list = document.createElement('ul');
-    features.slice(1, 4).forEach((feature) => {
+    features.forEach((feature) => {
       const item = document.createElement('li');
       item.textContent = feature;
       list.appendChild(item);
     });
     article.appendChild(list);
   }
+
+  const action = document.createElement('a');
+  action.className = 'plan-action';
+  action.href = index === 2 ? '#contacto' : '#prueba-gratis';
+  action.textContent = index === 0 ? 'Empezar' : (index === 1 ? 'Probar gratis 14 días' : 'Contactar');
+  article.appendChild(action);
 
   return article;
 }
@@ -130,11 +144,11 @@ const clientFeatures = {
   dashboard: {
     tag: 'Panel operativo',
     title: 'Dashboard',
-    description: 'Resumen diario del gimnasio con socios activos, conversion, reservas, tareas pendientes, pagos recientes y avisos importantes.',
+    description: 'Resumen diario del gimnasio con socios activos, conversión, reservas, tareas pendientes, pagos recientes y avisos importantes.',
     items: [
       'KPIs principales del centro en una sola vista.',
-      'Actividad reciente y proximas acciones del equipo.',
-      'Acceso rapido a leads, socios, clases, pagos y tareas.',
+      'Actividad reciente y próximas acciones del equipo.',
+      'Acceso rápido a leads, socios, clases, pagos y tareas.',
     ],
   },
   leads: {
@@ -142,49 +156,49 @@ const clientFeatures = {
     title: 'CRM de leads',
     description: 'Pantalla para registrar interesados, hacer seguimiento comercial y convertir pruebas en socios.',
     items: [
-      'Alta de lead con nombre, contacto, origen, interes y notas.',
+      'Alta de lead con nombre, contacto, origen, interés y notas.',
       'Estados comerciales: nuevo, contactado, prueba, propuesta, convertido o perdido.',
-      'Seguimiento de llamadas, WhatsApp, proxima accion y responsable interno.',
+      'Seguimiento de llamadas, WhatsApp, próxima acción y responsable interno.',
     ],
   },
   members: {
     tag: 'Ficha de cliente',
-    title: 'Gestion de socios',
-    description: 'Ficha centralizada para controlar datos personales, foto, membresia activa, historial, reservas y notas internas.',
+    title: 'Gestión de socios',
+    description: 'Ficha centralizada para controlar datos personales, foto, membresía activa, historial, reservas y notas internas.',
     items: [
-      'Alta y edicion de datos del socio.',
-      'Consulta de membresias, pagos, reservas, check-ins y tareas relacionadas.',
+      'Alta y edición de datos del socio.',
+      'Consulta de membresías, pagos, reservas, check-ins y tareas relacionadas.',
       'Estado del socio, vencimientos y observaciones del equipo.',
     ],
   },
   memberships: {
     tag: 'Formulario de planes',
-    title: 'Membresias y cuotas',
-    description: 'Gestion de planes contratados, precios, fechas de inicio y fin, renovaciones y vencimientos.',
+    title: 'Membresías y cuotas',
+    description: 'Gestión de planes contratados, precios, fechas de inicio y fin, renovaciones y vencimientos.',
     items: [
-      'Asignacion de plan a cada socio.',
-      'Control de caducidad, renovacion y cuotas pendientes.',
+      'Asignación de plan a cada socio.',
+      'Control de caducidad, renovación y cuotas pendientes.',
       'Vista de planes mensuales, trimestrales, bonos o personalizados.',
     ],
   },
   classes: {
     tag: 'Calendario',
     title: 'Clases y reservas',
-    description: 'Organizacion de sesiones, horarios, aforo, entrenadores y reservas de socios.',
+    description: 'Organización de sesiones, horarios, aforo, entrenadores y reservas de socios.',
     items: [
-      'Creacion de clases con fecha, hora, aforo y entrenador.',
+      'Creación de clases con fecha, hora, aforo y entrenador.',
       'Reserva de plaza y control de asistencia.',
-      'Vista de calendario para recepcion y equipo tecnico.',
+      'Vista de calendario para recepción y equipo técnico.',
     ],
   },
   checkins: {
     tag: 'Control de acceso',
     title: 'Check-ins',
-    description: 'Registro rapido de entradas al centro para consultar actividad y asistencia real de los socios.',
+    description: 'Registro rápido de entradas al centro para consultar actividad y asistencia real de los socios.',
     items: [
-      'Entrada manual o desde busqueda de socio.',
+      'Entrada manual o desde búsqueda de socio.',
       'Historial de accesos por persona y por fecha.',
-      'Deteccion de socios activos, inactivos o con cuota pendiente.',
+      'Detección de socios activos, inactivos o con cuota pendiente.',
     ],
   },
   payments: {
@@ -194,11 +208,11 @@ const clientFeatures = {
     items: [
       'Alta de pago por socio, concepto, fecha e importe.',
       'Estados pagado, pendiente o vencido.',
-      'Generacion de justificante o factura PDF cuando aplica.',
+      'Generación de justificante o factura PDF cuando aplica.',
     ],
   },
   tasks: {
-    tag: 'Operacion interna',
+    tag: 'Operación interna',
     title: 'Tareas internas',
     description: 'Lista de acciones para recepcion, comerciales, entrenadores y administradores.',
     items: [
@@ -210,19 +224,19 @@ const clientFeatures = {
   alerts: {
     tag: 'Avisos',
     title: 'Alertas',
-    description: 'Panel de avisos para detectar vencimientos, pagos pendientes, tareas atrasadas y actividad que requiere atencion.',
+    description: 'Panel de avisos para detectar vencimientos, pagos pendientes, tareas atrasadas y actividad que requiere atención.',
     items: [
-      'Avisos por membresias proximas a caducar.',
+      'Avisos por membresías próximas a caducar.',
       'Pagos pendientes o vencidos.',
       'Tareas atrasadas y socios que requieren seguimiento.',
     ],
   },
   users: {
-    tag: 'Configuracion',
+    tag: 'Configuración',
     title: 'Usuarios y roles',
-    description: 'Gestion del personal interno que accede al sistema con permisos segun su funcion.',
+    description: 'Gestión del personal interno que accede al sistema con permisos según su función.',
     items: [
-      'Alta de administradores, recepcion, comerciales y entrenadores.',
+      'Alta de administradores, recepción, comerciales y entrenadores.',
       'Permisos diferenciados por rol.',
       'Control de acceso al panel privado del centro.',
     ],
@@ -289,7 +303,9 @@ document.addEventListener('click', (event) => {
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
+    const wasOpen = clientFeaturePanel && !clientFeaturePanel.hidden;
     closeClientFeatureMenu();
+    if (wasOpen) clientFeatureToggle?.focus();
   }
 });
 
@@ -353,9 +369,58 @@ form?.addEventListener('submit', async (event) => {
     }
 
     form.reset();
-    showMessage('Solicitud enviada correctamente. Te contactaremos pronto.', 'success');
+    showMessage('Solicitud enviada correctamente. Te responderemos en un plazo aproximado de 24 a 48 horas.', 'success');
   } catch (error) {
-    showMessage(error.message || 'No se pudo enviar la solicitud. Intentalo mas tarde.', 'error');
+    showMessage(error.message || 'No se pudo enviar la solicitud. Inténtalo más tarde.', 'error');
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = originalText;
+    }
+  }
+});
+
+const trialForm = document.querySelector('[data-trial-form]');
+const trialAlert = document.querySelector('[data-trial-alert]');
+
+function showTrialMessage(message, type) {
+  if (!trialAlert) return;
+  trialAlert.textContent = message;
+  trialAlert.className = `form-alert ${type}`;
+  trialAlert.hidden = false;
+}
+
+trialForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const submitButton = trialForm.querySelector('button[type="submit"]');
+  const originalText = submitButton?.textContent || 'Crear prueba gratuita';
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = 'Creando solicitud...';
+  }
+
+  try {
+    const data = new FormData(trialForm);
+    const response = await fetch(MEMBORA_TRIAL_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        nombre: String(data.get('nombre') || '').trim(),
+        empresa: String(data.get('empresa') || '').trim(),
+        email: String(data.get('email') || '').trim(),
+        acepta_rgpd: data.get('acepta_rgpd') ? '1' : '',
+        website: String(data.get('website') || '').trim(),
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'No se pudo crear la prueba gratuita.');
+    }
+
+    trialForm.reset();
+    showTrialMessage('Revisa tu correo para activar la prueba y configurar tu contraseña.', 'success');
+  } catch (error) {
+    showTrialMessage(error.message || 'No se pudo crear la prueba. Inténtalo más tarde.', 'error');
   } finally {
     if (submitButton) {
       submitButton.disabled = false;

@@ -177,30 +177,47 @@ final class EmpresaRepository
     {
         self::ensureTables();
         PlatformClientRepository::ensureTable();
-        $params = self::empresaParams($data);
-        $client = null;
+        $pdo = Database::connection();
+        $ownsTransaction = !$pdo->inTransaction();
+        if ($ownsTransaction) {
+            $pdo->beginTransaction();
+        }
 
-        if ($params['client_id']) {
-            $client = PlatformClientRepository::find($params['client_id']);
-            if ($client) {
-                $params['name'] = $params['name'] ?: $client['company_name'];
-                $params['contact_email'] = $params['contact_email'] ?: $client['email'];
+        try {
+            $params = self::empresaParams($data);
+            $client = null;
+
+            if ($params['client_id']) {
+                $client = PlatformClientRepository::find($params['client_id']);
+                if ($client) {
+                    $params['name'] = $params['name'] ?: $client['company_name'];
+                    $params['contact_email'] = $params['contact_email'] ?: $client['email'];
+                }
             }
-        }
 
-        $tenantId = null;
-        if (($data['create_tenant'] ?? '') === '1' || trim((string) ($data['admin_email'] ?? '')) !== '') {
-            $tenantId = self::createTenantAndAdmin($params['name'], $data, $client);
-        }
+            $tenantId = null;
+            if (($data['create_tenant'] ?? '') === '1' || trim((string) ($data['admin_email'] ?? '')) !== '') {
+                $tenantId = self::createTenantAndAdmin($params['name'], $data, $client);
+            }
 
-        $stmt = Database::connection()->prepare(
-            'INSERT INTO empresas (id, tenant_id, client_id, name, contact_email, plan, status, payment_status, monthly_price, next_payment_at, trial_days, subscription_started_at, paid_since, access_until, renewal_period, renewal_status, cancelled_at, notes, created_at, updated_at)
-             VALUES (:id, :tenant_id, :client_id, :name, :contact_email, :plan, :status, :payment_status, :monthly_price, :next_payment_at, :trial_days, :subscription_started_at, :paid_since, :access_until, :renewal_period, :renewal_status, :cancelled_at, :notes, NOW(), NOW())'
-        );
-        $stmt->execute($params + ['id' => cuid(), 'tenant_id' => $tenantId]);
+            $stmt = $pdo->prepare(
+                'INSERT INTO empresas (id, tenant_id, client_id, name, contact_email, plan, status, payment_status, monthly_price, next_payment_at, trial_days, subscription_started_at, paid_since, access_until, renewal_period, renewal_status, cancelled_at, notes, created_at, updated_at)
+                 VALUES (:id, :tenant_id, :client_id, :name, :contact_email, :plan, :status, :payment_status, :monthly_price, :next_payment_at, :trial_days, :subscription_started_at, :paid_since, :access_until, :renewal_period, :renewal_status, :cancelled_at, :notes, NOW(), NOW())'
+            );
+            $stmt->execute($params + ['id' => cuid(), 'tenant_id' => $tenantId]);
 
-        if ($client) {
-            PlatformClientRepository::markCustomer($client['id']);
+            if ($client) {
+                PlatformClientRepository::markCustomer($client['id']);
+            }
+
+            if ($ownsTransaction) {
+                $pdo->commit();
+            }
+        } catch (Throwable $exception) {
+            if ($ownsTransaction && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
         }
     }
 
@@ -450,11 +467,11 @@ final class EmpresaRepository
         if ($isTrial) {
             $trialStartedAt = (string) ($empresa['subscription_started_at'] ?: $empresa['created_at'] ?: 'now');
             $expiresAt = (new DateTimeImmutable($trialStartedAt))->modify('+' . max(1, (int) ($empresa['trial_days'] ?? 30)) . ' days');
-            if ($expiresAt < $today) {
+            if ($expiresAt <= $today) {
                 return [
                     'blocked' => true,
                     'kind' => 'trial_expired',
-                    'title' => 'Tu demo ha caducado',
+                    'title' => 'Tu prueba ha caducado',
                     'message' => 'El periodo de prueba finalizo el ' . format_date_short($expiresAt->format('Y-m-d')) . '. Elige un plan para continuar usando Membora.',
                     'expires_at' => $expiresAt->format('Y-m-d'),
                 ];
