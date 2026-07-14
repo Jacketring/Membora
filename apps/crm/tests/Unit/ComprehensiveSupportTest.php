@@ -152,6 +152,33 @@ final class ComprehensiveSupportTest extends TestCase
         self::assertFalse(request_origin_allowed());
     }
 
+    public function testRequestOriginUsesTheActualHostInsteadOfAStaleAppUrl(): void
+    {
+        $previousAppUrl = getenv('APP_URL');
+
+        try {
+            putenv('APP_URL=https://www.membora.es/app');
+            $_SERVER = [
+                'HTTP_HOST' => 'membora.es',
+                'HTTPS' => 'on',
+                'HTTP_ORIGIN' => 'https://membora.es',
+                'SCRIPT_NAME' => '/app/index.php',
+            ];
+
+            self::assertSame('https://membora.es', current_request_origin());
+            self::assertTrue(request_origin_allowed());
+
+            unset($_SERVER['HTTP_ORIGIN']);
+            $_SERVER['HTTP_REFERER'] = 'https://membora.es/app/index.php?route=login';
+            self::assertTrue(request_origin_allowed());
+
+            $_SERVER['HTTP_ORIGIN'] = 'https://evil.example';
+            self::assertFalse(request_origin_allowed());
+        } finally {
+            $previousAppUrl === false ? putenv('APP_URL') : putenv('APP_URL=' . $previousAppUrl);
+        }
+    }
+
     public function testProductionClientDemoAcceptsEveryConfiguredPublicOrigin(): void
     {
         $previousEnvironment = getenv('APP_ENV');

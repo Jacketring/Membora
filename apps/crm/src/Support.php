@@ -26,11 +26,9 @@ function request_origin_allowed(): bool
 {
     $origin = rtrim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''), '/');
     $referer = rtrim((string) ($_SERVER['HTTP_REFERER'] ?? ''), '/');
-    $current = rtrim(app_base_url(), '/');
-    $parts = parse_url($current);
-    $currentOrigin = isset($parts['scheme'], $parts['host'])
-        ? $parts['scheme'] . '://' . $parts['host'] . (isset($parts['port']) ? ':' . $parts['port'] : '')
-        : $current;
+    $currentOrigin = current_request_origin();
+    $appPath = '/' . trim((string) (getenv('MEMBORA_APP_PATH') ?: '/app'), '/');
+    $current = $currentOrigin . $appPath;
 
     if ($origin !== '') {
         return hash_equals($currentOrigin, $origin);
@@ -41,6 +39,22 @@ function request_origin_allowed(): bool
     }
 
     return strtolower((string) (getenv('APP_STRICT_POST_ORIGIN') ?: 'false')) !== 'true';
+}
+
+function current_request_origin(): string
+{
+    $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
+    if ($host === '' || !preg_match('/^[a-z0-9.-]+(?::\d+)?$/', $host)) {
+        $configured = parse_url(app_base_url());
+        $host = isset($configured['host'])
+            ? $configured['host'] . (isset($configured['port']) ? ':' . $configured['port'] : '')
+            : 'membora.es';
+    }
+
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+
+    return ($https ? 'https://' : 'http://') . $host;
 }
 
 function enforce_internal_post_security(): void
