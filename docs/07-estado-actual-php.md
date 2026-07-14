@@ -29,8 +29,9 @@ No se usa Node.js en produccion.
 ### Autenticacion
 
 - Login con usuarios existentes.
-- Login demo automatico para cliente y administrador.
+- Login demo automatico para cliente y administrador mediante un usuario temporal unico por acceso.
 - Sesiones demo temporales de 20 minutos con contador y cierre automatico.
+- Eliminacion del usuario demo al cerrar sesion, al caducar o tras el cierre de la pestana, con limpieza diferida de respaldo.
 - Roles internos.
 - Sesion PHP.
 - Cierre de sesion.
@@ -246,6 +247,7 @@ La aplicacion PHP puede crear de forma incremental:
 - `class_types`.
 - `class_sessions`.
 - `reservations`.
+- `demo_users`.
 
 Tambien puede anadir columnas auxiliares para imagenes y configuracion visual si faltan.
 

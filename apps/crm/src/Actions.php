@@ -38,6 +38,8 @@ final class Actions
         match ($action) {
             'login' => self::login(),
             'demo_login' => self::demoLogin(),
+            'keep_demo_session' => self::keepDemoSession(),
+            'schedule_demo_cleanup' => self::scheduleDemoCleanup(),
             'request_password_reset' => self::requestPasswordReset(),
             'reset_password' => self::resetPassword(),
             'logout' => self::logout(),
@@ -239,6 +241,24 @@ final class Actions
 
         flash('No se pudo iniciar la demo.', 'error');
         redirect('login');
+    }
+
+    private static function keepDemoSession(): never
+    {
+        if (Auth::isDemoSession()) {
+            Auth::refreshDemoSession();
+        }
+        http_response_code(204);
+        exit;
+    }
+
+    private static function scheduleDemoCleanup(): never
+    {
+        if (Auth::isDemoSession()) {
+            Auth::scheduleDemoCleanup();
+        }
+        http_response_code(204);
+        exit;
     }
 
     private static function logout(): never

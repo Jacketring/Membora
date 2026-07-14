@@ -62,6 +62,7 @@ Estas tablas pertenecen a un gimnasio concreto y deben consultarse siempre con `
 - `billing_sync_logs`: registros de exportacion y sincronizacion de pagos.
 - `checkins`: entradas/asistencias manuales de socios.
 - `audit_logs`: registro de acciones internas con datos sanitizados.
+- `demo_users`: usuarios temporales de demo, token de limpieza y fecha de caducidad.
 
 Columnas auxiliares que PHP puede anadir:
 

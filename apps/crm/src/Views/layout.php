@@ -200,6 +200,14 @@ $publicPlans = $subscriptionBlocked ? PlatformPlanRepository::publicPlans() : []
       </section>
     </div>
   <?php endif; ?>
+  <?php if ($demoRemainingSeconds > 0): ?>
+    <form method="post" hidden data-demo-cleanup-form>
+      <input type="hidden" name="action" value="schedule_demo_cleanup">
+    </form>
+    <form method="post" hidden data-demo-keepalive-form>
+      <input type="hidden" name="action" value="keep_demo_session">
+    </form>
+  <?php endif; ?>
   <dialog id="confirm-dialog" class="confirm-dialog">
     <form method="dialog">
       <header>

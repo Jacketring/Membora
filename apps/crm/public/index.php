@@ -123,9 +123,15 @@ if ($requestPath === '/stripe/checkout/cancel') {
 }
 
 $postAction = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['action'] ?? '') : '';
+try {
+    DemoRepository::maintainTemporaryUsers();
+} catch (Throwable $exception) {
+    log_server_error($exception, 'demo_maintenance');
+}
 Auth::restoreRememberedLogin();
 if (!in_array($postAction, ['login', 'demo_login'], true)) {
     Auth::enforceDemoExpiry();
+    Auth::refreshDemoSession();
 }
 
 Actions::handle();
@@ -139,6 +145,7 @@ if ($route === 'demo-expired') {
 }
 
 Auth::enforceDemoExpiry();
+Auth::refreshDemoSession();
 
 if ($route === 'login') {
     if (Auth::user()) {

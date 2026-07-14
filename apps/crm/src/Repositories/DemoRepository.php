@@ -18,9 +18,6 @@ final class DemoRepository
         if (!DemoAccessPolicy::isEnabled((string) getenv('APP_ENV'))) {
             throw new LogicException('Demo data cannot be created outside the demo environment.');
         }
-        if (self::clientPassword() === '') {
-            throw new LogicException('DEMO_CLIENT_PASSWORD is required in the demo environment.');
-        }
     }
 
     public static function prepareClientDemo(): void
@@ -29,13 +26,13 @@ final class DemoRepository
         self::ensureResetTable();
         self::ensureTenantAndUser();
 
-        if (!self::shouldReset()) {
-            return;
+        if (self::shouldReset()) {
+            self::resetTenantData();
+            self::seedTenantData();
+            self::markReset();
         }
 
-        self::resetTenantData();
-        self::seedTenantData();
-        self::markReset();
+        self::deactivateSeedUser();
     }
 
     public static function prepareAdminDemo(): void
@@ -44,7 +41,122 @@ final class DemoRepository
         EmpresaRepository::ensureTables();
         EmpresaRepository::ensurePlatformAdmin();
         PlatformPlanRepository::ensureTable();
-        self::ensureTenantAndUser();
+        self::prepareClientDemo();
+    }
+
+    public static function createTemporaryUser(string $type): array
+    {
+        $type = $type === 'admin' ? 'admin' : 'client';
+        $type === 'admin' ? self::prepareAdminDemo() : self::prepareClientDemo();
+        self::ensureTemporaryUsersTable();
+        self::maintainTemporaryUsers();
+
+        $pdo = Database::connection();
+        $userId = cuid();
+        $password = bin2hex(random_bytes(16));
+        $cleanupToken = bin2hex(random_bytes(24));
+        $email = 'demo.' . $type . '.' . substr(hash('sha256', $userId), 0, 16) . '@membora.invalid';
+        $roleId = $type === 'admin' ? self::platformAdminRoleId() : self::ensureRole('GYM_ADMIN', 'Administrador');
+
+        $insertUser = $pdo->prepare(
+            'INSERT INTO users (id, tenant_id, role_id, name, email, password_hash, status, created_at, updated_at)
+             VALUES (:id, :tenant_id, :role_id, :name, :email, :password_hash, "ACTIVE", NOW(), NOW())'
+        );
+        $insertUser->execute([
+            'id' => $userId,
+            'tenant_id' => $type === 'client' ? self::TENANT_ID : null,
+            'role_id' => $roleId,
+            'name' => $type === 'admin' ? 'Administrador Demo Temporal' : 'Cliente Demo Temporal',
+            'email' => $email,
+            'password_hash' => password_hash($password, PASSWORD_BCRYPT),
+        ]);
+
+        $insertDemo = $pdo->prepare(
+            'INSERT INTO demo_users (user_id, demo_type, cleanup_token_hash, expires_at, cleanup_after, created_at)
+             VALUES (:user_id, :demo_type, :cleanup_token_hash, DATE_ADD(NOW(), INTERVAL 20 MINUTE), NULL, NOW())'
+        );
+        $insertDemo->execute([
+            'user_id' => $userId,
+            'demo_type' => $type,
+            'cleanup_token_hash' => hash('sha256', $cleanupToken),
+        ]);
+
+        return [
+            'id' => $userId,
+            'email' => $email,
+            'password' => $password,
+            'cleanup_token' => $cleanupToken,
+        ];
+    }
+
+    public static function maintainTemporaryUsers(): void
+    {
+        if (!DemoAccessPolicy::isEnabled((string) getenv('APP_ENV'))) {
+            return;
+        }
+
+        self::ensureTemporaryUsersTable();
+        $stmt = Database::connection()->query(
+            'SELECT user_id FROM demo_users
+             WHERE expires_at <= NOW() OR (cleanup_after IS NOT NULL AND cleanup_after <= NOW())'
+        );
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $userId) {
+            self::deleteTemporaryUserById((string) $userId);
+        }
+    }
+
+    public static function cancelScheduledCleanup(string $userId, string $cleanupToken): void
+    {
+        if (!self::temporaryUserTokenIsValid($userId, $cleanupToken)) {
+            return;
+        }
+
+        $stmt = Database::connection()->prepare('UPDATE demo_users SET cleanup_after = NULL WHERE user_id = :user_id');
+        $stmt->execute(['user_id' => $userId]);
+    }
+
+    public static function scheduleCleanup(string $userId, string $cleanupToken): bool
+    {
+        if (!self::temporaryUserTokenIsValid($userId, $cleanupToken)) {
+            return false;
+        }
+
+        $stmt = Database::connection()->prepare(
+            'UPDATE demo_users SET cleanup_after = DATE_ADD(NOW(), INTERVAL 10 SECOND) WHERE user_id = :user_id'
+        );
+        $stmt->execute(['user_id' => $userId]);
+        return true;
+    }
+
+    public static function deleteTemporaryUser(string $userId, string $cleanupToken): bool
+    {
+        if (!self::temporaryUserTokenIsValid($userId, $cleanupToken)) {
+            return false;
+        }
+
+        self::deleteTemporaryUserById($userId);
+        return true;
+    }
+
+    public static function temporaryUserIsActive(string $userId, string $cleanupToken): bool
+    {
+        return self::temporaryUserTokenIsValid($userId, $cleanupToken);
+    }
+
+    private static function ensureTemporaryUsersTable(): void
+    {
+        Database::connection()->exec(
+            'CREATE TABLE IF NOT EXISTS demo_users (
+                user_id VARCHAR(191) NOT NULL PRIMARY KEY,
+                demo_type VARCHAR(16) NOT NULL,
+                cleanup_token_hash CHAR(64) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                cleanup_after DATETIME NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                INDEX demo_users_expiry_idx (expires_at),
+                INDEX demo_users_cleanup_idx (cleanup_after)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+        );
     }
 
     private static function ensureResetTable(): void
@@ -111,7 +223,8 @@ final class DemoRepository
         $user = $pdo->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
         $user->execute(['email' => self::CLIENT_EMAIL]);
         $userId = (string) ($user->fetchColumn() ?: cuid());
-        $passwordHash = password_hash(self::clientPassword(), PASSWORD_BCRYPT);
+        $seedPassword = self::clientPassword() ?: bin2hex(random_bytes(16));
+        $passwordHash = password_hash($seedPassword, PASSWORD_BCRYPT);
 
         if ($userId && self::userExists($userId)) {
             $updateUser = $pdo->prepare(
@@ -383,5 +496,67 @@ final class DemoRepository
         $stmt->execute(['email' => self::CLIENT_EMAIL]);
 
         return (string) $stmt->fetchColumn();
+    }
+
+    private static function deactivateSeedUser(): void
+    {
+        $stmt = Database::connection()->prepare('UPDATE users SET status = "INACTIVE", updated_at = NOW() WHERE email = :email');
+        $stmt->execute(['email' => self::CLIENT_EMAIL]);
+    }
+
+    private static function platformAdminRoleId(): string
+    {
+        $stmt = Database::connection()->query(
+            'SELECT id FROM roles
+             WHERE `key` IN ("SUPERADMIN", "SUPER_ADMIN")
+             ORDER BY `key` = "SUPERADMIN" DESC
+             LIMIT 1'
+        );
+        $roleId = $stmt->fetchColumn();
+
+        return $roleId ? (string) $roleId : self::ensureRole('SUPERADMIN', 'Superadmin');
+    }
+
+    private static function temporaryUserTokenIsValid(string $userId, string $cleanupToken): bool
+    {
+        if ($userId === '' || !preg_match('/^[a-f0-9]{48}$/', $cleanupToken)) {
+            return false;
+        }
+
+        self::ensureTemporaryUsersTable();
+        $stmt = Database::connection()->prepare(
+            'SELECT cleanup_token_hash FROM demo_users WHERE user_id = :user_id AND expires_at > NOW() LIMIT 1'
+        );
+        $stmt->execute(['user_id' => $userId]);
+        $storedHash = $stmt->fetchColumn();
+
+        return is_string($storedHash) && hash_equals($storedHash, hash('sha256', $cleanupToken));
+    }
+
+    private static function deleteTemporaryUserById(string $userId): void
+    {
+        try {
+            AuthTokenRepository::deleteForUser($userId);
+        } catch (Throwable) {
+        }
+
+        $pdo = Database::connection();
+        $ownsTransaction = !$pdo->inTransaction();
+        if ($ownsTransaction) {
+            $pdo->beginTransaction();
+        }
+
+        try {
+            $pdo->prepare('DELETE FROM demo_users WHERE user_id = :user_id')->execute(['user_id' => $userId]);
+            $pdo->prepare('DELETE FROM users WHERE id = :user_id')->execute(['user_id' => $userId]);
+            if ($ownsTransaction) {
+                $pdo->commit();
+            }
+        } catch (Throwable $exception) {
+            if ($ownsTransaction && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
     }
 }

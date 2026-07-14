@@ -87,6 +87,8 @@ final class ComprehensiveSupportTest extends TestCase
         self::assertTrue(can_perform_action('create_lead', ['role' => 'SALES']));
         self::assertTrue(can_perform_action('create_reservation', ['role' => 'TRAINER']));
         self::assertFalse(can_perform_action('create_payment', ['role' => 'STAFF']));
+        self::assertTrue(can_perform_action('keep_demo_session', null));
+        self::assertTrue(can_perform_action('schedule_demo_cleanup', null));
     }
 
     public function testEveryVisibleLabelFamilyHasFallbacks(): void

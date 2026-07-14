@@ -735,6 +735,35 @@ document.querySelectorAll('[data-invoice-form]').forEach((form) => {
 const demoCountdown = document.querySelector('[data-demo-countdown]');
 const demoExpiresIn = Number.parseInt(document.body.dataset.demoExpiresIn || '0', 10);
 if (demoCountdown && demoExpiresIn > 0) {
+  const cleanupForm = document.querySelector('[data-demo-cleanup-form]');
+  const keepaliveForm = document.querySelector('[data-demo-keepalive-form]');
+  let demoNavigationExpected = false;
+  let keepaliveTimer = null;
+
+  const keepDemoSessionAlive = () => {
+    if (!keepaliveForm) return;
+    window.fetch('index.php', {
+      method: 'POST',
+      body: new FormData(keepaliveForm),
+      credentials: 'same-origin',
+      keepalive: true,
+    }).catch(() => {});
+  };
+
+  document.addEventListener('submit', () => { demoNavigationExpected = true; }, true);
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('a[href]')) demoNavigationExpected = true;
+  }, true);
+
+  window.addEventListener('pagehide', () => {
+    if (!demoNavigationExpected && cleanupForm && navigator.sendBeacon) {
+      navigator.sendBeacon('index.php', new FormData(cleanupForm));
+    }
+    if (keepaliveTimer) window.clearInterval(keepaliveTimer);
+  });
+
+  keepDemoSessionAlive();
+  keepaliveTimer = window.setInterval(keepDemoSessionAlive, 5000);
   let remainingSeconds = demoExpiresIn;
   const renderDemoCountdown = () => {
     const minutes = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
@@ -747,6 +776,7 @@ if (demoCountdown && demoExpiresIn > 0) {
     remainingSeconds -= 1;
     if (remainingSeconds <= 0) {
       window.clearInterval(demoTimer);
+      demoNavigationExpected = true;
       window.location.href = 'index.php?route=demo-expired';
       return;
     }

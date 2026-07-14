@@ -131,22 +131,13 @@ final class Auth
 
     public static function attemptDemo(string $type): bool
     {
-        if ($type === 'admin') {
-            DemoRepository::prepareAdminDemo();
-            $password = (string) (getenv('PLATFORM_ADMIN_PASSWORD') ?: '');
-            $success = $password !== '' && self::attempt(EmpresaRepository::PLATFORM_ADMIN_EMAIL, $password);
-            if ($success) {
-                self::markDemoSession('admin');
-            }
-
-            return $success;
-        }
-
-        DemoRepository::prepareClientDemo();
-        $password = DemoRepository::clientPassword();
-        $success = $password !== '' && self::attempt(DemoRepository::CLIENT_EMAIL, $password);
+        $type = $type === 'admin' ? 'admin' : 'client';
+        $temporaryUser = DemoRepository::createTemporaryUser($type);
+        $success = self::attempt((string) $temporaryUser['email'], (string) $temporaryUser['password']);
         if ($success) {
-            self::markDemoSession('client');
+            self::markDemoSession($type, (string) $temporaryUser['id'], (string) $temporaryUser['cleanup_token']);
+        } else {
+            DemoRepository::deleteTemporaryUser((string) $temporaryUser['id'], (string) $temporaryUser['cleanup_token']);
         }
 
         return $success;
@@ -158,7 +149,13 @@ final class Auth
             return;
         }
 
-        if ((int) $_SESSION['demo_expires_at'] > time()) {
+        $demoUserId = (string) ($_SESSION['demo_user_id'] ?? '');
+        $cleanupToken = (string) ($_SESSION['demo_cleanup_token'] ?? '');
+        $temporaryUserActive = $demoUserId !== ''
+            && $cleanupToken !== ''
+            && DemoRepository::temporaryUserIsActive($demoUserId, $cleanupToken);
+
+        if ($temporaryUserActive && (int) $_SESSION['demo_expires_at'] > time()) {
             return;
         }
 
@@ -189,6 +186,16 @@ final class Auth
 
     public static function logout(): void
     {
+        $demoUserId = (string) ($_SESSION['demo_user_id'] ?? '');
+        $demoCleanupToken = (string) ($_SESSION['demo_cleanup_token'] ?? '');
+        if ($demoUserId !== '' && $demoCleanupToken !== '') {
+            try {
+                DemoRepository::deleteTemporaryUser($demoUserId, $demoCleanupToken);
+            } catch (Throwable $exception) {
+                log_server_error($exception, 'demo_user_cleanup');
+            }
+        }
+
         self::forgetRememberedLogin();
         unset($_SESSION['user'], $_SESSION['platform_admin_user']);
         $_SESSION = [];
@@ -275,9 +282,29 @@ final class Auth
             ->execute(['ip' => $ip, 'email_hash' => $emailHash]);
     }
 
-    private static function markDemoSession(string $type): void
+    public static function refreshDemoSession(): void
+    {
+        $userId = (string) ($_SESSION['demo_user_id'] ?? '');
+        $cleanupToken = (string) ($_SESSION['demo_cleanup_token'] ?? '');
+        if ($userId !== '' && $cleanupToken !== '') {
+            DemoRepository::cancelScheduledCleanup($userId, $cleanupToken);
+        }
+    }
+
+    public static function scheduleDemoCleanup(): bool
+    {
+        $userId = (string) ($_SESSION['demo_user_id'] ?? '');
+        $cleanupToken = (string) ($_SESSION['demo_cleanup_token'] ?? '');
+
+        return $userId !== '' && $cleanupToken !== ''
+            && DemoRepository::scheduleCleanup($userId, $cleanupToken);
+    }
+
+    private static function markDemoSession(string $type, string $userId, string $cleanupToken): void
     {
         $_SESSION['demo_type'] = $type;
+        $_SESSION['demo_user_id'] = $userId;
+        $_SESSION['demo_cleanup_token'] = $cleanupToken;
         $_SESSION['demo_expires_at'] = time() + 20 * 60;
     }
 
