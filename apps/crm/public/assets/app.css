@@ -2231,6 +2231,29 @@ td.empty-state,
   height: 15px;
   width: 15px;
 }
+.support-cancel-action {
+  align-items: center;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 9px;
+  color: #c2410c;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 6px;
+  padding: 8px 10px;
+}
+.support-cancel-action:hover {
+  background: #ffedd5;
+  border-color: #fb923c;
+}
+.support-cancel-action svg {
+  fill: currentColor;
+  height: 14px;
+  width: 14px;
+}
 .platform-subscription-actions {
   display: flex;
   flex-wrap: wrap;

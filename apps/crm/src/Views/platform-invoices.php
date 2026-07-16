@@ -18,9 +18,6 @@ $statusOptions = [
 $clientInvoiceMode = !empty($clientInvoiceMode);
 $invoiceListRoute = $clientInvoiceMode ? 'billing' : 'platform-invoices';
 $invoiceDocumentRoute = $clientInvoiceMode ? 'client-invoice' : 'platform-invoice';
-$stripeEnabled = !empty($stripeEnabled);
-$stripeWebhookUrl = $stripeWebhookUrl ?? StripeBillingConfig::webhookUrl();
-$stripeEvents = $stripeEvents ?? [];
 ?>
 
 <div class="page-heading leads-heading platform-heading">
@@ -53,48 +50,6 @@ $stripeEvents = $stripeEvents ?? [];
     <small>Requieren seguimiento</small>
   </article>
 </section>
-
-<?php if (!$clientInvoiceMode): ?>
-  <section class="leads-table-card">
-    <header>
-      <div>
-        <h3>Stripe Billing</h3>
-        <span><?= $stripeEnabled ? 'Modo test activo' : 'Pendiente de configurar' ?></span>
-      </div>
-    </header>
-    <div class="platform-form-divider">
-      <strong>Webhook</strong>
-      <span><?= e($stripeWebhookUrl) ?></span>
-    </div>
-    <div class="leads-table-wrap">
-      <table class="leads-table platform-table">
-        <thead>
-          <tr>
-            <th>Evento</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Recibido</th>
-            <th>Error</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($stripeEvents as $event): ?>
-            <tr>
-              <td><?= e($event['stripe_event_id']) ?></td>
-              <td><?= e($event['event_type']) ?></td>
-              <td><span class="status-badge status-badge--<?= e(strtolower((string) $event['status'])) ?>"><?= e($event['status']) ?></span></td>
-              <td><?= e(format_date($event['received_at'])) ?></td>
-              <td><?= e($event['error_message'] ?: '-') ?></td>
-            </tr>
-          <?php endforeach; ?>
-          <?php if (!$stripeEvents): ?>
-            <tr><td colspan="5" class="empty-state">Aun no hay eventos Stripe recibidos.</td></tr>
-          <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
-  </section>
-<?php endif; ?>
 
 <form class="lead-toolbar platform-toolbar platform-toolbar--payments" method="get" action="index.php" data-auto-filter-form>
   <input type="hidden" name="route" value="<?= e($invoiceListRoute) ?>">

@@ -163,8 +163,9 @@ $planOptions = $planOptions ?? PlatformPlanRepository::options();
                   <form method="post" data-confirm-message="La empresa mantendra acceso hasta la fecha de fin del periodo, pero no renovara automaticamente." data-confirm-action-label="Cancelar renovación">
                     <input type="hidden" name="action" value="cancel_empresa_subscription">
                     <input type="hidden" name="id" value="<?= e($empresa['id']) ?>">
-                    <button class="note-delete-button" type="submit" aria-label="Cancelar suscripción de <?= e($empresa['name']) ?>">
-                      <svg viewBox="0 0 24 24"><path d="M6 6h12v2H6V6Zm2 4h8l-1 10H9L8 10Zm3-7h2l1 2h-4l1-2Z"/></svg>
+                    <button class="support-cancel-action" type="submit" aria-label="No renovar la suscripción de <?= e($empresa['name']) ?>">
+                      <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6V5Zm8 0h4v14h-4V5Z"/></svg>
+                      <span>No renovar</span>
                     </button>
                   </form>
                 <?php endif; ?>
