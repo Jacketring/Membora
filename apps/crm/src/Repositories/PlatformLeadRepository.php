@@ -197,8 +197,46 @@ final class PlatformLeadRepository
     public static function delete(string $id): void
     {
         self::ensureTable();
-        $stmt = Database::connection()->prepare('DELETE FROM platform_leads WHERE id = :id');
-        $stmt->execute(['id' => $id]);
+        PlatformClientRepository::ensureTable();
+        EmpresaRepository::ensureTables();
+
+        $pdo = Database::connection();
+        $ownsTransaction = !$pdo->inTransaction();
+        if ($ownsTransaction) {
+            $pdo->beginTransaction();
+        }
+
+        try {
+            $find = $pdo->prepare('SELECT client_id FROM platform_leads WHERE id = :id LIMIT 1 FOR UPDATE');
+            $find->execute(['id' => $id]);
+            $clientId = trim((string) $find->fetchColumn());
+
+            $stmt = $pdo->prepare('DELETE FROM platform_leads WHERE id = :id');
+            $stmt->execute(['id' => $id]);
+            if ($stmt->rowCount() !== 1) {
+                throw new RuntimeException('No se encontró el lead que quieres eliminar.');
+            }
+
+            if ($clientId !== '') {
+                $client = $pdo->prepare('SELECT status FROM platform_clients WHERE id = :id LIMIT 1 FOR UPDATE');
+                $client->execute(['id' => $clientId]);
+                if ((string) $client->fetchColumn() === 'LEAD') {
+                    $pdo->prepare('UPDATE empresas SET client_id = NULL, updated_at = NOW() WHERE client_id = :client_id')
+                        ->execute(['client_id' => $clientId]);
+                    $pdo->prepare('DELETE FROM platform_clients WHERE id = :id')
+                        ->execute(['id' => $clientId]);
+                }
+            }
+
+            if ($ownsTransaction) {
+                $pdo->commit();
+            }
+        } catch (Throwable $exception) {
+            if ($ownsTransaction && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     private static function normalizePayload(array $payload): array

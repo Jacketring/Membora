@@ -661,7 +661,13 @@ final class Actions
             redirect('platform-contacts');
         }
 
-        PlatformLeadRepository::delete($id);
+        try {
+            PlatformLeadRepository::delete($id);
+        } catch (Throwable $exception) {
+            log_server_error($exception, 'delete_platform_lead');
+            flash('No se pudo eliminar el lead.', 'error');
+            redirect('platform-contacts');
+        }
         flash('Contacto eliminado correctamente.');
         redirect('platform-contacts');
     }

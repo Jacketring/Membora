@@ -159,7 +159,7 @@ $paymentOptions = [
                   <span>Editar</span>
                 </button>
                 <?php if ($contact['type'] === 'lead'): ?>
-                  <form method="post" data-confirm-message="Eliminar este lead comercial? Esta acción no se puede deshacer.">
+                  <form method="post" data-confirm-message="Se eliminará completamente este lead comercial. Esta acción no se puede deshacer." data-confirm-action-label="Eliminar lead">
                     <input type="hidden" name="action" value="delete_platform_lead">
                     <input type="hidden" name="id" value="<?= e($contact['id']) ?>">
                     <button class="note-delete-button" type="submit" aria-label="Eliminar lead <?= e($contact['contact_name']) ?>">
