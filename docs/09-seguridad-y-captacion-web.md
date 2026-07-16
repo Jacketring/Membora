@@ -154,6 +154,8 @@ Objetivo:
 
 ### 9. Captacion web anti-abuso
 
+Durante la depuracion del alta gratuita, su limite especifico por IP y email queda desactivado por defecto con `TRIAL_RATE_LIMIT_ENABLED=false`. La validacion de origen y el honeypot siguen activos. El webhook general conserva su propio rate limit.
+
 El formulario publico incluye:
 
 - Honeypot invisible.

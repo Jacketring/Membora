@@ -70,6 +70,22 @@ final class TrialRegistrationRepositoryTest extends TestCase
         self::assertGreaterThanOrEqual(20, strlen($password));
     }
 
+    public function testTrialRateLimitIsDisabledByDefaultAndCanBeEnabled(): void
+    {
+        $previous = getenv('TRIAL_RATE_LIMIT_ENABLED');
+        putenv('TRIAL_RATE_LIMIT_ENABLED');
+
+        try {
+            self::assertFalse(TrialRegistrationRepository::trialRateLimitEnabled());
+            putenv('TRIAL_RATE_LIMIT_ENABLED=true');
+            self::assertTrue(TrialRegistrationRepository::trialRateLimitEnabled());
+        } finally {
+            $previous === false
+                ? putenv('TRIAL_RATE_LIMIT_ENABLED')
+                : putenv('TRIAL_RATE_LIMIT_ENABLED=' . $previous);
+        }
+    }
+
     public function testPublicTrialLinksAlwaysPointToTheCrmPath(): void
     {
         self::assertSame('https://membora.es/app', TrialRegistrationRepository::publicAppUrl());

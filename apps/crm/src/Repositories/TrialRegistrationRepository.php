@@ -57,6 +57,14 @@ final class TrialRegistrationRepository
         return 'Mb-' . implode('-', str_split(bin2hex(random_bytes(9)), 6));
     }
 
+    public static function trialRateLimitEnabled(): bool
+    {
+        return filter_var(
+            (string) (getenv('TRIAL_RATE_LIMIT_ENABLED') ?: 'false'),
+            FILTER_VALIDATE_BOOL
+        );
+    }
+
     public static function request(array $payload): array
     {
         if (trim((string) ($payload['website'] ?? '')) !== '') {
@@ -76,7 +84,7 @@ final class TrialRegistrationRepository
         $deliveryEmail = strtolower(trim((string) $payload['email']));
         $ipHash = hash('sha256', substr((string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 0, 64));
 
-        if (self::isRateLimited($ipHash, $deliveryEmail)) {
+        if (self::trialRateLimitEnabled() && self::isRateLimited($ipHash, $deliveryEmail)) {
             return ['success' => false, 'message' => 'Demasiadas solicitudes. Inténtalo de nuevo dentro de una hora.'];
         }
 
