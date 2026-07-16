@@ -248,6 +248,45 @@ final class EmpresaRepository
         $stmt->execute(self::empresaParams($data) + ['id' => $id]);
     }
 
+    public static function delete(string $id): void
+    {
+        self::ensureTables();
+        $empresa = self::find($id);
+        if (!$empresa) {
+            throw new RuntimeException('No se encontró la empresa.');
+        }
+
+        $pdo = Database::connection();
+        $tenantId = trim((string) ($empresa['tenant_id'] ?? ''));
+        $pdo->beginTransaction();
+
+        try {
+            self::deletePlatformInvoiceRows($pdo, $id);
+            self::deleteRowsByColumn($pdo, 'empresa_payments', 'empresa_id', $id);
+
+            if ($tenantId !== '') {
+                self::detachPlatformAdminsFromTenant($pdo, $tenantId);
+                self::deleteTenantRows($pdo, $tenantId);
+            }
+
+            $stmt = $pdo->prepare('DELETE FROM empresas WHERE id = :id');
+            $stmt->execute(['id' => $id]);
+
+            if ($tenantId !== '') {
+                self::deleteRowsByColumn($pdo, 'pipeline_stages', 'tenant_id', $tenantId);
+                self::deleteRowsByColumn($pdo, 'users', 'tenant_id', $tenantId);
+                self::deleteRowsByColumn($pdo, 'tenants', 'id', $tenantId);
+            }
+
+            $pdo->commit();
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
+    }
+
     public static function updateSubscription(string $id, array $data): void
     {
         self::ensureTables();
@@ -684,6 +723,114 @@ final class EmpresaRepository
     {
         $stmt = Database::connection()->query('SHOW COLUMNS FROM ' . $table);
         return array_map(static fn (array $column): string => $column['Field'], $stmt->fetchAll());
+    }
+
+    private static function deleteTenantRows(PDO $pdo, string $tenantId): void
+    {
+        if (self::tableExists($pdo, 'auth_tokens') && self::tableExists($pdo, 'users')) {
+            $stmt = $pdo->prepare(
+                'DELETE FROM auth_tokens
+                 WHERE user_id IN (SELECT id FROM users WHERE tenant_id = :tenant_id)'
+            );
+            $stmt->execute(['tenant_id' => $tenantId]);
+        }
+
+        foreach ([
+            'risk_alerts',
+            'billing_sync_logs',
+            'billing_integrations',
+            'webhook_logs',
+            'webhook_settings',
+            'checkins',
+            'reservations',
+            'payments',
+            'subscriptions',
+            'task_members',
+            'tasks',
+            'class_sessions',
+            'class_types',
+            'lead_notes',
+            'leads',
+            'members',
+            'membership_plans',
+        ] as $table) {
+            self::deleteRowsByColumn($pdo, $table, 'tenant_id', $tenantId);
+        }
+    }
+
+    private static function detachPlatformAdminsFromTenant(PDO $pdo, string $tenantId): void
+    {
+        $roleWhere = 'role_id IN (SELECT id FROM roles WHERE `key` IN ("SUPERADMIN", "SUPER_ADMIN"))';
+        $count = $pdo->prepare('SELECT COUNT(*) FROM users WHERE tenant_id = :tenant_id AND ' . $roleWhere);
+        $count->execute(['tenant_id' => $tenantId]);
+        if ((int) $count->fetchColumn() === 0) {
+            return;
+        }
+
+        if (self::usersTenantAllowsNull()) {
+            $stmt = $pdo->prepare('UPDATE users SET tenant_id = NULL WHERE tenant_id = :tenant_id AND ' . $roleWhere);
+            $stmt->execute(['tenant_id' => $tenantId]);
+            return;
+        }
+
+        $replacement = $pdo->prepare('SELECT id FROM tenants WHERE id <> :tenant_id ORDER BY created_at ASC LIMIT 1');
+        $replacement->execute(['tenant_id' => $tenantId]);
+        $replacementTenantId = trim((string) $replacement->fetchColumn());
+        if ($replacementTenantId === '') {
+            throw new RuntimeException('No se puede eliminar la única empresa mientras un superadministrador dependa de su tenant.');
+        }
+
+        $stmt = $pdo->prepare(
+            'UPDATE users SET tenant_id = :replacement_tenant_id
+             WHERE tenant_id = :tenant_id AND ' . $roleWhere
+        );
+        $stmt->execute([
+            'replacement_tenant_id' => $replacementTenantId,
+            'tenant_id' => $tenantId,
+        ]);
+    }
+
+    private static function deletePlatformInvoiceRows(PDO $pdo, string $empresaId): void
+    {
+        if (!self::tableExists($pdo, 'platform_invoices')) {
+            return;
+        }
+
+        foreach (['platform_invoice_payments', 'platform_invoice_items'] as $table) {
+            if (!self::tableExists($pdo, $table)) {
+                continue;
+            }
+
+            $stmt = $pdo->prepare(
+                'DELETE FROM ' . $table . '
+                 WHERE invoice_id IN (SELECT id FROM platform_invoices WHERE empresa_id = :empresa_id)'
+            );
+            $stmt->execute(['empresa_id' => $empresaId]);
+        }
+
+        self::deleteRowsByColumn($pdo, 'platform_invoices', 'empresa_id', $empresaId);
+    }
+
+    private static function deleteRowsByColumn(PDO $pdo, string $table, string $column, string $value): void
+    {
+        if (!self::tableExists($pdo, $table)) {
+            return;
+        }
+
+        $stmt = $pdo->prepare('DELETE FROM ' . $table . ' WHERE ' . $column . ' = :value');
+        $stmt->execute(['value' => $value]);
+    }
+
+    private static function tableExists(PDO $pdo, string $table): bool
+    {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM information_schema.tables
+             WHERE table_schema = DATABASE() AND table_name = :table'
+        );
+        $stmt->execute(['table' => $table]);
+
+        return (int) $stmt->fetchColumn() > 0;
     }
 
     private static function ensureColumn(string $table, string $column, string $sql): void

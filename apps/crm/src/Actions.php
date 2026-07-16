@@ -55,6 +55,7 @@ final class Actions
             'delete_platform_client' => self::deletePlatformClient(),
             'create_empresa' => self::createEmpresa(),
             'update_empresa' => self::updateEmpresa(),
+            'delete_empresa' => self::deleteEmpresa(),
             'update_empresa_subscription' => self::updateEmpresaSubscription(),
             'renew_empresa_subscription' => self::renewEmpresaSubscription(),
             'cancel_empresa_subscription' => self::cancelEmpresaSubscription(),
@@ -414,6 +415,28 @@ final class Actions
 
         EmpresaRepository::update($id, $_POST);
         flash('Empresa actualizada correctamente.');
+        redirect('platform-companies');
+    }
+
+    private static function deleteEmpresa(): never
+    {
+        self::requirePlatformAdmin();
+        $id = post_value('id', '');
+
+        if ($id === '') {
+            flash('No se encontró la empresa que quieres eliminar.', 'error');
+            redirect('platform-companies');
+        }
+
+        try {
+            EmpresaRepository::delete($id);
+        } catch (Throwable $exception) {
+            log_server_error($exception, 'delete_empresa');
+            flash('No se pudo eliminar la empresa.', 'error');
+            redirect('platform-companies');
+        }
+
+        flash('Empresa y datos de su CRM eliminados correctamente. El contacto comercial se ha conservado.');
         redirect('platform-companies');
     }
 

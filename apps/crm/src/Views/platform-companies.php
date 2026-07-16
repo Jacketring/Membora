@@ -178,6 +178,14 @@ $planOptions = $planOptions ?? PlatformPlanRepository::options();
                     </button>
                   </form>
                 <?php endif; ?>
+                <form method="post" data-confirm-message="Se eliminarán la empresa, sus usuarios y todos los datos de su CRM. El contacto comercial se conservará. Esta acción no se puede deshacer." data-confirm-action-label="Eliminar empresa">
+                  <input type="hidden" name="action" value="delete_empresa">
+                  <input type="hidden" name="id" value="<?= e($empresa['id']) ?>">
+                  <button class="support-delete-action" type="submit" aria-label="Eliminar empresa <?= e($empresa['name']) ?>">
+                    <svg viewBox="0 0 24 24"><path d="M6 7h12v2H6V7Zm2 3h8l-1 10H9L8 10Zm3-7h2l1 2h4v2H6V5h4l1-2Z"/></svg>
+                    <span>Eliminar</span>
+                  </button>
+                </form>
               </div>
             </td>
           </tr>

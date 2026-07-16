@@ -174,9 +174,9 @@ El formulario de `httpdocs` envia al webhook:
 El webhook acepta `POST` con JSON, `application/x-www-form-urlencoded` o `multipart/form-data`.
 No es necesario copiar tokens en la web. El CRM valida el origen configurado en `WEB_APP_URL`, aplica honeypot y rate limit, y crea la solicitud en `Admin CRM > Contactos`. Desde esa seccion el administrador puede mantenerla como lead, actualizar su estado o convertirla en cliente.
 
-Cuando la solicitud incluye un email valido, el CRM intenta enviar una confirmacion HTML al contacto. Para produccion se recomienda SMTP con `MAIL_MAILER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USERNAME` y `SMTP_PASSWORD`. Si el envio falla, el lead se crea igualmente y el fallo de correo queda registrado en `Admin CRM > Web`.
+Cuando la solicitud incluye un email valido, el CRM intenta enviar una confirmacion HTML al contacto. Para produccion se recomienda SMTP con `MAIL_MAILER`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_ENCRYPTION`, `SMTP_USERNAME` y `SMTP_PASSWORD`. Si el envio falla, el lead se crea igualmente y el fallo queda registrado para diagnostico.
 
-Para depurar el correo, entra en `Admin CRM > Web` y usa `Prueba de correo`. La pantalla muestra la configuracion detectada de correo y registra el resultado en `Ultimos envios tecnicos`.
+La ruta `index.php?route=platform-web` y su vista `platform-web.php` se crearon como herramienta interna durante la depuracion del flujo de correo. No forman parte de la interfaz funcional y se mantienen ocultas del menu. Un superadministrador puede abrir la ruta directamente cuando necesite usar `Prueba de correo`, revisar la configuracion detectada o consultar `Ultimos envios tecnicos`; nunca se muestran secretos SMTP completos.
 
 ## Seguridad
 

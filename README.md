@@ -221,8 +221,8 @@ Si Plesk ha clonado el repositorio dentro de otra carpeta, la ruta debe acabar i
 No hay que ejecutar comandos Node, compilar frontend ni reiniciar una app Node.
 
 No hay que editar tokens en la web. El formulario envia al webhook del CRM y las solicitudes aparecen en `Admin CRM > Contactos`.
-Si `MAIL_ENABLED` esta activo y el SMTP esta configurado, la persona que rellena el formulario recibe un email HTML de confirmacion indicando que el equipo revisara su solicitud y contactara en 24-48 horas. Los fallos de correo quedan visibles en `Admin CRM > Web`.
-La seccion `Admin CRM > Web` incluye una prueba de correo para enviar un email tecnico a una direccion concreta, ver la configuracion detectada y registrar el error SMTP exacto si falla.
+Si `MAIL_ENABLED` esta activo y el SMTP esta configurado, la persona que rellena el formulario recibe un email HTML de confirmacion indicando que el equipo revisara su solicitud y contactara en 24-48 horas. Los fallos quedan registrados para su diagnostico tecnico.
+La ruta interna `index.php?route=platform-web` se creo exclusivamente para depurar el envio de correos durante el desarrollo. Esta oculta del menu normal, solo admite superadministradores y permite enviar una prueba tecnica, revisar la configuracion detectada y consultar el error SMTP exacto.
 La web publica incluye enlaces a textos legales basicos: aviso legal, privacidad y cookies.
 Los enlaces de demo de la web publica no abren una maqueta estatica: crean un usuario temporal unico e inician una sesion real del CRM durante 20 minutos sin depender del nombre exacto de `APP_ENV`. El acceso publico solo habilita la demo cliente; la demo de administrador queda limitada al entorno interno `demo`. El usuario se elimina al cerrar sesion, al caducar o tras la senal de cierre de pestana; la limpieza por caducidad actua tambien como respaldo. Al finalizar, el CRM devuelve al usuario a `WEB_APP_URL`.
 

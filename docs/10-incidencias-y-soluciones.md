@@ -178,7 +178,7 @@ Solucion aplicada:
 
 - Plantilla HTML de confirmacion mas limpia.
 - Eliminacion de referencias internas tipo `php_...` del correo visible.
-- Diagnostico SMTP en `Admin CRM > Web`.
+- Diagnostico SMTP mediante una ruta interna exclusiva para superadministradores.
 - El lead se crea aunque falle el envio del email.
 
 Resultado:
@@ -187,7 +187,7 @@ El formulario no pierde solicitudes por fallos de correo y el administrador pued
 
 Prevencion:
 
-Los fallos quedan registrados en logs y la prueba de correo permite validar la configuracion antes de la demo.
+Los fallos quedan registrados en logs y la prueba de correo permite validar la configuracion antes de la demo. La vista `platform-web.php` se creo para estas pruebas de depuracion y esta deliberadamente oculta del menu: no es una seccion funcional para clientes ni administradores de gimnasio.
 
 ### I-07 Subidas de imagen y permisos de escritura
 

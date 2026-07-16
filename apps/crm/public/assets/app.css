@@ -2183,6 +2183,29 @@ td.empty-state,
 .platform-row-actions form {
   margin: 0;
 }
+.support-delete-action {
+  align-items: center;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  color: var(--danger);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 6px;
+  padding: 8px 10px;
+}
+.support-delete-action:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+.support-delete-action svg {
+  fill: currentColor;
+  height: 15px;
+  width: 15px;
+}
 .platform-subscription-actions {
   display: flex;
   flex-wrap: wrap;
