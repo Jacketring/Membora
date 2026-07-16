@@ -78,6 +78,24 @@ $webUrl = $webUrl ?? 'https://membora.es';
     </form>
   </article>
 
+  <article class="platform-panel platform-panel--wide">
+    <header>
+      <div>
+        <h3>Reiniciar alta de prueba</h3>
+        <p>Invalida solicitudes pendientes o fallidas para poder enviar un enlace de activación nuevo.</p>
+      </div>
+      <span>14 días</span>
+    </header>
+    <form class="lead-toolbar platform-toolbar" method="post">
+      <input type="hidden" name="action" value="reset_platform_trial_attempts">
+      <label class="field platform-search">
+        <span>Email de la solicitud</span>
+        <input name="email" type="email" value="josehurtadodev@gmail.com" placeholder="correo@ejemplo.com" required>
+      </label>
+      <button class="secondary-action" type="submit">Reiniciar intentos</button>
+    </form>
+  </article>
+
   <article class="platform-panel">
     <header>
       <div>

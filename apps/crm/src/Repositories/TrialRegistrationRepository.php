@@ -195,6 +195,27 @@ final class TrialRegistrationRepository
         }
     }
 
+    public static function resetAttempts(string $email): int
+    {
+        $email = strtolower(trim($email));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Indica un email válido.');
+        }
+
+        self::ensureTable();
+        $stmt = Database::connection()->prepare(
+            'DELETE FROM trial_registrations
+             WHERE (email = :account_email OR delivery_email = :delivery_email)
+               AND status IN ("PENDING", "FAILED", "ACTIVATING")'
+        );
+        $stmt->execute([
+            'account_email' => $email,
+            'delivery_email' => $email,
+        ]);
+
+        return $stmt->rowCount();
+    }
+
     private static function ensureTable(): void
     {
         Database::connection()->exec(

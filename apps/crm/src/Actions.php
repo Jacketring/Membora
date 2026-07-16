@@ -48,6 +48,7 @@ final class Actions
             'convert_platform_lead' => self::convertPlatformLead(),
             'delete_platform_lead' => self::deletePlatformLead(),
             'send_platform_test_email' => self::sendPlatformTestEmail(),
+            'reset_platform_trial_attempts' => self::resetTrialAttempts(),
             'create_platform_client' => self::createPlatformClient(),
             'update_platform_client' => self::updatePlatformClient(),
             'delete_platform_client' => self::deletePlatformClient(),
@@ -614,6 +615,29 @@ final class Actions
 
         WebhookIntegrationRepository::logPlatformEmailDiagnostic('email_error', 'Prueba de correo fallida. ' . Mailer::lastError(), $email);
         flash('No se pudo enviar el correo de prueba: ' . Mailer::lastError(), 'error');
+        redirect('platform-web');
+    }
+
+    private static function resetTrialAttempts(): never
+    {
+        self::requirePlatformAdmin();
+        $email = strtolower(trim((string) post_value('email', '')));
+
+        try {
+            $deleted = TrialRegistrationRepository::resetAttempts($email);
+        } catch (InvalidArgumentException $exception) {
+            flash($exception->getMessage(), 'error');
+            redirect('platform-web');
+        } catch (Throwable $exception) {
+            log_server_error($exception, 'reset_trial_attempts');
+            flash('No se pudieron reiniciar los intentos de la prueba.', 'error');
+            redirect('platform-web');
+        }
+
+        $message = $deleted > 0
+            ? 'Intentos reiniciados. Ya puedes solicitar un enlace nuevo para ' . $email . '.'
+            : 'No había solicitudes pendientes o fallidas para ' . $email . '.';
+        flash($message);
         redirect('platform-web');
     }
 

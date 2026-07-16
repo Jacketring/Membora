@@ -736,6 +736,7 @@ function audit_action_label(?string $action): string
         'convert_platform_lead' => 'Conversión de lead web',
         'delete_platform_lead' => 'Eliminación de lead web',
         'send_platform_test_email' => 'Prueba de email',
+        'reset_platform_trial_attempts' => 'Reinicio de alta de prueba',
         'create_platform_client' => 'Creación de cliente CRM',
         'update_platform_client' => 'Actualizacion de cliente CRM',
         'delete_platform_client' => 'Eliminación de cliente CRM',
