@@ -158,7 +158,7 @@ Esto permite desplegar cambios incrementales en Plesk sin ejecutar migraciones N
 
 La integracion Stripe esta habilitada exclusivamente con `PAYMENTS_MODE=stripe_test` y claves `sk_test_`. La activacion Live queda fuera del estado cerrado actual; consulta `../../docs/16-stripe-billing-saas.md`.
 
-El estado tecnico de Stripe y la URL del webhook no se muestran en el listado de Facturas CRM. La integracion y el endpoint `/stripe/webhook` siguen activos; se ocultan de esa vista para no mezclar diagnostico tecnico con la gestion diaria de facturas.
+El estado tecnico de Stripe, sus identificadores y la URL del webhook no se muestran en Facturas CRM ni en el formulario de suscripcion. La integracion y el endpoint `/stripe/webhook` siguen activos internamente; se ocultan para no mezclar diagnostico tecnico con la gestion diaria.
 
 ## Web comercial
 

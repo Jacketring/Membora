@@ -2255,13 +2255,36 @@ td.empty-state,
   width: 14px;
 }
 .platform-subscription-actions {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(15, 23, 42, 0.12);
+}
+.platform-subscription-actions form { margin: 0; }
+.subscription-management-card {
+  align-items: center;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-sizing: border-box;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-top: 24px;
+  padding: 18px;
+  width: 100%;
+}
+.subscription-management-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.subscription-management-copy strong { color: var(--text); font-size: 14px; }
+.subscription-management-copy span { color: var(--muted); font-size: 12px; line-height: 1.5; }
+@media (max-width: 720px) {
+  .subscription-management-card { grid-template-columns: 1fr; }
+  .platform-subscription-actions { justify-content: flex-start; }
 }
 .invoice-lines {
   display: grid;
