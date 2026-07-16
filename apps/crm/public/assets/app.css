@@ -204,6 +204,31 @@ summary:focus-visible {
 }
 .login-site-back-action:hover .login-site-back-action__chevron { transform: translateX(3px); }
 .login-card > .notice, .login-card form > .notice { margin-bottom: 18px; }
+.trial-credential-intro { color: var(--muted); line-height: 1.55; margin: 0 0 22px; }
+.trial-credential-box {
+  background: #eef4ff;
+  border: 1px solid #cfe0ff;
+  border-radius: 14px;
+  display: grid;
+  gap: 7px;
+  margin: 22px 0;
+  padding: 18px;
+}
+.trial-credential-box span { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.trial-credential-box strong { color: var(--text); overflow-wrap: anywhere; }
+.trial-credential-box code {
+  background: #fff;
+  border: 1px dashed #9bb8e8;
+  border-radius: 9px;
+  color: #08172d;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  overflow-wrap: anywhere;
+  padding: 12px;
+  user-select: all;
+}
 .demo-note {
   background: #eef4ff;
   border-radius: 10px;

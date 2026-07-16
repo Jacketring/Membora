@@ -102,6 +102,25 @@ final class Mailer
         return self::sendHtml($email, 'Activa tu prueba gratuita de Membora', $html);
     }
 
+    public static function sendTrialCredentials(string $email, string $name, string $company, string $accountEmail, string $credentialUrl): bool
+    {
+        self::$lastError = '';
+        if (strtolower((string) (getenv('MAIL_ENABLED') ?: 'true')) === 'false') {
+            self::$lastError = 'El correo debe estar habilitado para entregar las credenciales.';
+            return false;
+        }
+        $email = strtolower(trim($email));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            self::$lastError = 'Email de credenciales no válido.';
+            return false;
+        }
+        return self::sendHtml(
+            $email,
+            'Tu acceso a Membora CRM ya está preparado',
+            self::trialCredentialsTemplate($name, $company, $accountEmail, $credentialUrl)
+        );
+    }
+
     public static function sendExistingTrialAccount(string $email, string $name, string $loginUrl, string $forgotPasswordUrl): bool
     {
         self::$lastError = '';
@@ -405,7 +424,7 @@ HTML;
           <tr><td style="padding:34px 32px 18px;">
             <p style="margin:0 0 10px;color:#004bf2;font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.08em;">Prueba gratuita de 14 días</p>
             <h1 style="margin:0 0 16px;font-size:30px;line-height:1.18;color:#071327;">Hola, {$safeName}</h1>
-            <p style="margin:0 0 18px;font-size:16px;line-height:1.65;color:#334155;">Confirma tu email para crear el espacio de <strong>{$safeCompany}</strong>. Después podrás definir tu contraseña y entrar en Membora.</p>
+            <p style="margin:0 0 18px;font-size:16px;line-height:1.65;color:#334155;">Confirma tu email para crear el cliente, la empresa y el usuario administrador de <strong>{$safeCompany}</strong>. Después recibirás otro correo con un enlace para ver tu contraseña una sola vez.</p>
             <p style="margin:0 0 18px;padding:14px 16px;border-radius:12px;background:#eef4ff;color:#1f3657;font-size:14px;line-height:1.5;">Tu email de acceso al CRM será <strong>{$safeAccountEmail}</strong>.</p>
             <p style="margin:26px 0;"><a href="{$safeUrl}" style="display:inline-block;background:#004bf2;color:#fff;text-decoration:none;font-weight:800;padding:14px 20px;border-radius:12px;">Activar prueba gratuita</a></p>
             <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">El enlace caduca en una hora y solo puede utilizarse una vez. Si no has solicitado esta prueba, ignora este correo.</p>
@@ -441,6 +460,39 @@ HTML;
             <p style="margin:0 0 18px;color:#334155;font-size:16px;line-height:1.65;">Hemos recibido una solicitud de prueba con este email, pero ya existe una cuenta asociada. No hemos creado otra empresa ni duplicado tus datos.</p>
             <p style="margin:24px 0;"><a href="{$safeLoginUrl}" style="display:inline-block;background:#004bf2;color:#fff;text-decoration:none;font-weight:800;padding:14px 20px;border-radius:12px;">Entrar en Membora</a></p>
             <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Si no recuerdas tu contraseña, <a href="{$safeForgotPasswordUrl}" style="color:#004bf2;">solicita un enlace de recuperación</a>. Si no has realizado esta solicitud, puedes ignorar el mensaje.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>
+HTML;
+    }
+
+    private static function trialCredentialsTemplate(string $name, string $company, string $accountEmail, string $credentialUrl): string
+    {
+        $safeName = e(trim($name) !== '' ? trim($name) : 'Hola');
+        $safeCompany = e($company);
+        $safeEmail = e($accountEmail);
+        $safeUrl = e($credentialUrl);
+        $emailLogo = self::emailLogoHtml(48);
+
+        return <<<HTML
+<!doctype html>
+<html lang="es">
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tu acceso a Membora CRM</title></head>
+  <body style="margin:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#0b172a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:32px 14px;">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#fff;border-radius:22px;overflow:hidden;border:1px solid #dce6f5;">
+          <tr><td style="background:#004bf2;padding:28px 32px;color:#fff;">{$emailLogo}<span style="font-size:23px;font-weight:900;vertical-align:middle;">Membora CRM</span></td></tr>
+          <tr><td style="padding:34px 32px;">
+            <p style="margin:0 0 10px;color:#004bf2;font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.08em;">Cuenta preparada</p>
+            <h1 style="margin:0 0 16px;font-size:28px;color:#071327;">Hola, {$safeName}</h1>
+            <p style="margin:0 0 18px;color:#334155;font-size:16px;line-height:1.65;">Ya hemos creado el cliente, la empresa <strong>{$safeCompany}</strong> y tu usuario administrador.</p>
+            <p style="margin:0 0 22px;padding:14px 16px;border-radius:12px;background:#eef4ff;color:#1f3657;font-size:14px;line-height:1.5;">Tu usuario de acceso es <strong>{$safeEmail}</strong>.</p>
+            <a href="{$safeUrl}" style="display:inline-block;background:#004bf2;color:#fff;text-decoration:none;font-weight:800;padding:14px 20px;border-radius:12px;">Ver mi contraseña una vez</a>
+            <p style="margin:24px 0 0;color:#64748b;font-size:13px;line-height:1.6;">El enlace caduca en una hora. La contraseña solo se mostrará una vez: guárdala antes de cerrar o recargar la página.</p>
           </td></tr>
         </table>
       </td></tr>

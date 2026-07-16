@@ -92,6 +92,7 @@ Objetivo:
 - La recuperacion responde de forma neutra para no confirmar si existe una cuenta.
 - Los enlaces de restablecimiento caducan, son de un solo uso y nunca almacenan el token completo en claro.
 - Cambiar la contrasena revoca los tokens anteriores del usuario.
+- El alta `TRIAL` genera una contrasena aleatoria y envia por correo un enlace de entrega, nunca la contrasena. La credencial temporal se cifra con AES-256-GCM y una clave derivada de `APP_KEY` (o de `DB_PASSWORD` en instalaciones antiguas); el enlace exige un POST con CSRF, caduca en una hora y se marca como visto antes de mostrar la contrasena. Una recarga o segundo acceso ya no puede recuperarla.
 
 ### 6. Validacion de origen y CSRF en formularios internos
 

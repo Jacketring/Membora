@@ -150,6 +150,7 @@ La aplicacion crea algunas tablas o columnas auxiliares si no existen, por ejemp
 - `demo_users` y `demo_resets`.
 - `login_attempts` y `auth_tokens`.
 - `trial_registrations`.
+- `trial_credential_deliveries` para la entrega cifrada y de una sola visualizacion de la contrasena inicial.
 - `stripe_events`.
 - columnas de imagen para usuarios/socios.
 
@@ -163,7 +164,7 @@ La captacion web se revisa desde el panel de administradores de Membora CRM, no 
 
 Los enlaces de demo de la web publica envian un `POST` al login demo del CRM. La demo cliente publica no depende del nombre exacto de `APP_ENV`, mientras que la demo de administrador solo se habilita con `APP_ENV=demo`. Cada acceso crea un usuario temporal con credenciales aleatorias, dura 20 minutos, muestra un contador y elimina ese usuario al cerrar sesion, caducar o cerrar la pestana. Al terminar devuelve al usuario a `WEB_APP_URL`.
 
-El formulario `Empieza gratis` envia a `/app/api/trial`. El servidor verifica origen, honeypot y rate limit, envia un enlace de activacion de una hora y, tras confirmar el email, crea o actualiza un contacto `Cliente CRM`, lo vincula a su empresa y crea un tenant con plan `TRIAL` durante 14 dias. La persona define su contrasena mediante el flujo seguro de recuperacion; no se envian contrasenas por correo.
+El formulario `Empieza gratis` envia a `/app/api/trial`. El servidor verifica origen, honeypot y rate limit y envia un enlace de activacion de una hora. Tras confirmar el email crea o actualiza un contacto `Cliente CRM` con el nombre de la empresa y el correo real, vincula ese contacto a la empresa, crea el tenant `TRIAL` de 14 dias y su usuario administrador. La contrasena inicial se genera aleatoriamente y se entrega mediante un segundo correo que contiene un enlace temporal, no la contrasena: la credencial permanece cifrada con una clave derivada de `APP_KEY` (o `DB_PASSWORD` como compatibilidad), requiere una confirmacion explicita para revelarse y queda consumida inmediatamente para que no pueda verse de nuevo.
 
 El formulario de `httpdocs` envia al webhook:
 

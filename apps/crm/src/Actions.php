@@ -22,6 +22,7 @@ final class Actions
 
         $user = Auth::user();
         if ($action !== 'logout'
+            && $action !== 'reveal_trial_credentials'
             && $user
             && !is_platform_admin($user)
             && !is_platform_support_context()
@@ -43,6 +44,7 @@ final class Actions
             'request_password_reset' => self::requestPasswordReset(),
             'reset_password' => self::resetPassword(),
             'confirm_trial_activation' => self::confirmTrialActivation(),
+            'reveal_trial_credentials' => self::revealTrialCredentials(),
             'logout' => self::logout(),
             'update_profile' => self::updateProfile(),
             'update_platform_lead' => self::updatePlatformLead(),
@@ -224,9 +226,9 @@ final class Actions
         $token = trim((string) post_value('token', ''));
 
         try {
-            $resetToken = TrialRegistrationRepository::activate($token);
-            header('Location: index.php?route=reset-password&token=' . urlencode($resetToken));
-            exit;
+            TrialRegistrationRepository::activate($token);
+            flash('Cuenta activada. Te hemos enviado otro correo con el enlace para ver tu contraseña una sola vez.');
+            redirect('login');
         } catch (Throwable $exception) {
             log_server_error($exception, 'trial_activation');
             $safeMessages = [
@@ -240,6 +242,26 @@ final class Actions
             flash($message, 'error');
             redirect('login');
         }
+    }
+
+    private static function revealTrialCredentials(): never
+    {
+        $token = trim((string) post_value('token', ''));
+        try {
+            $credentials = TrialCredentialRepository::consume($token);
+        } catch (Throwable $exception) {
+            log_server_error($exception, 'trial_credentials');
+            $credentials = null;
+        }
+
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        render('trial-credentials', [
+            'token' => '',
+            'tokenValid' => false,
+            'credentials' => $credentials,
+        ]);
+        exit;
     }
 
     private static function redirectToPasswordReset(string $token): never

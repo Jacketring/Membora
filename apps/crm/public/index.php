@@ -247,6 +247,24 @@ if ($route === 'reset-password') {
     exit;
 }
 
+if ($route === 'trial-credentials') {
+    $token = trim((string) ($_GET['token'] ?? ''));
+    try {
+        $tokenValid = $token !== '' && TrialCredentialRepository::isValid($token);
+    } catch (Throwable $exception) {
+        log_server_error($exception, 'trial_credentials');
+        $tokenValid = false;
+    }
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    render('trial-credentials', [
+        'token' => $token,
+        'tokenValid' => $tokenValid,
+        'credentials' => null,
+    ]);
+    exit;
+}
+
 $currentUser = Auth::requireUser();
 
 if (!can_access_route((string) $route, $currentUser)) {

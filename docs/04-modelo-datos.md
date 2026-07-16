@@ -103,6 +103,7 @@ Tablas transversales de autenticacion, demo y provisionamiento:
 - `auth_tokens`: tokens de un solo uso o rotatorios para recordar sesion y recuperar contrasena.
 - `demo_resets`: control de reinicios periodicos de los datos demo.
 - `trial_registrations`: solicitudes de prueba, token de verificacion, rate limit, estado y fecha de activacion.
+- `trial_credential_deliveries`: entrega cifrada y temporal de la contrasena inicial, asociada al usuario y consumida en la primera visualizacion.
 
 ## 5. Relaciones principales
 

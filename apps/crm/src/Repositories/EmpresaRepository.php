@@ -734,6 +734,13 @@ final class EmpresaRepository
             );
             $stmt->execute(['tenant_id' => $tenantId]);
         }
+        if (self::tableExists($pdo, 'trial_credential_deliveries') && self::tableExists($pdo, 'users')) {
+            $stmt = $pdo->prepare(
+                'DELETE FROM trial_credential_deliveries
+                 WHERE user_id IN (SELECT id FROM users WHERE tenant_id = :tenant_id)'
+            );
+            $stmt->execute(['tenant_id' => $tenantId]);
+        }
 
         foreach ([
             'risk_alerts',

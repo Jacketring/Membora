@@ -46,11 +46,12 @@ final class TrialRegistrationRepositoryTest extends TestCase
             'name' => 'Ana Martín',
             'company_name' => 'Centro Norte',
             'email' => 'ana@example.com',
+            'delivery_email' => 'ana.real@gmail.com',
         ], 'client_trial_1', 'temporary-secret');
 
         self::assertSame('client_trial_1', $data['client_id']);
         self::assertSame('Centro Norte', $data['name']);
-        self::assertSame('ana@example.com', $data['contact_email']);
+        self::assertSame('ana.real@gmail.com', $data['contact_email']);
         self::assertSame('TRIAL', $data['plan']);
         self::assertSame('TRIAL', $data['status']);
         self::assertSame('TRIAL', $data['payment_status']);
@@ -59,6 +60,14 @@ final class TrialRegistrationRepositoryTest extends TestCase
         self::assertSame('1', $data['create_tenant']);
         self::assertSame('Ana Martín', $data['admin_name']);
         self::assertSame('temporary-secret', $data['admin_password']);
+    }
+
+    public function testGeneratedInitialPasswordIsStrongAndReadable(): void
+    {
+        $password = TrialRegistrationRepository::generateInitialPassword();
+
+        self::assertMatchesRegularExpression('/^Mb-[a-f0-9]{6}-[a-f0-9]{6}-[a-f0-9]{6}$/', $password);
+        self::assertGreaterThanOrEqual(20, strlen($password));
     }
 
     public function testPublicTrialLinksAlwaysPointToTheCrmPath(): void
