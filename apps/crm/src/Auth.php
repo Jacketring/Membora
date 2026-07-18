@@ -213,6 +213,15 @@ final class Auth
         }
     }
 
+    public static function restartAnonymousSession(): void
+    {
+        self::logout();
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+    }
+
     public static function enterTenantContext(array $empresa): void
     {
         if (empty($empresa['tenant_id'])) {

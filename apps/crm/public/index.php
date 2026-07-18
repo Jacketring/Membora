@@ -203,7 +203,7 @@ $route = $_GET['route'] ?? 'dashboard';
 if ($route === 'activate-trial') {
     // La verificacion debe comenzar sin una cuenta anterior para que el
     // retorno al login no rebote al dashboard de una sesion ya iniciada.
-    Auth::logout();
+    Auth::restartAnonymousSession();
 
     try {
         $token = trim((string) ($_GET['token'] ?? ''));

@@ -9,7 +9,7 @@ Permitir que una persona cree un espacio propio de Membora durante 14 dias desde
 1. La persona indica nombre, gimnasio, email y acepta privacidad.
 2. El backend valida origen, honeypot y formato. El rate limit especifico se aplica solo cuando `TRIAL_RATE_LIMIT_ENABLED=true`.
 3. Se envia un enlace de verificacion valido durante una hora.
-4. Al abrir el enlace se cierra cualquier sesion previa, se muestra una confirmacion y solo el `POST` protegido consume la activacion.
+4. Al abrir el enlace se cierra cualquier sesion previa y se inicia una sesion anonima limpia para conservar el token CSRF; se muestra una confirmacion y solo el `POST` protegido consume la activacion.
 5. Se crea o actualiza el contacto como `Cliente`, se vincula una empresa `TRIAL`, se crea su tenant y un usuario `GYM_ADMIN` activo con el mismo `tenant_id`.
 6. Se genera una contrasena inicial aleatoria y se envia un segundo correo con un token de entrega de un solo uso.
 7. La persona confirma la revelacion; la credencial cifrada se marca como consumida antes de mostrarse y no puede recuperarse al recargar.

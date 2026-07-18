@@ -46,6 +46,16 @@ final class SecurityPolicyTest extends TestCase
         self::assertSame([], $_SESSION);
     }
 
+    public function testTrialActivationRestartsWithAnAnonymousSession(): void
+    {
+        $_SESSION = ['user' => ['id' => 'previous-user'], 'csrf_token' => 'stale-token'];
+
+        Auth::restartAnonymousSession();
+
+        self::assertNull(Auth::user());
+        self::assertSame([], $_SESSION);
+    }
+
     public function testLoginLimitUsesInjectedTimeWithoutSleeping(): void
     {
         $policy = new LoginRateLimitPolicy(5, 900);

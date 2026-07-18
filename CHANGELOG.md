@@ -5,6 +5,7 @@ Todos los cambios notables se documentan aquí siguiendo [Keep a Changelog](http
 ## [Unreleased]
 
 ### Changed
+- La activacion de prueba reinicia una sesion anonima despues de cerrar la cuenta anterior, evitando que la caducidad de la cookie invalide el formulario CSRF antes de crear el contacto, la empresa y el correo de credenciales.
 - El formulario comercial solicita contacto con Membora y el aviso de activacion explica la llegada del correo de contraseña y los pasos para iniciar sesion.
 - La empresa tecnica de la demo deja de sincronizarse como contacto comercial, se retira cualquier contacto demo previo y el dominio antiguo del login redirige a `membora.es/app`.
 - La verificacion de una prueba cierra cualquier sesion anterior antes de volver al login; las empresas nuevas ya no reciben una nota automatica y el texto antiguo se retira de las existentes sin afectar notas manuales.
