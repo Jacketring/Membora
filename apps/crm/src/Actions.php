@@ -234,7 +234,7 @@ final class Actions
 
         try {
             TrialRegistrationRepository::activate($token);
-            flash('Cuenta activada. Te hemos enviado otro correo con el enlace para ver tu contraseña una sola vez.');
+            flash('Cuenta activada correctamente. En unos momentos recibirás en tu correo un mensaje de Membora con un enlace de un solo uso para consultar tu contraseña inicial. Abre el enlace, guarda la contraseña y vuelve a esta pantalla para iniciar sesión. Si no lo encuentras, revisa la carpeta de spam.');
             redirect('login');
         } catch (Throwable $exception) {
             log_server_error($exception, 'trial_activation');
