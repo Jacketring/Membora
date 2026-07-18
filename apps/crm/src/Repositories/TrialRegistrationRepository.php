@@ -45,7 +45,6 @@ final class TrialRegistrationRepository
             'subscription_started_at' => date('Y-m-d'),
             'renewal_period' => 'MONTHLY',
             'renewal_status' => 'ACTIVE',
-            'notes' => 'Alta self-service desde membora.es.',
             'create_tenant' => '1',
             'admin_name' => (string) ($registration['name'] ?? ''),
             'admin_email' => (string) ($registration['email'] ?? ''),

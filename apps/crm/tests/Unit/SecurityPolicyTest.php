@@ -32,6 +32,20 @@ final class SecurityPolicyTest extends TestCase
         self::assertSame('delete', UserDeletionPolicy::relationMode('required_records', 'user_id', false));
     }
 
+    public function testLogoutClearsAnExistingSessionBeforeTrialActivation(): void
+    {
+        $_SESSION = [
+            'user' => ['id' => 'previous-user'],
+            'platform_admin_user' => ['id' => 'previous-admin'],
+            'unrelated_session_value' => 'remove-me',
+        ];
+
+        Auth::logout();
+
+        self::assertNull(Auth::user());
+        self::assertSame([], $_SESSION);
+    }
+
     public function testLoginLimitUsesInjectedTimeWithoutSleeping(): void
     {
         $policy = new LoginRateLimitPolicy(5, 900);

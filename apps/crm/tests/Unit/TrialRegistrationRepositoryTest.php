@@ -57,6 +57,7 @@ final class TrialRegistrationRepositoryTest extends TestCase
         self::assertSame('TRIAL', $data['payment_status']);
         self::assertSame('0', $data['monthly_price']);
         self::assertSame('14', $data['trial_days']);
+        self::assertArrayNotHasKey('notes', $data);
         self::assertSame('1', $data['create_tenant']);
         self::assertSame('Ana Martín', $data['admin_name']);
         self::assertSame('temporary-secret', $data['admin_password']);

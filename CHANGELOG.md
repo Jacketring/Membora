@@ -5,6 +5,7 @@ Todos los cambios notables se documentan aquí siguiendo [Keep a Changelog](http
 ## [Unreleased]
 
 ### Changed
+- La verificacion de una prueba cierra cualquier sesion anterior antes de volver al login; las empresas nuevas ya no reciben una nota automatica y el texto antiguo se retira de las existentes sin afectar notas manuales.
 - La eliminacion de administradores de plataforma borra su actividad y sus credenciales relacionadas, desvincula de forma segura los datos operativos conservables y elimina la cuenta en una unica transaccion.
 - Sincronizada la documentacion canonica con las rutas, acciones, tablas, autenticacion, facturacion SaaS y Stripe Test implementados.
 - Ampliada la trazabilidad con requisitos, historias, flujos arquitectonicos y casos de prueba de las funciones actuales.

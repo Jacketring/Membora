@@ -51,6 +51,7 @@ final class EmpresaRepository
         self::markOverduePayments();
         self::expireCancelledSubscriptions();
         self::normalizeConvertedLeadStages();
+        self::removeLegacyTrialNotes();
     }
 
     public static function ensurePlatformAdmin(): void
@@ -779,6 +780,15 @@ final class EmpresaRepository
             );
         } catch (Throwable) {
         }
+    }
+
+    private static function removeLegacyTrialNotes(): void
+    {
+        Database::connection()->exec(
+            'UPDATE empresas
+             SET notes = NULL
+             WHERE notes = "Alta self-service desde membora.es."'
+        );
     }
 
     private static function defaultNextPaymentDate(string $period = 'MONTHLY'): string

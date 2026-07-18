@@ -230,6 +230,7 @@ final class Actions
     private static function confirmTrialActivation(): never
     {
         $token = trim((string) post_value('token', ''));
+        Auth::logout();
 
         try {
             TrialRegistrationRepository::activate($token);
