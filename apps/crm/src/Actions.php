@@ -247,11 +247,14 @@ final class Actions
                 'El enlace de activación ha caducado o ya se ha utilizado.',
                 'Esta prueba ya se está activando.',
             ];
-            $message = in_array($exception->getMessage(), $safeMessages, true)
-                ? $exception->getMessage()
-                : 'No se pudo activar la prueba. Contacta con el equipo de Membora.';
-            flash($message, 'error');
-            redirect('login');
+            if (in_array($exception->getMessage(), $safeMessages, true)) {
+                flash($exception->getMessage(), 'error');
+                redirect('login');
+            }
+
+            flash('No se pudo completar el alta. No se han duplicado los datos; vuelve a pulsar el botón para continuar.', 'error');
+            header('Location: index.php?route=activate-trial&token=' . urlencode($token));
+            exit;
         }
     }
 

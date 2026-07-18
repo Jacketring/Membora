@@ -141,6 +141,7 @@ Pasos:
 5. Abrir el segundo correo y revelar la contrasena inicial desde su enlace temporal.
 6. Guardar la credencial e iniciar sesion con la nueva cuenta.
 7. Recargar el enlace de credenciales y comprobar que ya no vuelve a mostrarla.
+8. Simular un fallo del segundo correo, repetir la activación y comprobar que se reutilizan el mismo cliente, empresa, tenant y usuario antes de enviar un enlace nuevo.
 
 Resultado esperado:
 
@@ -149,6 +150,7 @@ Resultado esperado:
 - El enlace solo se puede usar una vez y caduca al cabo de una hora.
 - Tras verificarlo aparece un contacto `Cliente CRM`, una empresa vinculada, un tenant aislado, 14 dias de prueba y un usuario `GYM_ADMIN` activo con el mismo `tenant_id`.
 - La contrasena no se incluye en el correo: se genera aleatoriamente, permanece cifrada y solo puede revelarse una vez durante una hora.
+- Un fallo de provisionamiento o SMTP conserva las referencias ya creadas y el mismo enlace permite continuar sin registros duplicados.
 
 ## 4. Pruebas funcionales de gimnasio
 

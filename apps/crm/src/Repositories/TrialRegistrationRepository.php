@@ -66,6 +66,11 @@ final class TrialRegistrationRepository
         );
     }
 
+    public static function activationStatusCanBeRetried(string $status): bool
+    {
+        return in_array($status, ['PENDING', 'PROVISION_FAILED', 'PROVISIONED', 'EMAIL_FAILED'], true);
+    }
+
     public static function request(array $payload): array
     {
         if (trim((string) ($payload['website'] ?? '')) !== '') {
@@ -137,7 +142,9 @@ final class TrialRegistrationRepository
 
         $stmt = Database::connection()->prepare(
             'SELECT * FROM trial_registrations
-             WHERE token_hash = :token_hash AND status IN ("PENDING", "EMAIL_FAILED") AND expires_at > NOW()
+             WHERE token_hash = :token_hash
+               AND status IN ("PENDING", "PROVISION_FAILED", "PROVISIONED", "EMAIL_FAILED")
+               AND expires_at > NOW()
              LIMIT 1'
         );
         $stmt->execute(['token_hash' => hash('sha256', $token)]);
@@ -159,57 +166,10 @@ final class TrialRegistrationRepository
             throw new RuntimeException('Esta prueba ya se está activando.');
         }
 
-        $deliveryEmail = (string) ($registration['delivery_email'] ?: $registration['email']);
-        $existingClient = PlatformClientRepository::findByEmail($deliveryEmail);
-        $newClient = $existingClient === null;
-        $clientId = '';
-        $empresaCreated = false;
-        $empresaCleaned = true;
-        $credentialToken = '';
-
         try {
-            if ($previousStatus === 'EMAIL_FAILED' || self::hasPreparedTrialAccount($registration)) {
-                self::retryCredentialEmail($registration);
-                return;
-            }
-
-            $clientId = PlatformClientRepository::upsertTrialCustomer(
-                (string) $registration['company_name'],
-                (string) $registration['company_name'],
-                $deliveryEmail
-            );
-
-            $initialPassword = self::generateInitialPassword();
-            EmpresaRepository::create(self::provisioningData(
-                $registration,
-                $clientId,
-                $initialPassword
-            ));
-            $empresaCreated = true;
-            $empresaCleaned = false;
-
-            $empresa = EmpresaRepository::findByClient($clientId);
-            $client = PlatformClientRepository::find($clientId);
-            $tenantId = trim((string) ($empresa['tenant_id'] ?? ''));
-            if (!$client || (string) ($client['status'] ?? '') !== 'CUSTOMER') {
-                throw new RuntimeException('No se pudo crear el Cliente CRM de la prueba.');
-            }
-            if (!$empresa || $tenantId === '' || !hash_equals($clientId, (string) ($empresa['client_id'] ?? ''))) {
-                throw new RuntimeException('No se pudo vincular el Cliente CRM y el usuario a la empresa de la prueba.');
-            }
-            $userId = EmpresaRepository::ensureTenantAdminUser(
-                $tenantId,
-                (string) $registration['name'],
-                (string) $registration['email'],
-                $initialPassword
-            );
-
-            $credentialToken = TrialCredentialRepository::issue(
-                $userId,
-                (string) $registration['email'],
-                (string) $registration['company_name'],
-                $initialPassword
-            );
+            $account = self::provisionAccount($registration);
+            $credentialToken = self::prepareCredentialToken($registration, $account);
+            $deliveryEmail = (string) ($registration['delivery_email'] ?: $registration['email']);
             $credentialUrl = self::publicAppUrl() . '/index.php?route=trial-credentials&token=' . urlencode($credentialToken);
             if (!Mailer::sendTrialCredentials(
                 $deliveryEmail,
@@ -223,6 +183,7 @@ final class TrialRegistrationRepository
                     'Correo de credenciales de prueba: ' . Mailer::lastError(),
                     $deliveryEmail
                 );
+                self::setActivationState((string) $registration['id'], 'EMAIL_FAILED');
                 throw new RuntimeException(self::CREDENTIAL_EMAIL_FAILED);
             }
             self::logEmailDiagnostic(
@@ -231,62 +192,12 @@ final class TrialRegistrationRepository
                 $deliveryEmail
             );
 
-            Database::connection()->prepare(
-                'UPDATE trial_registrations SET status = "ACTIVATED", activated_at = NOW() WHERE id = :id'
-            )->execute(['id' => $registration['id']]);
-
+            self::setActivationState((string) $registration['id'], 'ACTIVATED', true);
         } catch (Throwable $exception) {
             if ($exception->getMessage() === self::CREDENTIAL_EMAIL_FAILED) {
-                Database::connection()->prepare(
-                    'UPDATE trial_registrations
-                     SET status = "EMAIL_FAILED", expires_at = DATE_ADD(NOW(), INTERVAL 1 HOUR)
-                     WHERE id = :id'
-                )->execute(['id' => $registration['id']]);
                 throw $exception;
             }
-            if ($previousStatus === 'EMAIL_FAILED') {
-                Database::connection()->prepare(
-                    'UPDATE trial_registrations
-                     SET status = "EMAIL_FAILED", expires_at = DATE_ADD(NOW(), INTERVAL 1 HOUR)
-                     WHERE id = :id'
-                )->execute(['id' => $registration['id']]);
-                throw $exception;
-            }
-
-            if ($credentialToken !== '') {
-                try {
-                    TrialCredentialRepository::revoke($credentialToken);
-                } catch (Throwable $cleanupException) {
-                    log_server_error($cleanupException, 'trial_credential_cleanup');
-                }
-            }
-            if ($empresaCreated && $clientId !== '') {
-                try {
-                    $empresa = EmpresaRepository::findByClient($clientId);
-                    if ($empresa) {
-                        EmpresaRepository::delete((string) $empresa['id']);
-                    }
-                    $empresaCleaned = true;
-                } catch (Throwable $cleanupException) {
-                    log_server_error($cleanupException, 'trial_empresa_cleanup');
-                }
-            }
-            if ($newClient && $empresaCleaned && $clientId !== '') {
-                try {
-                    PlatformClientRepository::delete($clientId);
-                } catch (Throwable $cleanupException) {
-                    log_server_error($cleanupException, 'trial_client_cleanup');
-                }
-            } elseif ($existingClient && $empresaCleaned) {
-                try {
-                    PlatformClientRepository::update((string) $existingClient['id'], $existingClient);
-                } catch (Throwable $cleanupException) {
-                    log_server_error($cleanupException, 'trial_client_restore');
-                }
-            }
-            Database::connection()->prepare(
-                'UPDATE trial_registrations SET status = "PENDING" WHERE id = :id'
-            )->execute(['id' => $registration['id']]);
+            self::setActivationState((string) $registration['id'], 'PROVISION_FAILED');
             throw $exception;
         }
     }
@@ -297,7 +208,9 @@ final class TrialRegistrationRepository
         $token = self::normalizeActivationToken($token);
         $stmt = Database::connection()->prepare(
             'SELECT COUNT(*) FROM trial_registrations
-             WHERE token_hash = :token_hash AND status IN ("PENDING", "EMAIL_FAILED") AND expires_at > NOW()'
+             WHERE token_hash = :token_hash
+               AND status IN ("PENDING", "PROVISION_FAILED", "PROVISIONED", "EMAIL_FAILED")
+               AND expires_at > NOW()'
         );
         $stmt->execute(['token_hash' => hash('sha256', $token)]);
         if ((int) $stmt->fetchColumn() !== 1) {
@@ -316,7 +229,7 @@ final class TrialRegistrationRepository
         $stmt = Database::connection()->prepare(
             'DELETE FROM trial_registrations
              WHERE (email = :account_email OR delivery_email = :delivery_email)
-               AND status IN ("PENDING", "FAILED", "EMAIL_FAILED", "ACTIVATING")'
+               AND status IN ("PENDING", "FAILED", "PROVISION_FAILED", "PROVISIONED", "EMAIL_FAILED", "ACTIVATING")'
         );
         $stmt->execute([
             'account_email' => $email,
@@ -350,6 +263,19 @@ final class TrialRegistrationRepository
         $column = Database::connection()->query("SHOW COLUMNS FROM trial_registrations LIKE 'delivery_email'")->fetch();
         if (!$column) {
             Database::connection()->exec('ALTER TABLE trial_registrations ADD COLUMN delivery_email VARCHAR(191) NULL AFTER email');
+        }
+        foreach ([
+            'client_id' => 'ALTER TABLE trial_registrations ADD COLUMN client_id VARCHAR(191) NULL AFTER delivery_email',
+            'empresa_id' => 'ALTER TABLE trial_registrations ADD COLUMN empresa_id VARCHAR(191) NULL AFTER client_id',
+            'tenant_id' => 'ALTER TABLE trial_registrations ADD COLUMN tenant_id VARCHAR(191) NULL AFTER empresa_id',
+            'user_id' => 'ALTER TABLE trial_registrations ADD COLUMN user_id VARCHAR(191) NULL AFTER tenant_id',
+        ] as $name => $sql) {
+            $referenceColumn = Database::connection()->query(
+                'SHOW COLUMNS FROM trial_registrations LIKE ' . Database::connection()->quote($name)
+            )->fetch();
+            if (!$referenceColumn) {
+                Database::connection()->exec($sql);
+            }
         }
         Database::connection()->exec('UPDATE trial_registrations SET delivery_email = email WHERE delivery_email IS NULL');
     }
@@ -406,90 +332,178 @@ final class TrialRegistrationRepository
         return $webOrigin . $appPath;
     }
 
-    private static function retryCredentialEmail(array $registration): void
+    private static function provisionAccount(array $registration): array
     {
         $deliveryEmail = (string) ($registration['delivery_email'] ?: $registration['email']);
-        $client = PlatformClientRepository::findByEmail($deliveryEmail);
-        $empresa = $client ? EmpresaRepository::findByClient((string) $client['id']) : null;
+        $clientId = trim((string) ($registration['client_id'] ?? ''));
+        $client = $clientId !== '' ? PlatformClientRepository::find($clientId) : null;
+        if (!$client) {
+            $client = PlatformClientRepository::findByEmail($deliveryEmail);
+            $clientId = (string) ($client['id'] ?? '');
+        }
+        if ($clientId === '') {
+            $clientId = PlatformClientRepository::upsertTrialCustomer(
+                (string) $registration['company_name'],
+                (string) $registration['name'],
+                $deliveryEmail
+            );
+        } else {
+            PlatformClientRepository::markCustomer($clientId);
+        }
+        self::persistAccountReferences((string) $registration['id'], $clientId);
+
+        $empresaId = trim((string) ($registration['empresa_id'] ?? ''));
+        $empresa = $empresaId !== '' ? EmpresaRepository::find($empresaId) : null;
+        if (!$empresa) {
+            $empresa = self::findPreparedEmpresa($registration, $clientId);
+            $empresaId = (string) ($empresa['id'] ?? '');
+        }
+        if ($empresaId === '') {
+            $empresaId = EmpresaRepository::create(self::provisioningData(
+                $registration,
+                $clientId,
+                self::generateInitialPassword()
+            ));
+            $empresa = EmpresaRepository::find($empresaId);
+        }
+
         $tenantId = trim((string) ($empresa['tenant_id'] ?? ''));
-        if (!$client || !$empresa || $tenantId === '') {
-            throw new RuntimeException('No se encontró la cuenta preparada para reenviar el acceso.');
+        if (!$empresa || $tenantId === '' || !hash_equals($clientId, (string) ($empresa['client_id'] ?? ''))) {
+            throw new RuntimeException('No se pudo preparar la empresa y su espacio CRM.');
         }
 
-        $stmt = Database::connection()->prepare(
-            'SELECT id FROM users WHERE tenant_id = :tenant_id AND email = :email LIMIT 1'
-        );
-        $stmt->execute([
-            'tenant_id' => $tenantId,
-            'email' => (string) $registration['email'],
-        ]);
-        $userId = trim((string) $stmt->fetchColumn());
+        $userId = trim((string) ($registration['user_id'] ?? ''));
+        $user = $userId !== '' ? self::findPreparedUser($tenantId, (string) $registration['email'], $userId) : null;
+        if (!$user) {
+            $user = self::findPreparedUser($tenantId, (string) $registration['email']);
+            $userId = (string) ($user['id'] ?? '');
+        }
         if ($userId === '') {
-            throw new RuntimeException('No se encontró el usuario preparado para reenviar el acceso.');
-        }
-
-        $credentialToken = TrialCredentialRepository::rotateTokenForUser($userId);
-        if (!$credentialToken) {
-            $initialPassword = self::generateInitialPassword();
             $userId = EmpresaRepository::ensureTenantAdminUser(
                 $tenantId,
                 (string) $registration['name'],
                 (string) $registration['email'],
-                $initialPassword
-            );
-            $credentialToken = TrialCredentialRepository::issue(
-                $userId,
-                (string) $registration['email'],
-                (string) $registration['company_name'],
-                $initialPassword
+                self::generateInitialPassword()
             );
         }
 
-        $credentialUrl = self::publicAppUrl() . '/index.php?route=trial-credentials&token=' . urlencode($credentialToken);
-        if (!Mailer::sendTrialCredentials(
-            $deliveryEmail,
-            (string) $registration['name'],
-            (string) $registration['company_name'],
-            (string) $registration['email'],
-            $credentialUrl
-        )) {
-            self::logEmailDiagnostic(
-                'email_error',
-                'Reenvío de credenciales de prueba: ' . Mailer::lastError(),
-                $deliveryEmail
-            );
-            throw new RuntimeException(self::CREDENTIAL_EMAIL_FAILED);
-        }
-
-        self::logEmailDiagnostic(
-            'trial_email',
-            'Reenvío del enlace de credenciales aceptado por el transporte de envío.',
-            $deliveryEmail
+        self::persistAccountReferences(
+            (string) $registration['id'],
+            $clientId,
+            $empresaId,
+            $tenantId,
+            $userId,
+            'PROVISIONED'
         );
-        Database::connection()->prepare(
-            'UPDATE trial_registrations SET status = "ACTIVATED", activated_at = NOW() WHERE id = :id'
-        )->execute(['id' => $registration['id']]);
+
+        return compact('clientId', 'empresaId', 'tenantId', 'userId');
     }
 
-    private static function hasPreparedTrialAccount(array $registration): bool
+    private static function prepareCredentialToken(array $registration, array $account): string
     {
-        $deliveryEmail = (string) ($registration['delivery_email'] ?: $registration['email']);
-        $client = PlatformClientRepository::findByEmail($deliveryEmail);
-        $empresa = $client ? EmpresaRepository::findByClient((string) $client['id']) : null;
-        $tenantId = trim((string) ($empresa['tenant_id'] ?? ''));
-        if (!$client || !$empresa || $tenantId === '') {
-            return false;
+        $userId = (string) $account['userId'];
+        $credentialToken = TrialCredentialRepository::rotateTokenForUser($userId);
+        if ($credentialToken) {
+            return $credentialToken;
         }
 
-        $stmt = Database::connection()->prepare(
-            'SELECT COUNT(*) FROM users WHERE tenant_id = :tenant_id AND email = :email'
+        $initialPassword = self::generateInitialPassword();
+        EmpresaRepository::ensureTenantAdminUser(
+            (string) $account['tenantId'],
+            (string) $registration['name'],
+            (string) $registration['email'],
+            $initialPassword
+        );
+
+        return TrialCredentialRepository::issue(
+            $userId,
+            (string) $registration['email'],
+            (string) $registration['company_name'],
+            $initialPassword
+        );
+    }
+
+    private static function findPreparedEmpresa(array $registration, string $clientId): ?array
+    {
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare(
+            'SELECT empresas.* FROM empresas
+             INNER JOIN users ON users.tenant_id = empresas.tenant_id
+             WHERE empresas.client_id = :client_id AND users.email = :email
+             ORDER BY empresas.created_at DESC LIMIT 1'
         );
         $stmt->execute([
-            'tenant_id' => $tenantId,
+            'client_id' => $clientId,
             'email' => (string) $registration['email'],
         ]);
+        $empresa = $stmt->fetch();
+        if ($empresa) {
+            return $empresa;
+        }
 
-        return (int) $stmt->fetchColumn() === 1;
+        $stmt = $pdo->prepare(
+            'SELECT * FROM empresas
+             WHERE client_id = :client_id AND name = :name AND status = "TRIAL"
+             ORDER BY created_at DESC LIMIT 1'
+        );
+        $stmt->execute([
+            'client_id' => $clientId,
+            'name' => (string) $registration['company_name'],
+        ]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    private static function findPreparedUser(string $tenantId, string $email, string $userId = ''): ?array
+    {
+        $sql = 'SELECT id, tenant_id, email FROM users WHERE tenant_id = :tenant_id AND email = :email';
+        $params = ['tenant_id' => $tenantId, 'email' => $email];
+        if ($userId !== '') {
+            $sql .= ' AND id = :id';
+            $params['id'] = $userId;
+        }
+        $stmt = Database::connection()->prepare($sql . ' LIMIT 1');
+        $stmt->execute($params);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    private static function persistAccountReferences(
+        string $registrationId,
+        string $clientId,
+        ?string $empresaId = null,
+        ?string $tenantId = null,
+        ?string $userId = null,
+        ?string $status = null
+    ): void {
+        $stmt = Database::connection()->prepare(
+            'UPDATE trial_registrations
+             SET client_id = :client_id,
+                 empresa_id = COALESCE(:empresa_id, empresa_id),
+                 tenant_id = COALESCE(:tenant_id, tenant_id),
+                 user_id = COALESCE(:user_id, user_id),
+                 status = COALESCE(:status, status),
+                 expires_at = DATE_ADD(NOW(), INTERVAL 1 HOUR)
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'id' => $registrationId,
+            'client_id' => $clientId,
+            'empresa_id' => $empresaId,
+            'tenant_id' => $tenantId,
+            'user_id' => $userId,
+            'status' => $status,
+        ]);
+    }
+
+    private static function setActivationState(string $registrationId, string $status, bool $activated = false): void
+    {
+        $sql = 'UPDATE trial_registrations SET status = :status, expires_at = DATE_ADD(NOW(), INTERVAL 1 HOUR)';
+        if ($activated) {
+            $sql .= ', activated_at = NOW()';
+        }
+        $stmt = Database::connection()->prepare($sql . ' WHERE id = :id');
+        $stmt->execute(['id' => $registrationId, 'status' => $status]);
     }
 
     private static function logEmailDiagnostic(string $status, string $message, string $email): void

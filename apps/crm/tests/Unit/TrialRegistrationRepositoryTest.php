@@ -70,6 +70,16 @@ final class TrialRegistrationRepositoryTest extends TestCase
         self::assertGreaterThanOrEqual(20, strlen($password));
     }
 
+    public function testInterruptedActivationStatesCanBeRetriedWithoutDuplicatingTheAccount(): void
+    {
+        foreach (['PENDING', 'PROVISION_FAILED', 'PROVISIONED', 'EMAIL_FAILED'] as $status) {
+            self::assertTrue(TrialRegistrationRepository::activationStatusCanBeRetried($status));
+        }
+
+        self::assertFalse(TrialRegistrationRepository::activationStatusCanBeRetried('ACTIVATING'));
+        self::assertFalse(TrialRegistrationRepository::activationStatusCanBeRetried('ACTIVATED'));
+    }
+
     public function testTrialRateLimitIsDisabledByDefaultAndCanBeEnabled(): void
     {
         $previous = getenv('TRIAL_RATE_LIMIT_ENABLED');

@@ -237,7 +237,7 @@ final class EmpresaRepository
         return $userId;
     }
 
-    public static function create(array $data): void
+    public static function create(array $data): string
     {
         self::ensureTables();
         PlatformClientRepository::ensureTable();
@@ -264,11 +264,12 @@ final class EmpresaRepository
                 $tenantId = self::createTenantAndAdmin($params['name'], $data, $client);
             }
 
+            $empresaId = cuid();
             $stmt = $pdo->prepare(
                 'INSERT INTO empresas (id, tenant_id, client_id, name, contact_email, plan, status, payment_status, monthly_price, next_payment_at, trial_days, subscription_started_at, paid_since, access_until, renewal_period, renewal_status, cancelled_at, notes, created_at, updated_at)
                  VALUES (:id, :tenant_id, :client_id, :name, :contact_email, :plan, :status, :payment_status, :monthly_price, :next_payment_at, :trial_days, :subscription_started_at, :paid_since, :access_until, :renewal_period, :renewal_status, :cancelled_at, :notes, NOW(), NOW())'
             );
-            $stmt->execute($params + ['id' => cuid(), 'tenant_id' => $tenantId]);
+            $stmt->execute($params + ['id' => $empresaId, 'tenant_id' => $tenantId]);
 
             if ($client) {
                 PlatformClientRepository::markCustomer($client['id']);
@@ -277,6 +278,8 @@ final class EmpresaRepository
             if ($ownsTransaction) {
                 $pdo->commit();
             }
+
+            return $empresaId;
         } catch (Throwable $exception) {
             if ($ownsTransaction && $pdo->inTransaction()) {
                 $pdo->rollBack();

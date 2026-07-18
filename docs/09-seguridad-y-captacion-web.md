@@ -93,6 +93,7 @@ Objetivo:
 - Los enlaces de restablecimiento caducan, son de un solo uso y nunca almacenan el token completo en claro.
 - Cambiar la contrasena revoca los tokens anteriores del usuario.
 - El alta `TRIAL` genera una contrasena aleatoria y envia por correo un enlace de entrega, nunca la contrasena. La credencial temporal se cifra con AES-256-GCM y una clave derivada de `APP_KEY` (o de `DB_PASSWORD` en instalaciones antiguas); el enlace exige un POST con CSRF, caduca en una hora y se marca como visto antes de mostrar la contrasena. Una recarga o segundo acceso ya no puede recuperarla.
+- El provisionamiento y el correo son fases independientes e idempotentes. La solicitud persiste las referencias creadas y admite reintentos desde `PROVISION_FAILED`, `PROVISIONED` o `EMAIL_FAILED`; un fallo de correo no borra ni duplica cliente, empresa, tenant o usuario.
 
 ### 6. Validacion de origen y CSRF en formularios internos
 
