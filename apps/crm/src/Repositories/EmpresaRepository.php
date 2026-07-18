@@ -853,9 +853,9 @@ final class EmpresaRepository
             'tasks',
             'class_sessions',
             'class_types',
+            'members',
             'lead_notes',
             'leads',
-            'members',
             'membership_plans',
         ] as $table) {
             self::deleteRowsByColumn($pdo, $table, 'tenant_id', $tenantId);
