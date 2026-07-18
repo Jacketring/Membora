@@ -315,6 +315,7 @@ final class EmpresaRepository
     public static function delete(string $id): void
     {
         self::ensureTables();
+        AuditLogRepository::ensureTable();
         $empresa = self::find($id);
         if (!$empresa) {
             throw new RuntimeException('No se encontró la empresa.');
@@ -803,6 +804,17 @@ final class EmpresaRepository
 
     private static function deleteTenantRows(PDO $pdo, string $tenantId): void
     {
+        if (self::tableExists($pdo, 'audit_logs') && self::tableExists($pdo, 'users')) {
+            $stmt = $pdo->prepare(
+                'UPDATE audit_logs
+                 SET user_id = NULL
+                 WHERE user_id IN (SELECT id FROM users WHERE tenant_id = :tenant_id)'
+            );
+            $stmt->execute(['tenant_id' => $tenantId]);
+
+            $stmt = $pdo->prepare('UPDATE audit_logs SET tenant_id = NULL WHERE tenant_id = :tenant_id');
+            $stmt->execute(['tenant_id' => $tenantId]);
+        }
         if (self::tableExists($pdo, 'auth_tokens') && self::tableExists($pdo, 'users')) {
             $stmt = $pdo->prepare(
                 'DELETE FROM auth_tokens
@@ -813,6 +825,13 @@ final class EmpresaRepository
         if (self::tableExists($pdo, 'trial_credential_deliveries') && self::tableExists($pdo, 'users')) {
             $stmt = $pdo->prepare(
                 'DELETE FROM trial_credential_deliveries
+                 WHERE user_id IN (SELECT id FROM users WHERE tenant_id = :tenant_id)'
+            );
+            $stmt->execute(['tenant_id' => $tenantId]);
+        }
+        if (self::tableExists($pdo, 'demo_users') && self::tableExists($pdo, 'users')) {
+            $stmt = $pdo->prepare(
+                'DELETE FROM demo_users
                  WHERE user_id IN (SELECT id FROM users WHERE tenant_id = :tenant_id)'
             );
             $stmt->execute(['tenant_id' => $tenantId]);

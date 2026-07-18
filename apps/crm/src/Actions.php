@@ -460,7 +460,10 @@ final class Actions
             EmpresaRepository::delete($id);
         } catch (Throwable $exception) {
             log_server_error($exception, 'delete_empresa');
-            flash('No se pudo eliminar la empresa.', 'error');
+            $message = str_contains($exception->getMessage(), 'superadministrador')
+                ? 'No puedes eliminar la única empresa vinculada al superadministrador. Crea otra empresa y vuelve a intentarlo.'
+                : 'No se pudo eliminar la empresa porque todavía tiene datos relacionados. Revisa el registro del servidor con la referencia delete_empresa.';
+            flash($message, 'error');
             redirect('platform-companies');
         }
 
