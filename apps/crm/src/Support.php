@@ -135,6 +135,22 @@ function app_base_url(): string
     return ($https ? 'https://' : 'http://') . $host . $basePath;
 }
 
+function trusted_request_app_base_url(): string
+{
+    $requestOrigin = current_request_origin();
+    $allowedOrigins = array_values(array_filter(array_map(
+        static fn (string $value): string => rtrim(trim($value), '/'),
+        explode(',', (string) (getenv('WEB_APP_URL') ?: 'https://membora.es'))
+    )));
+
+    if (!in_array($requestOrigin, $allowedOrigins, true)) {
+        return app_base_url();
+    }
+
+    $appPath = '/' . trim((string) (getenv('MEMBORA_APP_PATH') ?: '/app'), '/');
+    return $requestOrigin . ($appPath === '/' ? '' : $appPath);
+}
+
 function post_value(string $key, ?string $default = null): ?string
 {
     $value = $_POST[$key] ?? $default;

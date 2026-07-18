@@ -213,6 +213,30 @@ final class ComprehensiveSupportTest extends TestCase
         }
     }
 
+    public function testStripeReturnUsesTrustedCurrentHostInsteadOfStaleAppUrl(): void
+    {
+        $previousAppUrl = getenv('APP_URL');
+        $previousWebUrl = getenv('WEB_APP_URL');
+        $previousAppPath = getenv('MEMBORA_APP_PATH');
+
+        try {
+            putenv('APP_URL=https://app.crm.josehurtado.dev/app');
+            putenv('WEB_APP_URL=https://membora.es,https://www.membora.es');
+            putenv('MEMBORA_APP_PATH=/app');
+            $_SERVER = [
+                'HTTP_HOST' => 'membora.es',
+                'HTTPS' => 'on',
+                'SCRIPT_NAME' => '/app/index.php',
+            ];
+
+            self::assertSame('https://membora.es/app', trusted_request_app_base_url());
+        } finally {
+            $previousAppUrl === false ? putenv('APP_URL') : putenv('APP_URL=' . $previousAppUrl);
+            $previousWebUrl === false ? putenv('WEB_APP_URL') : putenv('WEB_APP_URL=' . $previousWebUrl);
+            $previousAppPath === false ? putenv('MEMBORA_APP_PATH') : putenv('MEMBORA_APP_PATH=' . $previousAppPath);
+        }
+    }
+
     public function testProductionClientDemoAcceptsEveryConfiguredPublicOrigin(): void
     {
         $previousEnvironment = getenv('APP_ENV');

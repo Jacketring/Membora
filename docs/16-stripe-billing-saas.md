@@ -53,6 +53,9 @@ STRIPE_SECRET_KEY="sk_test_PEGAR_AQUI"
 STRIPE_WEBHOOK_SECRET="whsec_PEGAR_AQUI"
 ```
 
+Las URLs de retorno de Stripe usan el dominio real y permitido desde el que el administrador inicio
+el checkout. De este modo, un `APP_URL` antiguo no puede enviar al usuario a otro dominio al terminar.
+
 Antes de generar facturas de demostracion, completar tambien las variables `INVOICE_ISSUER_*` con los datos fiscales del emisor del entorno. El codigo no contiene datos fiscales reales; estas variables alimentan la instantanea del emisor que queda guardada en cada factura.
 
 Donde pegar cada valor:
