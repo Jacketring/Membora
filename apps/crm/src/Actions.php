@@ -879,7 +879,13 @@ final class Actions
             redirect('platform-contacts');
         }
 
-        PlatformClientRepository::delete($id);
+        try {
+            PlatformClientRepository::delete($id);
+        } catch (Throwable $exception) {
+            log_server_error($exception, 'delete_platform_client');
+            flash('No se pudo eliminar el contacto comercial.', 'error');
+            redirect('platform-contacts');
+        }
         flash('Contacto eliminado correctamente.');
         redirect('platform-contacts');
     }

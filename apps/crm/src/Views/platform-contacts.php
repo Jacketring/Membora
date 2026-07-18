@@ -167,7 +167,7 @@ $paymentOptions = [
                     </button>
                   </form>
                 <?php else: ?>
-                  <form method="post" data-confirm-message="Eliminar este contacto comercial? Si tiene empresas vinculadas, se mantendran pero sin cliente asociado.">
+                  <form method="post" data-confirm-message="¿Eliminar este contacto comercial? Si tiene empresas vinculadas, se mantendrán, pero se retirarán el cliente y su email de contacto.">
                     <input type="hidden" name="action" value="delete_platform_client">
                     <input type="hidden" name="id" value="<?= e($contact['id']) ?>">
                     <button class="note-delete-button" type="submit" aria-label="Eliminar contacto <?= e($contact['contact_name']) ?>">

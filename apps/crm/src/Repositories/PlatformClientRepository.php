@@ -202,9 +202,30 @@ final class PlatformClientRepository
         EmpresaRepository::ensureTables();
 
         $pdo = Database::connection();
-        $pdo->prepare('UPDATE empresas SET client_id = NULL, updated_at = NOW() WHERE client_id = :id')->execute(['id' => $id]);
-        $pdo->prepare('DELETE FROM platform_leads WHERE client_id = :id')->execute(['id' => $id]);
-        $pdo->prepare('DELETE FROM platform_clients WHERE id = :id')->execute(['id' => $id]);
+        $pdo->beginTransaction();
+
+        try {
+            $companyUpdate = $pdo->prepare(
+                'UPDATE empresas
+                 SET client_id = NULL, contact_email = NULL, updated_at = NOW()
+                 WHERE client_id = :id'
+            );
+            $companyUpdate->execute(['id' => $id]);
+
+            $pdo->prepare('DELETE FROM platform_leads WHERE client_id = :id')->execute(['id' => $id]);
+            $delete = $pdo->prepare('DELETE FROM platform_clients WHERE id = :id');
+            $delete->execute(['id' => $id]);
+            if ($delete->rowCount() !== 1) {
+                throw new RuntimeException('No se encontró el cliente que quieres eliminar.');
+            }
+
+            $pdo->commit();
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
     }
 
     private static function markLinkedLeadConverted(string $clientId): void
