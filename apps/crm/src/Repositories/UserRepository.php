@@ -181,12 +181,116 @@ final class UserRepository
 
     public static function deletePlatform(string $userId): void
     {
-        $stmt = Database::connection()->prepare(
-            'DELETE FROM users
-             WHERE id = :id
-               AND role_id IN (SELECT id FROM roles WHERE `key` IN ("SUPER_ADMIN", "SUPERADMIN"))'
+        $pdo = Database::connection();
+        $pdo->beginTransaction();
+
+        try {
+            $target = $pdo->prepare(
+                'SELECT users.id
+                 FROM users
+                 INNER JOIN roles ON roles.id = users.role_id
+                 WHERE users.id = :id
+                   AND roles.`key` IN ("SUPER_ADMIN", "SUPERADMIN")
+                 LIMIT 1
+                 FOR UPDATE'
+            );
+            $target->execute(['id' => $userId]);
+            if ($target->fetchColumn() === false) {
+                throw new RuntimeException('El administrador ya no existe o no tiene un rol de plataforma.');
+            }
+
+            foreach (UserDeletionPolicy::activityRelations() as $relation) {
+                if (!self::relationColumnExists($pdo, $relation['table'], $relation['column'])) {
+                    continue;
+                }
+
+                $pdo->prepare(
+                    'DELETE FROM ' . self::quoteIdentifier($relation['table']) .
+                    ' WHERE ' . self::quoteIdentifier($relation['column']) . ' = :user_id'
+                )->execute(['user_id' => $userId]);
+            }
+
+            foreach (self::relationsReferencingUsers($pdo) as $relation) {
+                $table = (string) $relation['table_name'];
+                $column = (string) $relation['column_name'];
+                if ($table === 'users' && $column === 'id') {
+                    continue;
+                }
+
+                $mode = UserDeletionPolicy::relationMode(
+                    $table,
+                    $column,
+                    strtoupper((string) $relation['is_nullable']) === 'YES'
+                );
+                $tableSql = self::quoteIdentifier($table);
+                $columnSql = self::quoteIdentifier($column);
+                $sql = $mode === 'detach'
+                    ? 'UPDATE ' . $tableSql . ' SET ' . $columnSql . ' = NULL WHERE ' . $columnSql . ' = :user_id'
+                    : 'DELETE FROM ' . $tableSql . ' WHERE ' . $columnSql . ' = :user_id';
+                $pdo->prepare($sql)->execute(['user_id' => $userId]);
+            }
+
+            $stmt = $pdo->prepare(
+                'DELETE FROM users
+                 WHERE id = :id
+                   AND role_id IN (SELECT id FROM roles WHERE `key` IN ("SUPER_ADMIN", "SUPERADMIN"))'
+            );
+            $stmt->execute(['id' => $userId]);
+            if ($stmt->rowCount() !== 1) {
+                throw new RuntimeException('No se pudo eliminar el administrador seleccionado.');
+            }
+
+            $pdo->commit();
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
+        }
+    }
+
+    private static function relationColumnExists(PDO $pdo, string $table, string $column): bool
+    {
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = :table_name
+               AND COLUMN_NAME = :column_name'
         );
-        $stmt->execute(['id' => $userId]);
+        $stmt->execute(['table_name' => $table, 'column_name' => $column]);
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private static function relationsReferencingUsers(PDO $pdo): array
+    {
+        $stmt = $pdo->query(
+            'SELECT DISTINCT
+                    relations.TABLE_NAME AS table_name,
+                    relations.COLUMN_NAME AS column_name,
+                    columns.IS_NULLABLE AS is_nullable
+             FROM information_schema.KEY_COLUMN_USAGE AS relations
+             INNER JOIN information_schema.COLUMNS AS columns
+                ON columns.TABLE_SCHEMA = relations.TABLE_SCHEMA
+               AND columns.TABLE_NAME = relations.TABLE_NAME
+               AND columns.COLUMN_NAME = relations.COLUMN_NAME
+             WHERE relations.TABLE_SCHEMA = DATABASE()
+               AND relations.REFERENCED_TABLE_SCHEMA = DATABASE()
+               AND relations.REFERENCED_TABLE_NAME = "users"
+               AND relations.REFERENCED_COLUMN_NAME = "id"'
+        );
+
+        return $stmt->fetchAll();
+    }
+
+    private static function quoteIdentifier(string $identifier): string
+    {
+        if (!preg_match('/^[A-Za-z0-9_]+$/', $identifier)) {
+            throw new RuntimeException('Se detecto una relacion de base de datos no valida.');
+        }
+
+        return '`' . $identifier . '`';
     }
 
     public static function roleExists(string $roleId): bool

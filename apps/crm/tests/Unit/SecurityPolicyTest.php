@@ -24,6 +24,14 @@ final class SecurityPolicyTest extends TestCase
         self::assertTrue(UserMutationPolicy::mayAssignRole($superadmin, 'SUPER_ADMIN'));
     }
 
+    public function testUserDeletionRemovesActivityAndDetachesNullableBusinessData(): void
+    {
+        self::assertSame('delete', UserDeletionPolicy::relationMode('audit_logs', 'user_id', true));
+        self::assertSame('delete', UserDeletionPolicy::relationMode('auth_tokens', 'user_id', false));
+        self::assertSame('detach', UserDeletionPolicy::relationMode('tasks', 'assigned_user_id', true));
+        self::assertSame('delete', UserDeletionPolicy::relationMode('required_records', 'user_id', false));
+    }
+
     public function testLoginLimitUsesInjectedTimeWithoutSleeping(): void
     {
         $policy = new LoginRateLimitPolicy(5, 900);

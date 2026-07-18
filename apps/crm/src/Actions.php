@@ -1280,7 +1280,7 @@ final class Actions
             redirect('platform-users');
         }
 
-        flash('Administrador eliminado correctamente.');
+        flash('Administrador y actividad relacionada eliminados correctamente.');
         redirect('platform-users');
     }
 

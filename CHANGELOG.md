@@ -5,6 +5,7 @@ Todos los cambios notables se documentan aquí siguiendo [Keep a Changelog](http
 ## [Unreleased]
 
 ### Changed
+- La eliminacion de administradores de plataforma borra su actividad y sus credenciales relacionadas, desvincula de forma segura los datos operativos conservables y elimina la cuenta en una unica transaccion.
 - Sincronizada la documentacion canonica con las rutas, acciones, tablas, autenticacion, facturacion SaaS y Stripe Test implementados.
 - Ampliada la trazabilidad con requisitos, historias, flujos arquitectonicos y casos de prueba de las funciones actuales.
 - El alta de prueba verificada crea y vincula automaticamente `Cliente`, empresa `TRIAL`, tenant y administrador durante 14 dias; los emails ya registrados reciben un aviso de acceso en lugar de una respuesta silenciosa.

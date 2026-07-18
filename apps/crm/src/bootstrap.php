@@ -58,6 +58,7 @@ require __DIR__ . '/DashboardMetrics.php';
 require __DIR__ . '/Security/DemoAccessPolicy.php';
 require __DIR__ . '/Security/LoginRateLimitPolicy.php';
 require __DIR__ . '/Security/UserMutationPolicy.php';
+require __DIR__ . '/Security/UserDeletionPolicy.php';
 require __DIR__ . '/Auth.php';
 require __DIR__ . '/Mailer.php';
 require __DIR__ . '/Repositories.php';
